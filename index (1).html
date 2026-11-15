@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sustrai kontuak</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sustrai">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Diseinua: kontzertu-kartel itxura (beltza, zuria, gorria); goiburu beltz finkoa fitxekin; kontu-liburu erako errenkadak, mugikorrean pilatzen direnak. */
+:root {
+  --bg: #f4f3f1;
+  --surface: #ffffff;
+  --ink: #0d0d0d;
+  --muted: #5f5f5f;
+  --line: #e0dedb;
+  --accent: #d0191c;
+  --accent-soft: #fde3e2;
+  --on-accent: #ffffff;
+  --head-bg: #0d0d0d;
+  --head-ink: #ffffff;
+  --head-muted: #a6a6a6;
+  --good: #1d7a45;
+  --good-soft: #e1f2e7;
+  --warn: #a35f06;
+  --warn-soft: #fbefd9;
+  --bad: #b3141a;
+  --bad-soft: #fbe0e0;
+  --info-soft: #ececec;
+  --info: #3a3a3a;
+  --font-display: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0b0b; --surface: #161616; --ink: #f2f2f2; --muted: #a3a3a3; --line: #2b2b2b;
+    --accent: #ff3b3b; --accent-soft: #3a1414; --on-accent: #ffffff; --head-bg: #000000; --head-ink: #ffffff; --head-muted: #9a9a9a;
+    --good: #5fcf8a; --good-soft: #15301f;
+    --warn: #e8a94a; --warn-soft: #3a2c15; --bad: #ff6b6b; --bad-soft: #3d1a1a;
+    --info-soft: #262626; --info: #d0d0d0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0b0b; --surface: #161616; --ink: #f2f2f2; --muted: #a3a3a3; --line: #2b2b2b;
+  --accent: #ff3b3b; --accent-soft: #3a1414; --on-accent: #ffffff; --head-bg: #000000; --head-ink: #ffffff; --head-muted: #9a9a9a;
+  --good: #5fcf8a; --good-soft: #15301f;
+  --warn: #e8a94a; --warn-soft: #3a2c15; --bad: #ff6b6b; --bad-soft: #3d1a1a;
+  --info-soft: #262626; --info: #d0d0d0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+header.top { background: var(--head-bg); color: var(--head-ink); border-bottom: 4px solid var(--accent); position: sticky; top: 0; z-index: 5; }
+.top-inner { max-width: 1000px; margin: 0 auto; padding: 14px 16px 0; }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: .04em; margin: 0; text-transform: uppercase; }
+.brand h1 span { color: var(--accent); }
+.brand .sub { color: var(--head-muted); font-size: 13px; }
+.year { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--head-muted); }
+header.top .btn { background: transparent; color: var(--head-ink); border-color: #4a4a4a; }
+header.top .btn:hover { border-color: var(--head-ink); }
+.year select { padding: 5px 8px; border: 1px solid #4a4a4a; border-radius: 8px; background: var(--head-bg); color: var(--head-ink); }
+nav.tabs { display: flex; gap: 4px; overflow-x: auto; margin-top: 10px; scrollbar-width: none; }
+nav.tabs button { border: 0; background: none; padding: 10px 12px; border-bottom: 3px solid transparent; cursor: pointer; color: var(--head-muted); font-weight: 600; white-space: nowrap; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; font-size: 15px; margin-bottom: -4px; }
+nav.tabs button[aria-selected="true"] { color: var(--head-ink); border-bottom-color: var(--accent); }
+nav.tabs .count { font-size: 12px; color: var(--head-muted); margin-left: 4px; }
+
+main { max-width: 1000px; margin: 0 auto; padding: 20px 16px 80px; display: grid; gap: 22px; }
+.banner { padding: 10px 14px; border-radius: var(--radius); background: var(--warn-soft); color: var(--ink); font-size: 14px; }
+.banner[hidden] { display: none; }
+
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin: 0; text-wrap: balance; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.hint { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.tile .label { font-size: 13px; color: var(--muted); }
+.tile .value { font-family: var(--font-display); font-size: 26px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile .foot { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tile.hero { background: var(--head-bg); border-color: var(--head-bg); border-left: 5px solid var(--accent); }
+.tile.hero .label, .tile.hero .foot { color: var(--head-muted); }
+.tile.hero .value { color: var(--head-ink); }
+.tile.neg .value { color: var(--bad); }
+.tile-btn { cursor: pointer; transition: border-color .15s; }
+.tile-btn:hover { border-color: var(--muted); }
+.tile-btn.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tile-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.card-pad { padding: 14px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--bad); }
+.btn.small { padding: 4px 10px; font-size: 13px; }
+.btn:focus-visible, nav.tabs button:focus-visible, .row:focus-visible, .pill:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Filas tipo libro de cuentas */
+.ledger { list-style: none; margin: 0; padding: 0; }
+.ledger-head, .row { display: grid; grid-template-columns: var(--cols); gap: 10px; align-items: center; padding: 10px 14px; }
+.ledger-head { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--line); }
+.row { border-bottom: 1px solid var(--line); cursor: pointer; }
+.row:last-child { border-bottom: 0; }
+.row:hover { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+.row .main { font-weight: 500; overflow-wrap: anywhere; }
+.row .meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.r { text-align: right; }
+.only-m { display: none; }
+.empty { padding: 26px 16px; text-align: center; color: var(--muted); }
+.empty strong { display: block; color: var(--ink); margin-bottom: 4px; }
+.ledger-foot { display: grid; grid-template-columns: var(--cols); gap: 10px; padding: 10px 14px; border-top: 2px solid var(--line); font-weight: 600; }
+
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 0; cursor: pointer; white-space: nowrap; }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.info { background: var(--info-soft); color: var(--info); }
+.pill.neutral { background: var(--bg); color: var(--muted); }
+.pill[disabled] { cursor: default; opacity: .6; }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+
+/* Gráfico */
+.chart-wrap { overflow-x: auto; }
+.legend { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+/* Diálogo */
+.overlay { position: fixed; inset: 0; background: rgba(10, 16, 13, .45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 20; overflow-y: auto; }
+.overlay[hidden] { display: none; }
+.dialog { background: var(--surface); border-radius: 14px; width: 100%; max-width: 520px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.25); display: grid; gap: 14px; }
+.dialog h3 { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 600; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: grid; gap: 4px; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.field input, .field select, .field textarea { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); width: 100%; }
+.field textarea { min-height: 64px; resize: vertical; }
+.field .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink); }
+.field .check input { width: auto; }
+.calc { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 14px; display: grid; gap: 2px; }
+.calc div { display: flex; justify-content: space-between; }
+.calc .tot { font-weight: 600; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.actions .spacer { flex: 1; }
+.err { color: var(--bad); font-size: 13px; }
+
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 30; }
+.toast[hidden] { display: none; }
+
+@media (max-width: 640px) {
+  .ledger-head { display: none; }
+  .row, .ledger-foot { grid-template-columns: 1fr auto; }
+  .row > .hide-m, .ledger-foot > .hide-m { display: none; }
+  .only-m { display: inline; }
+  .coche-detail { padding-left: 0; }
+  .bolos-card .row, .bolos-card .ledger-foot { grid-template-columns: minmax(0,1fr) auto auto; }
+  .form-grid { grid-template-columns: 1fr; }
+  .brand h1 { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.field.sep { font-family: var(--font-display); font-weight: 600; font-size: 15px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; }
+.seg label { cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 7px 18px; font-weight: 500; }
+.seg input:checked + span { background: var(--ink); color: var(--surface); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.multi input { width: auto !important; flex: none; padding: 0; }
+.multi { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.multi label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.linkbtn { border: 0; background: none; color: var(--accent); font-size: 12px; cursor: pointer; padding: 0 0 0 6px; text-decoration: underline; }
+.row .meta .num, .r .meta { font-size: 12px; }
+.coches { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.coche-row { display: grid; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.coche-row:last-child { border-bottom: 0; }
+.coche-detail { display: grid; gap: 6px; padding-left: 24px; }
+.coche-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.coche-row input[type=number], .coche-row input[type=text] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.coche-tray { flex: 1; min-width: 160px; }
+.coche-row input[type=number] { width: 84px; }
+.mini { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.coche-imp { margin-left: auto; font-weight: 600; }
+.coche-links a { color: var(--accent); }
+.del-confirm { display: inline-flex; gap: 4px; }
+.pag-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pag-row label { font-size: 14px; color: var(--ink); }
+.pag-row input { width: 110px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); text-align: right; }
+.pag-tot { border-top: 1px solid var(--line); padding-top: 6px; font-weight: 600; }
+.del-x { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.del-x:hover { color: var(--on-accent); background: var(--bad); border-color: var(--bad); }
+.del-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ap-toggle { color: var(--ink); font-weight: 500; cursor: pointer; }
+.ap-toggle input { width: auto !important; }
+.coche-row input:disabled { opacity: .45; }
+.deudas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.deudas li { display: flex; gap: 8px; align-items: baseline; }
+.deudas li .num { margin-left: auto; font-weight: 600; }
+.deudas .arrow { color: var(--accent); font-weight: 700; }
+.deudas li.pagado strong, .deudas li.pagado .num { color: var(--muted); text-decoration: line-through; }
+.deudas li .pill { margin-left: 4px; }
+.kitatuta { margin: 0; color: var(--good); font-weight: 600; }
+.pago-ok { color: var(--good); }
+.pago-pend { color: var(--warn); font-weight: 600; }
+details summary { cursor: pointer; font-weight: 500; }
+.bolo-liq { display: grid; gap: 4px; padding: 10px 0; border-top: 1px solid var(--line); }
+.bolo-liq:first-of-type { margin-top: 8px; }
+.mes-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 6px 0 4px; border-bottom: 2px solid var(--ink); font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.mes-head .meta { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-weight: 400; }
+.mes-head + .bolo-liq { border-top: 0; }
+.card-pad > .mes-head:first-child { margin-top: 0; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink); cursor: pointer; }
+main, main section { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+main { overflow-x: clip; }
+.ajustes-card > div > span.num { white-space: normal; text-align: right; }
+.ajustes-card > div > span:first-child { flex: 0 1 auto; min-width: 0; }
+.liq-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.liq-title .main { font-size: 16px; font-weight: 600; }
+.liq-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 8px; }
+.liq-list { list-style: none; margin: 0; padding: 0 0 0 4px; display: grid; gap: 3px; }
+.liq-list li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 14px; }
+.liq-list li .meta { font-size: 12px; }
+.liq-tot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 6px; padding: 6px 8px; background: var(--bg); border-radius: 6px; font-size: 14px; }
+.bolo-liq { gap: 4px; padding: 14px 0; }
+.liq-grid { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 3px 16px; padding-left: 4px; font-size: 14px; align-items: baseline; }
+.liq-grid .meta { font-size: 12px; }
+.kid-table .r { text-align: center; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="firebase-shim.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div>
+        <h1>Sustrai <span>· kontuak</span></h1>
+        <div class="sub" id="sync-status">Konektatzen…</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <label class="year" for="year-select">Epea
+          <select id="year-select"></select>
+        </label>
+        <button type="button" class="btn small" id="btn-ajustes">Ezarpenak</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="banner" id="banner" hidden></div>
+  <div id="view"></div>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <form class="dialog" id="dialog" novalidate></form>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Utilidades ----------
+  const eur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+  const money = (n) => eur.format(Number.isFinite(n) ? n : 0);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const num = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return Number.isFinite(n) ? n : 0; };
+  const has = (v) => v !== null && v !== undefined && v !== "";
+  const round2 = (n) => Math.round(n * 100) / 100;
+  const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const fdate = (s) => { if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return "—"; const [y, m, d] = s.split("-"); return d + "/" + m + "/" + y; };
+  const MESES = ["urt", "ots", "mar", "api", "mai", "eka", "uzt", "abu", "ira", "urr", "aza", "abe"];
+  const $ = (id) => document.getElementById(id);
+  const MESES_L = ["urtarrila", "otsaila", "martxoa", "apirila", "maiatza", "ekaina", "uztaila", "abuztua", "iraila", "urria", "azaroa", "abendua"];
+  const mesLargo = (ym) => { if (!/^\d{4}-\d{2}$/.test(ym || "")) return "Datarik gabe"; const [y, m] = ym.split("-"); return y + "ko " + MESES_L[+m - 1]; };
+  const sinAcentos = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const rutaPuntos = (t) => {
+    const clean = (arr) => arr.map((x) => x.replace(/[^a-z0-9 -]/g, "").trim()).filter(Boolean);
+    let p = clean(sinAcentos(t).split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+|\s+hasta\s+|\s+eta\s+/));
+    if (p.length < 2) p = clean(sinAcentos(t).split("-"));
+    return p;
+  };
+  const rutaKey = (t) => { const p = rutaPuntos(t); if (p.length < 2) return null; return p.slice().sort().join("__").replace(/ +/g, "-").slice(0, 180); };
+
+  const TIPOS_GASTO = ["Coche (km + peajes)", "Peaje", "Parking", "Tren / bus", "Avión", "Hotel", "Dietas", "Otro"];
+  const TIPO_EU = { "Coche (km + peajes)": "Autoa (km + bidesariak)", "Peaje": "Bidesaria", "Parking": "Aparkalekua", "Tren / bus": "Trena / autobusa", "Avión": "Hegazkina", "Hotel": "Hotela", "Dietas": "Dietak", "Otro": "Besterik" };
+  const tipoEu = (t) => TIPO_EU[t] || t || "";
+  const IVA_DEF = 21, EURKM_DEF = 0.26;
+  const TARIFA_DEF = { factura: 1760, sinFactura: 1400, factura2: 2120, sinFactura2: 1760, extra: 125, pago1: 280, pago2: 352 };
+  const tarifa = () => ({
+    factura: has(state.ajustes.tarifaFactura) ? num(state.ajustes.tarifaFactura) : TARIFA_DEF.factura,
+    sinFactura: has(state.ajustes.tarifaSinFactura) ? num(state.ajustes.tarifaSinFactura) : TARIFA_DEF.sinFactura,
+    factura2: has(state.ajustes.tarifaFactura2) ? num(state.ajustes.tarifaFactura2) : TARIFA_DEF.factura2,
+    sinFactura2: has(state.ajustes.tarifaSinFactura2) ? num(state.ajustes.tarifaSinFactura2) : TARIFA_DEF.sinFactura2,
+    extra: has(state.ajustes.extraSinCena) ? num(state.ajustes.extraSinCena) : TARIFA_DEF.extra,
+    pago1: has(state.ajustes.pago1) ? num(state.ajustes.pago1) : TARIFA_DEF.pago1,
+    pago2: has(state.ajustes.pago2) ? num(state.ajustes.pago2) : TARIFA_DEF.pago2,
+  });
+  const esTarifa2 = (m) => String(m || "").endsWith("2");
+  const pagoAuto = (m) => esTarifa2(m) ? tarifa().pago2 : tarifa().pago1;
+  const MOD_KEY = { factura: "factura", sinfactura: "sinFactura", factura2: "factura2", sinfactura2: "sinFactura2" };
+  const esSinFactura = (m) => String(m || "").startsWith("sinfactura");
+  const precioAuto = (modalidad, cena) => (tarifa()[MOD_KEY[modalidad] || "factura"]) + (cena ? 0 : tarifa().extra);
+  const modalidadOpts = () => { const t = tarifa(); return [
+    ["factura", `Gipuzkoan · fakturarekin (${money(t.factura)} + BEZ)`],
+    ["sinfactura", `Gipuzkoan · fakturarik gabe (${money(t.sinFactura)})`],
+    ["factura2", `Gipuzkoatik kanpo · fakturarekin (${money(t.factura2)} + BEZ)`],
+    ["sinfactura2", `Gipuzkoatik kanpo · fakturarik gabe (${money(t.sinFactura2)})`],
+  ]; };
+
+  // ---------- Estado ----------
+  const state = {
+    componentes: [], bolos: [], viajes: [], rutas: [], materiala: [],
+    ajustes: { eurKm: EURKM_DEF },
+    loaded: { componentes: false, bolos: false, viajes: false, rutas: false, materiala: false },
+    year: "all", tab: "bolos", filtroComp: "all", canWrite: true, db: null, limited: true, filtroCobro: "all", myEmail: null, myId: null,
+  };
+  try { const y = localStorage.getItem("sustrai-year"); if (y) state.year = y; } catch (e) {}
+
+  const TABS = [
+    { id: "bolos", label: "Emanaldiak" },
+    { id: "integrantes", label: "Kideen irabaziak" },
+    { id: "viajes", label: "Bidaiak" },
+    { id: "materiala", label: "Materiala" },
+    { id: "componentes", label: "Kideak" },
+  ];
+  const hashTab = () => { const h = location.hash.replace("#", ""); return TABS.some((t) => t.id === h) ? h : null; };
+  state.tab = hashTab() || "bolos";
+
+  // ---------- Cálculos ----------
+  const inYear = (d) => state.year === "all" || (d && d.slice(0, 4) === state.year);
+  const compName = (id) => { const c = state.componentes.find((x) => x.id === id); return c ? c.nombre : "(esleitu gabe)"; };
+  const boloName = (id) => { const b = state.bolos.find((x) => x.id === id); return b ? (b.evento || b.cliente || "Emanaldia") + " · " + fdate(b.fecha) : ""; };
+  const titulares = () => state.componentes.filter((c) => !c.ordezkoa);
+  const compOpts = () => [...state.componentes].sort((a, b) => (!!a.ordezkoa - !!b.ordezkoa) || (a.nombre || "").localeCompare(b.nombre || "", "es")).map((c) => [c.id, c.nombre, !!c.ordezkoa, c.instrumento || ""]);
+  const tocanDe = (b) => {
+    const ids = Array.isArray(b.tocan) ? b.tocan.filter((id) => state.componentes.some((c) => c.id === id)) : null;
+    return ids && ids.length ? ids : titulares().map((c) => c.id);
+  };
+
+  function boloCalc(b, viajes) {
+    const facturado = !esSinFactura(b.modalidad);
+    const ingreso = num(b.presupuesto);
+    const iva = facturado ? round2(ingreso * IVA_DEF / 100) : 0;
+    const irpf = 0;
+    const aCobrar = round2(ingreso + iva);
+    const tocan = tocanDe(b);
+    const pagoBase = has(b.pagoIntegrante) ? num(b.pagoIntegrante) : pagoAuto(b.modalidad);
+    const extraCena = b.cena === false ? (has(b.extraCena) ? num(b.extraCena) : tarifa().extra) : 0;
+    const extraPor = tocan.length ? round2(extraCena / tocan.length) : 0;
+    const porIntegrante = round2(pagoBase + extraPor);
+    const pagos = round2(porIntegrante * tocan.length);
+    const gestion = round2(ingreso - pagos);
+    return { facturado, ingreso, iva, irpf, aCobrar, gestion, tocan, porIntegrante, pagos, pagoBase, extraCena, extraPor };
+  }
+
+  function viajesDeBolo(b) { return state.viajes.filter((v) => v.boloId === b.id); }
+  function liquidar(bal) {
+    const cred = [], deb = [];
+    Object.entries(bal).forEach(([id, v]) => { const x = round2(v); if (x > 0.004) cred.push({ id, v: x }); else if (x < -0.004) deb.push({ id, v: -x }); });
+    cred.sort((a, b) => b.v - a.v); deb.sort((a, b) => b.v - a.v);
+    const out = []; let i = 0, j = 0;
+    while (i < deb.length && j < cred.length) {
+      const m = round2(Math.min(deb[i].v, cred[j].v));
+      if (m > 0.004) out.push({ from: deb[i].id, to: cred[j].id, amount: m });
+      deb[i].v = round2(deb[i].v - m); cred[j].v = round2(cred[j].v - m);
+      if (deb[i].v <= 0.004) i++; if (cred[j].v <= 0.004) j++;
+    }
+    return out;
+  }
+  function afariGastuak(b) { return b && b.cena === false && b.afariOrdainketak && typeof b.afariOrdainketak === "object" ? Object.entries(b.afariOrdainketak).filter(([, x]) => num(x) > 0).map(([id, x]) => ({ componente: id, importe: num(x), afaria: true })) : []; }
+  function boloViajes(b, viajes) {
+    const vs = [...(viajes || viajesDeBolo(b)), ...afariGastuak(b)];
+    const tocan = tocanDe(b);
+    const total = round2(vs.reduce((s, v) => s + num(v.importe), 0));
+    const share = tocan.length ? total / tocan.length : 0;
+    const bal = {};
+    tocan.forEach((id) => (bal[id] = -share));
+    vs.forEach((v) => { if (!v.componente) return; bal[v.componente] = (bal[v.componente] || 0) + num(v.importe); });
+    Object.keys(bal).forEach((k) => (bal[k] = round2(bal[k])));
+    return { total, share: round2(share), n: tocan.length, bal, transfers: liquidar(bal) };
+  }
+  const transferHtml = (tr) => tr.length ? `<ul class="deudas">${tr.map((x) => `<li><strong>${esc(compName(x.from))}</strong> <span class="arrow" aria-label="ordaindu behar dio">→</span> <strong>${esc(compName(x.to))}</strong><span class="num">${money(x.amount)}</span></li>`).join("")}</ul>` : `<p class="meta" style="margin:0">Inork ez dio inori ezer zor.</p>`;
+
+  function liqSecciones(b, l) {
+    const vs = viajesDeBolo(b), af = afariGastuak(b);
+    const row = (name, det, imp) => `<li><span><strong>${esc(name)}</strong>${det ? ` <span class="meta">· ${esc(det)}</span>` : ""}</span><span class="num">${money(imp)}</span></li>`;
+    const autos = vs.filter((v) => v.tipo === TIPOS_GASTO[0]).sort((x, y) => compName(x.componente).localeCompare(compName(y.componente), "es"));
+    const otros = vs.filter((v) => v.tipo !== TIPOS_GASTO[0]);
+    const kmTxt = (v) => [v.trayecto, num(v.km) ? String(num(v.km)).replace(".", ",") + " km" : "", num(v.peajes) ? money(num(v.peajes)) + " bidesari" : ""].filter(Boolean).join(" · ");
+    let h = "";
+    if (autos.length) h += `<div class="liq-h">🚗 Autoa jarri dutenak</div><ul class="liq-list">${autos.map((v) => row(compName(v.componente), kmTxt(v), num(v.importe))).join("")}</ul>`;
+    if (otros.length) h += `<div class="liq-h">Beste gastuak</div><ul class="liq-list">${otros.map((v) => row(compName(v.componente), [tipoEu(v.tipo), v.trayecto].filter(Boolean).join(" · "), num(v.importe))).join("")}</ul>`;
+    if (af.length) h += `<div class="liq-h">🍽 Afaria/bazkaria ordaindu dutenak</div><ul class="liq-list">${af.slice().sort((x, y) => compName(x.componente).localeCompare(compName(y.componente), "es")).map((x) => row(compName(x.componente), "", x.importe)).join("")}</ul>`;
+    h += `<div class="liq-tot"><span>Guztira ${money(l.total)} ÷ ${l.n} kide</span><strong class="num">${money(l.share)} bakoitzak</strong></div>`;
+    const bc = boloCalc(b), betiko = round2(bc.porIntegrante - l.share);
+    const ids = tocanDe(b).slice().sort((x, y) => compName(x).localeCompare(compName(y), "es"));
+    h += `<div class="liq-h">💶 Irabaziak</div><div class="liq-grid"><span class="meta">Kidea</span><span class="meta r">Behin-behinekoa</span><span class="meta r">Behin betikoa</span>${ids.map((id) => `<span><strong>${esc(compName(id))}</strong></span><span class="num r">${money(bc.porIntegrante)}</span><span class="num r"><strong>${money(betiko)}</strong></span>`).join("")}</div>`;
+    return h;
+  }
+  const payKey = (x) => x.from + "__" + x.to;
+  const myComp = () => { if (window.sustraiMyComp && state.componentes.some((c) => c.id === window.sustraiMyComp)) return window.sustraiMyComp; if (!state.myEmail && !state.myId) return null; const c = state.componentes.find((c) => (state.myEmail && String(c.email || "").trim().toLowerCase() === state.myEmail) || (state.myId && c.uid === state.myId)); return c ? c.id : null; };
+  const canPay = (x) => state.canWrite && (!state.limited || (myComp() && (x.from === myComp() || x.to === myComp())));
+  function boloPagos(b, l) {
+    const paid = (b && b.ordainduak) || {};
+    const list = l.transfers.map((x) => { const p = num(paid[payKey(x)]); const rest = round2(Math.max(0, x.amount - p)); return { ...x, paid: rest <= 0.009, rest }; });
+    return { list, pending: list.filter((x) => !x.paid), done: list.length > 0 && list.every((x) => x.paid) };
+  }
+  function boloEstadoPagos(b) { const l = boloViajes(b); if (!l.total || !l.transfers.length) return null; return boloPagos(b, l).done ? "ok" : "pend"; }
+
+  function totals() {
+    const bolos = state.bolos.filter((b) => inYear(b.fecha));
+    const via = state.viajes.filter((v) => inYear(v.fecha));
+    let presupuesto = 0, facturado = 0, cobrado = 0, pendiente = 0, iva = 0, irpf = 0, gestion = 0, pagos = 0;
+    const porComp = {};
+    state.componentes.forEach((c) => (porComp[c.id] = { ganancia: 0, bolos: 0 }));
+    bolos.forEach((b) => {
+      const c = boloCalc(b);
+      presupuesto += num(b.presupuesto);
+      if (c.facturado) { facturado += c.ingreso; iva += c.iva; irpf += c.irpf; }
+      const importe = c.aCobrar;
+      if (b.cobrado) cobrado += importe; else pendiente += importe;
+      gestion += c.gestion; pagos += c.pagos;
+      c.tocan.forEach((id) => { if (porComp[id]) { porComp[id].ganancia += c.porIntegrante; porComp[id].bolos++; } });
+    });
+    return { bolos, via, presupuesto, facturado, cobrado, pendiente, iva, irpf, gestion, pagos, porComp };
+  }
+
+  // ---------- Pestañas y periodo ----------
+  function renderTabs() {
+    if (state.limited) { $("tabs").innerHTML = ""; return; }
+    const counts = { materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: state.bolos.filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
+    $("tabs").innerHTML = TABS.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}${counts[t.id] != null ? `<span class="count">${counts[t.id]}</span>` : ""}</button>`).join("");
+  }
+  function renderYears() {
+    const ys = new Set();
+    [...state.viajes, ...state.bolos, ...state.materiala].forEach((x) => { if (x.fecha && /^\d{4}/.test(x.fecha)) ys.add(x.fecha.slice(0, 4)); });
+    const list = [...ys].sort().reverse();
+    if (state.year !== "all" && !list.includes(state.year)) { if (state.loaded.bolos) { state.year = "all"; try { localStorage.setItem("sustrai-year", "all"); } catch (er) {} } else list.unshift(state.year); }
+    $("year-select").innerHTML = `<option value="all">Guztia</option>` + list.map((y) => `<option value="${y}">${y}</option>`).join("");
+    $("year-select").value = state.year;
+  }
+  $("btn-ajustes").addEventListener("click", () => { if (!state.db) return toast("Ikuspegi honetan ezin dira ezarpenak gorde."); openAjustes(); });
+  $("year-select").addEventListener("change", (e) => { state.year = e.target.value; try { localStorage.setItem("sustrai-year", state.year); } catch (er) {} render(); });
+  $("tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; goTab(b.dataset.tab); });
+  function goTab(t) { state.tab = t; try { history.replaceState(null, "", "#" + t); } catch (er) {} render(); }
+  window.addEventListener("hashchange", () => { const t = hashTab(); if (t && t !== state.tab) { state.tab = t; render(); } });
+
+  // ---------- Vistas ----------
+  function render() {
+    if (state.limited) state.tab = "integrantes";
+    $("btn-ajustes").style.display = state.limited ? "none" : "";
+    renderYears();
+    renderTabs();
+    const v = { bolos: viewBolos, integrantes: viewIntegrantes, viajes: viewViajes, materiala: viewMateriala, componentes: viewComponentes }[state.tab];
+    $("view").innerHTML = v();
+  }
+  const periodoTxt = () => state.year === "all" ? "epe osoa" : state.year;
+  const addBtn = (kind, label) => state.canWrite ? `<button type="button" class="btn primary" data-add="${kind}">+ ${label}</button>` : "";
+  const loadingOr = (key, html) => state.loaded[key] ? html : `<div class="card empty">Kargatzen…</div>`;
+  const noComps = () => `<div class="card empty"><strong>Lehenik, gehitu taldeko kideak</strong>Horrela, aplikazioak kalkula dezake bakoitzak zenbat kobratzen duen.<div style="margin-top:12px">${addBtn("componente", "Gehitu kidea")}</div></div>`;
+
+  function tiles(t) {
+    return `<div class="tiles">
+      <div class="tile hero"><div class="label">Kideentzat</div><div class="value">${money(t.pagos)}</div><div class="foot">Finkoa, emanaldi eta pertsonako</div></div>
+      <div class="tile"><div class="label">Artistamente</div><div class="value">${money(t.gestion)}</div><div class="foot">Aurrekontua ken kideak</div></div>
+      <div class="tile"><div class="label">Aurrekontuak</div><div class="value">${money(t.presupuesto)}</div><div class="foot">${t.bolos.length} emanaldi</div></div>
+      <div class="tile tile-btn${state.filtroCobro === "fac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="fac" title="Ikusi fakturarekin egindako emanaldiak"><div class="label">BEZ (%${IVA_DEF}) ›</div><div class="value">${money(t.iva)}</div><div class="foot">${t.bolos.filter((b) => boloCalc(b).facturado).length} emanaldi fakturarekin</div></div>
+      ${(() => { const sf = t.bolos.filter((b) => !boloCalc(b).facturado); return `<div class="tile tile-btn${state.filtroCobro === "sinfac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="sinfac" title="Ikusi fakturarik gabeko emanaldiak"><div class="label">BEZ gabe ›</div><div class="value">${money(sf.reduce((a, b) => a + num(b.presupuesto), 0))}</div><div class="foot">${sf.length} emanaldi fakturarik gabe</div></div>`; })()}
+      ${(() => { const fb = t.bolos.filter((b) => boloCalc(b).facturado), fp = fb.filter((b) => !b.facturaEmitida); return `<div class="tile tile-btn${state.filtroCobro === "facpend" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="facpend" title="Ikusi faktura egin gabeko emanaldiak"><div class="label">Faktura egiteko ›</div><div class="value" style="color:${fp.length ? "var(--warn)" : "var(--good)"}">${fp.length ? fp.length + " emanaldi" : "✓ Denak"}</div><div class="foot">${fb.length - fp.length} / ${fb.length} faktura emanda</div></div>`; })()}
+      <div class="tile tile-btn${state.filtroCobro === "si" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="si" title="Ikusi kobratutako emanaldiak"><div class="label">Kobratuta ›</div><div class="value">${money(t.cobrado)}</div><div class="foot">${t.bolos.filter((b) => b.cobrado).length} emanaldi kobratuta</div></div>
+      <div class="tile tile-btn${state.filtroCobro === "no" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="no" title="Ikusi kobratu gabeko emanaldiak"><div class="label">Kobratzeko ›</div><div class="value" style="color:${t.pendiente > 0 ? "var(--warn)" : "inherit"}">${money(t.pendiente)}</div><div class="foot">${t.bolos.filter((b) => !b.cobrado).length} emanaldi kobratu gabe</div></div>
+    </div>`;
+  }
+
+  function viewBolos() {
+    if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Emanaldiak</h2>${noComps()}</section>`;
+    const t = totals();
+    const list = [...t.bolos].filter((b) => state.filtroCobro === "all" || (state.filtroCobro === "facpend" ? boloCalc(b).facturado && !b.facturaEmitida : state.filtroCobro === "fac" ? boloCalc(b).facturado : state.filtroCobro === "sinfac" ? !boloCalc(b).facturado : state.filtroCobro === "si" ? !!b.cobrado : !b.cobrado)).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+    const cols = "minmax(0,1fr) 130px 130px 110px";
+    let sp = 0, sc = 0, sg = 0;
+    const rows = list.map((b) => {
+      const pedido = num(b.presupuesto);
+      const c = boloCalc(b);
+      sp += pedido; if (b.cobrado) sc += pedido; sg += c.gestion;
+      return `
+        <li class="row" tabindex="0" data-edit="bolo" data-id="${esc(b.id)}">
+          <div><div class="main">${esc(b.evento || "Lekurik gabeko emanaldia")}</div>
+            <div class="meta">${fdate(b.fecha)}${b.cliente ? " · " + esc(b.cliente) : ""}${b.clienteEmail ? ` · <a href="mailto:${esc(b.clienteEmail)}" style="color:inherit">✉ ${esc(b.clienteEmail)}</a>` : ""}${c.facturado ? (b.facturaEmitida ? ` · <span class="pago-ok">faktura${b.facturaNum ? " " + esc(b.facturaNum) : ""} emanda ✓</span>` : ` · <span class="pago-pend">faktura egin gabe</span>${state.canWrite ? ` <button type="button" class="linkbtn" data-toggle-fact="${esc(b.id)}">emanda markatu</button>` : ""}`) : ""}${b.cena === false ? " · afaririk gabe (+" + money(tarifa().extra) + ")" + (afariGastuak(b).length ? ", afaria: " + esc(afariGastuak(b).map((x) => compName(x.componente) + " " + money(x.importe)).join(", ")) : "") : b.cena === "zehazteko" ? ' · <span class="pago-pend">afaria zehazteko</span>' : ""}${(() => { const e = boloEstadoPagos(b); return e === "ok" ? ' · <span class="pago-ok">bidaiak kitatuta ✓</span>' : e === "pend" ? ' · <span class="pago-pend">bidaiak kitatu gabe</span>' : ""; })()}<span class="only-m"> · kudeaketa ${money(c.gestion)}</span></div></div>
+          <div class="r"><div class="num"><strong>${money(pedido)}</strong></div><div class="meta">${b.modalidad && b.modalidad.endsWith("2") ? "Gipuzkoatik kanpo · " : ""}${c.facturado ? "+ BEZ" : "fakturarik gabe"}</div></div>
+          <div class="r num hide-m" style="color:${c.gestion < 0 ? "var(--bad)" : "inherit"}">${money(c.gestion)}</div>
+          <div class="r"><button type="button" class="pill ${b.cobrado ? "ok" : "warn"}" data-toggle-cobro="${esc(b.id)}" ${state.canWrite ? "" : "disabled"} title="Aldatu">${b.cobrado ? "Bai" : "Ez"}</button></div>
+        </li>`;
+    }).join("");
+    const body = list.length ? `
+      <div class="card bolos-card" style="--cols:${cols}">
+        <div class="ledger-head"><div>Emanaldiaren lekua</div><div class="r">Aurrekontua</div><div class="r hide-m">Kudeaketa</div><div class="r">Kobratuta</div></div>
+        <ul class="ledger">${rows}</ul>
+        <div class="ledger-foot"><div>Guztira (${esc(periodoTxt())}) · kobratuta ${money(sc)}</div><div class="r num">${money(sp)}</div><div class="r num hide-m">${money(sg)}</div><div class="r num" style="color:${sp - sc > 0 ? "var(--warn)" : "inherit"}">${sp - sc > 0 ? "falta: " + money(sp - sc) : ""}</div></div>
+      </div>`
+      : state.filtroCobro !== "all" ? `<div class="card empty"><strong>${state.filtroCobro === "facpend" ? "Faktura guztiak emanda ✓" : state.filtroCobro === "si" ? "Ez dago emanaldi kobraturik" : state.filtroCobro === "fac" ? "Ez dago fakturarekin egindako emanaldirik" : state.filtroCobro === "sinfac" ? "Ez dago fakturarik gabeko emanaldirik" : "Dena kobratuta ✓"} (${esc(periodoTxt())})</strong></div>` : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Idatzi emanaldi bakoitzaren lekua eta aurrekontua.</div>`;
+    return `${tiles(t)}
+      <section style="display:grid;gap:12px">
+        <div class="section-head"><div><h2>Emanaldiak</h2><p class="hint">Sakatu "Bai / Ez" kobratuta dagoen markatzeko. Kudeaketa = BEZik gabeko aurrekontua ken kideei ordaintzen zaiena.</p></div>${addBtn("bolo", "Emanaldi berria")}</div>
+        ${state.filtroCobro !== "all" ? `<div class="filters" id="bolos-list"><span class="pill ${state.filtroCobro === "si" ? "ok" : state.filtroCobro === "fac" || state.filtroCobro === "sinfac" ? "info" : "warn"}" style="cursor:default">${state.filtroCobro === "facpend" ? "Faktura egin gabeak bakarrik" : state.filtroCobro === "si" ? "Kobratutakoak bakarrik" : state.filtroCobro === "fac" ? "Fakturarekin bakarrik" : state.filtroCobro === "sinfac" ? "Fakturarik gabe bakarrik" : "Kobratu gabeak bakarrik"} · ${list.length}</span><button type="button" class="linkbtn" data-filtro-cobro="all">Ikusi guztiak</button></div>` : `<div id="bolos-list"></div>`}
+        ${loadingOr("bolos", body)}
+      </section>`;
+  }
+
+  function viewIntegrantes() {
+    if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Kideen irabaziak</h2>${noComps()}</section>`;
+    const t = totals();
+    const cols = "minmax(0,.8fr) 80px 1fr 1fr 1fr 1fr 1fr";
+    const balG = {}, balV = {}, balA = {}, cuotaG = {}, pendG = {}, porBolo = [];
+    const sumaBal = (acc, b, vs) => {
+      const tocan = tocanDe(b), tot = vs.reduce((s, v) => s + num(v.importe), 0);
+      if (!tot || !tocan.length) return;
+      const share = tot / tocan.length;
+      tocan.forEach((id) => (acc[id] = (acc[id] || 0) - share));
+      vs.forEach((v) => { if (v.componente) acc[v.componente] = (acc[v.componente] || 0) + num(v.importe); });
+    };
+    [...t.bolos].sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).forEach((b) => {
+      const l = boloViajes(b);
+      if (!l.total) return;
+      const pg = boloPagos(b, l);
+      porBolo.push({ b, l, pg });
+      pg.pending.forEach((x) => { pendG[x.from] = round2((pendG[x.from] || 0) - x.rest); pendG[x.to] = round2((pendG[x.to] || 0) + x.rest); });
+      Object.entries(l.bal).forEach(([id, v]) => (balG[id] = round2((balG[id] || 0) + v)));
+      sumaBal(balV, b, viajesDeBolo(b)); sumaBal(balA, b, afariGastuak(b));
+      tocanDe(b).forEach((id) => (cuotaG[id] = round2((cuotaG[id] || 0) + l.share)));
+    });
+    const deudas = liquidar(pendG);
+    const meses = [];
+    porBolo.forEach(({ b, pg }) => {
+      if (!pg.pending.length) return;
+      const m = (b.fecha || "").slice(0, 7);
+      let e = meses.find((x) => x.m === m); if (!e) { e = { m, bal: {}, n: 0 }; meses.push(e); }
+      e.n++;
+      pg.pending.forEach((x) => { e.bal[x.from] = round2((e.bal[x.from] || 0) - x.rest); e.bal[x.to] = round2((e.bal[x.to] || 0) + x.rest); });
+    });
+    meses.forEach((e) => (e.tr = liquidar(e.bal)));
+    const nPend = porBolo.filter((x) => x.pg.pending.length).length;
+    const rows = state.componentes.map((c) => {
+      const pc = t.porComp[c.id] || { ganancia: 0, bolos: 0 };
+      const pend = round2(balV[c.id] || 0);
+      const afari = round2(balA[c.id] || 0);
+      const cuota = round2(cuotaG[c.id] || 0);
+      return { c, ...pc, pend, afari, total: round2(pc.ganancia + pend + afari), cuota, neto: round2(pc.ganancia - cuota) };
+    }).sort((a, b) => (!!a.c.ordezkoa - !!b.c.ordezkoa) || (a.c.nombre || "").localeCompare(b.c.nombre || "", "es"));
+    const sum = rows.reduce((s, r) => ({ g: s.g + r.ganancia, p: s.p + r.pend, a: s.a + r.afari, t: s.t + r.total, n: s.n + r.neto }), { g: 0, p: 0, a: 0, t: 0, n: 0 });
+    const signed = (v) => `<div class="r num hide-m" style="color:${v < 0 ? "var(--bad)" : v > 0 ? "var(--good)" : "inherit"}">${v > 0 ? "+" : ""}${money(v)}</div>`;
+    return `
+      ${state.limited ? "" : `<section style="display:grid;gap:12px">
+        <div class="section-head"><div><h2>Kideen irabaziak · ${esc(periodoTxt())}</h2><p class="hint">Kide bakoitzak kopuru finkoa kobratzen du emanaldiko: ${money(tarifa().pago1)} Gipuzkoan eta ${money(tarifa().pago2)} Gipuzkoatik kanpo. Aurrekontuaren gainerakoa kudeaketa gastuak dira.</p></div></div>
+        <div class="card kid-table" style="--cols:${cols}">
+          <div class="ledger-head"><div>Kidea</div><div class="r hide-m">Emanaldiak</div><div class="r">Behin-behineko irabazia</div><div class="r hide-m">Bidaien doikuntza</div><div class="r hide-m">Bazkari/afari doikuntza</div><div class="r hide-m">Jasotzekoa guztira</div><div class="r">Behin betiko irabazia</div></div>
+          <ul class="ledger">${rows.map((r, i) => `${r.c.ordezkoa && (i === 0 || !rows[i - 1].c.ordezkoa) ? `<li class="ledger-head" style="border-top:2px solid var(--line)"><div>Ordezkoak</div></li>` : ""}
+            <li class="row" tabindex="0" data-goto-comp="${esc(r.c.id)}">
+              <div><div class="main">${esc(r.c.nombre)}</div><div class="meta">${esc(r.c.instrumento || "")}<span class="only-m">${r.c.instrumento ? " · " : ""}${r.bolos} emanaldi · behin-behineko irabazia ${money(r.ganancia)} · bidaiak ${r.pend > 0 ? "+" : ""}${money(r.pend)}${r.afari ? ` · bazkari/afaria ${r.afari > 0 ? "+" : ""}${money(r.afari)}` : ""} · jasotzekoa ${money(r.total)}</span></div></div>
+              <div class="r num hide-m">${r.bolos}</div>
+              <div class="r num hide-m">${money(r.ganancia)}</div>
+              ${signed(r.pend)}
+              ${signed(r.afari)}
+              <div class="r num hide-m">${money(r.total)}</div>
+              <div class="r num"><strong>${money(r.neto)}</strong></div>
+            </li>`).join("")}
+          </ul>
+          <div class="ledger-foot"><div>Guztira</div><div class="hide-m"></div><div class="r num hide-m">${money(sum.g)}</div><div class="r num hide-m">${money(sum.p)}</div><div class="r num hide-m">${money(sum.a)}</div><div class="r num hide-m">${money(sum.t)}</div><div class="r num">${money(sum.n)}</div></div>
+        </div>
+        <p class="hint">Emanaldi bakoitzeko bidaiak (eta kideek ordaindutako afariak) jo zuten guztien artean ordaintzen dira, zati berdinetan. "Bidaien doikuntza" eta "Bazkari/afari doikuntza" bakoitzak jartzen duena (−) edo berreskuratzen duena (+) da. "Jasotzekoa guztira" = bere ordainketa gehi bi doikuntza horiek. "Behin betiko irabazia" = bidaiak eta bazkari/afariak ordaindu ondoren poltsikoan geratzen zaiona (behin-behineko irabazia ken bidaietan eta otorduetan dagokion zatia).</p>
+      </section>
+      `}
+      ${state.limited ? (() => { const mc = myComp(); return mc && !state.canWrite ? `<div class="banner">Kaixo, <strong>${esc(compName(mc))}</strong>! Oraingoz ezin duzu ezer markatu: zure sarbidea irakurtzeko bakarrik da. Eskatu arduradunari <strong>Editore</strong> sarbidea.</div>` : mc ? `<div class="banner" style="background:var(--good-soft)">Kaixo, <strong>${esc(compName(mc))}</strong>! Zure ordainketak bakarrik marka ditzakezu (zuk ordaintzen dituzunak edo zuri ordaintzen dizkizutenak).</div>` : state.myId && state.canWrite ? (() => { const libres = [...state.componentes].filter((c) => !c.admin).sort((x, y) => (x.nombre || "").localeCompare(y.nombre || "", "es")); return `<div class="banner" style="display:grid;gap:8px"><span><strong>Nor zara?</strong> Aukeratu zure izena eta idatzi Aitorrek emandako PINa. Behin bakarrik egin behar da gailu bakoitzean.</span><span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="claim-sel" style="padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"><option value="">Aukeratu…</option>${libres.map((c) => `<option value="${esc(c.id)}">${esc(c.nombre)}</option>`).join("")}</select><input id="claim-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PINa" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"><button type="button" class="btn small primary" data-claim>Ni naiz</button></span></div>`; })() : `<div class="banner">Ezin izan da jakin nor zaren. Ordainketak markatzeko, eskatu aplikazioaren arduradunari editatzeko sarbidea.</div>`; })() : ""}
+      <section style="display:grid;gap:10px">
+        <div class="section-head"><div><h2>Nork nori zor dio · ${esc(periodoTxt())}</h2><p class="hint">Oraindik egin gabe dauden ordainketak, gutxienera bilduta. "A → B": A-k B-ri ordaindu behar dio. Hilabeteka bilduta daude. Ordaindutakoan, markatu hilabetea, emanaldi bakoitza edo dena batera.</p></div>${porBolo.length || state.viajes.some((v) => inYear(v.fecha)) ? `<button type="button" class="btn" data-pdf>PDF deskargatu</button>` : ""}</div>
+        <div class="card card-pad" style="display:grid;gap:10px">${!porBolo.length ? `<p class="meta" style="margin:0">Epe honetako emanaldietan ez dago bidaiarik idatzita.</p>`
+          : deudas.length ? `${meses.map((e) => `<div class="mes-head"><span>${esc(mesLargo(e.m))}</span><span class="meta">${e.n} emanaldi kitatu gabe</span></div>${transferHtml(e.tr)}${state.canWrite && !state.limited ? `<div><button type="button" class="btn small" data-pay-month="${esc(e.m)}">${esc(mesLargo(e.m))} ordainduta</button></div>` : ""}`).join("")}
+            ${meses.length > 1 ? `<div class="mes-head"><span>Guztira, hilabeteak batuta</span><span class="meta">ordainketa gutxiago</span></div>${transferHtml(deudas)}` : ""}
+            ${state.canWrite && !state.limited ? `<div id="payall-box"><button type="button" class="btn small" data-pay-all>Dena ordainduta markatu</button></div>` : ""}`
+          : `<p class="kitatuta">✓ Dena kitatuta. Inork ez dio inori ezer zor.</p>`}</div>
+        ${porBolo.length ? `<details class="card card-pad" ${nPend ? "open" : ""}><summary>Emanaldiz emanaldi · ${nPend ? nPend + " kitatu gabe" : "denak kitatuta"}</summary>${porBolo.map(({ b, l, pg }, i) => `${(() => { const m = (b.fecha || "").slice(0, 7), prevM = i ? (porBolo[i - 1].b.fecha || "").slice(0, 7) : null; if (m === prevM) return ""; const enMes = porBolo.filter((x) => (x.b.fecha || "").slice(0, 7) === m); const np = enMes.filter((x) => x.pg.pending.length).length; return `<div class="mes-head"><span>${esc(mesLargo(m))}</span><span class="meta">${enMes.length} emanaldi · ${np ? np + " kitatu gabe" : "denak kitatuta ✓"}</span></div>`; })()}
+          <div class="bolo-liq"><div class="liq-title"><span class="main">${esc(b.evento || "Emanaldia")} · ${fdate(b.fecha)}</span> ${pg.done ? `<span class="pill ok">Kitatuta</span>` : `<span class="pill warn">Kitatu gabe</span>`}</div>
+          ${liqSecciones(b, l)}
+          <div class="liq-h">Ordainketak</div>
+          ${pg.list.length ? `<ul class="deudas">${pg.list.map((x) => `<li class="${x.paid ? "pagado" : ""}"><strong>${esc(compName(x.from))}</strong> <span class="arrow">→</span> <strong>${esc(compName(x.to))}</strong><span class="num">${money(x.amount)}</span>
+            <button type="button" class="pill ${x.paid ? "ok" : "neutral"}" data-pay="${esc(b.id)}" data-key="${esc(payKey(x))}" data-amount="${x.amount}" ${canPay(x) ? "" : "disabled"} title="${canPay(x) ? "Aldatu" : "Zure ordainketak bakarrik marka ditzakezu"}">${x.paid ? "✓ Ordainduta" : "Ordaindu gabe"}</button></li>`).join("")}</ul>` : `<p class="meta" style="margin:0">Inork ez dio inori ezer zor.</p>`}
+          </div>`).join("")}</details>` : ""}
+      </section>
+      <section style="display:grid;gap:10px"><h2>Hilabeteko banaketa</h2><div class="card card-pad">${chart()}</div></section>
+`;
+  }
+
+  function chart() {
+    const months = [];
+    if (state.year === "all") {
+      const d = new Date();
+      for (let i = 11; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); months.push(x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0")); }
+    } else for (let m = 1; m <= 12; m++) months.push(state.year + "-" + String(m).padStart(2, "0"));
+    const ing = months.map((m) => state.bolos.filter((b) => (b.fecha || "").slice(0, 7) === m).reduce((s, b) => s + boloCalc(b).pagos, 0));
+    const gas = months.map((m) => state.bolos.filter((b) => (b.fecha || "").slice(0, 7) === m).reduce((s, b) => s + boloCalc(b).gestion, 0));
+    const max = Math.max(...ing, ...gas, 0);
+    if (max === 0) return `<div class="empty" style="padding:14px"><strong>Ez dago mugimendurik epe honetan</strong>Emanaldiak idazten dituzunean, hilabete bakoitza hemen ikusiko duzu.</div>`;
+    const step = niceStep(max), top = Math.ceil(max / step) * step;
+    const W = 720, H = 220, L = 56, R = 8, T = 10, B = 26;
+    const cw = (W - L - R) / months.length, bw = Math.min(16, cw / 3);
+    const y = (v) => T + (H - T - B) * (1 - v / top);
+    let g = "";
+    for (let v = 0; v <= top + 0.001; v += step) {
+      g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+      g += `<text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${shortMoney(v)}</text>`;
+    }
+    months.forEach((m, i) => {
+      const cx = L + cw * i + cw / 2, [yy, mm] = m.split("-");
+      g += `<rect x="${cx - bw - 1}" y="${y(ing[i])}" width="${bw}" height="${Math.max(0, y(0) - y(ing[i]))}" rx="2" fill="var(--accent)"><title>${MESES[+mm - 1]} ${yy} · kideak ${money(ing[i])}</title></rect>`;
+      g += `<rect x="${cx + 1}" y="${y(gas[i])}" width="${bw}" height="${Math.max(0, y(0) - y(gas[i]))}" rx="2" fill="var(--muted)"><title>${MESES[+mm - 1]} ${yy} · kudeaketa ${money(gas[i])}</title></rect>`;
+      g += `<text x="${cx}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${MESES[+mm - 1]}</text>`;
+    });
+    return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:520px;display:block" role="img" aria-label="Hilabeteko banaketa">${g}</svg></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Kideentzat</span><span><i style="background:var(--muted)"></i>Kudeaketa gastuak</span></div>`;
+  }
+  function niceStep(max) { const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+  function shortMoney(v) { return v >= 1000 ? (v / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " k€" : v.toLocaleString("es-ES") + " €"; }
+
+  function viewViajes() {
+    if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Bidaiak</h2>${noComps()}</section>`;
+    let list = state.viajes.filter((v) => inYear(v.fecha));
+    if (state.filtroComp !== "all") list = list.filter((v) => v.componente === state.filtroComp);
+    list.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+    const total = list.reduce((s, v) => s + num(v.importe), 0);
+    const itz = (v) => { const b = v.boloId && state.bolos.find((x) => x.id === v.boloId); if (!b) return !!v.reembolsado; const e = boloEstadoPagos(b); return e === null || e === "ok"; };
+    const desdeBolo = (v) => !!(v.boloId && state.bolos.some((x) => x.id === v.boloId));
+    const pend = list.filter((v) => !itz(v)).reduce((s, v) => s + num(v.importe), 0);
+    const cols = "88px minmax(0,1.5fr) minmax(0,.9fr) 140px 110px 90px";
+    const filt = `<div class="filters"><label for="f-comp" class="hint" style="margin:0">Kidea</label>
+      <select id="f-comp"><option value="all">Guztiak</option>${state.componentes.map((c) => `<option value="${esc(c.id)}" ${state.filtroComp === c.id ? "selected" : ""}>${esc(c.nombre)}</option>`).join("")}</select></div>`;
+    const body = list.length ? `
+      <div class="card" style="--cols:${cols}">
+        <div class="ledger-head"><div class="hide-m">Data</div><div>Emanaldia eta ibilbidea</div><div class="hide-m">Kidea</div><div class="r">Zenbatekoa</div><div class="r hide-m">Bidesaria</div><div class="r hide-m">Itzulita</div></div>
+        <ul class="ledger">${list.map((v) => `
+          <li class="row" tabindex="0" data-edit="${v.auto ? "bolo" : "viaje"}" data-id="${esc(v.auto ? v.boloId : v.id)}">
+            <div class="num hide-m">${fdate(v.fecha)}</div>
+            <div><div class="main">${esc(boloName(v.boloId) || "Emanaldirik gabe")}</div><div class="meta">${esc([v.trayecto, tipoEu(v.tipo), v.km ? num(v.km) + " km × " + money(num(v.eurKm) || num(state.ajustes.eurKm) || EURKM_DEF) : "", ].filter(Boolean).join(" · "))}<span class="only-m"> · ${fdate(v.fecha)} · ${esc(compName(v.componente))} · ${itz(v) ? "itzulita" : "itzultzeko"}</span></div></div>
+            <div class="hide-m">${esc(compName(v.componente))}</div>
+            <div class="r"><div class="num"><strong>${money(num(v.importe))}</strong></div>${v.km || v.peajes ? `<div class="meta num">${v.km ? money(round2(num(v.km) * (num(v.eurKm) || num(state.ajustes.eurKm) || EURKM_DEF))) + " km" : ""}${v.km && v.peajes ? " + " : ""}${v.peajes ? money(num(v.peajes)) + " bidesari" : ""}</div>` : ""}</div>
+            <div class="r hide-m">${v.tipo === TIPOS_GASTO[0] ? (() => { const on = v.autobidea !== undefined ? v.autobidea : num(v.peajes) > 0; return `<button type="button" class="pill ${on ? "ok" : "neutral"}" data-toggle-ap="${esc(v.id)}" ${state.canWrite ? "" : "disabled"} title="Aldatu">${on ? "Bai · " + money(num(v.peajes)) : "Ez"}</button>`; })() : `<span class="meta">—</span>`}</div>
+            <div class="r hide-m">${desdeBolo(v) ? `<span class="pill ${itz(v) ? "ok" : "warn"}" title="Emanaldiko ordainketak kitatzean eguneratzen da">${itz(v) ? "Bai" : "Ez"}</span>` : `<button type="button" class="pill ${v.reembolsado ? "ok" : "warn"}" data-toggle-reemb="${esc(v.id)}" ${state.canWrite ? "" : "disabled"} title="Aldatu">${v.reembolsado ? "Bai" : "Ez"}</button>`}</div>
+          </li>`).join("")}
+        </ul>
+        <div class="ledger-foot"><div class="hide-m"></div><div>Guztira · ${money(pend)} itzultzeko${list.some((v) => v.peajes) ? ` · horietatik ${money(list.reduce((s2, v) => s2 + num(v.peajes), 0))} bidesariak` : ""}</div><div class="hide-m"></div><div class="r num">${money(total)}</div><div class="hide-m"></div><div class="hide-m"></div></div>
+      </div>`
+      : `<div class="card empty"><strong>Ez dago bidaiarik (${esc(periodoTxt())})</strong>Idatzi kide bakoitzaren gasolina, bidesariak, hotelak edo dietak, eta zein emanaldiri dagozkion.</div>`;
+    return `<section style="display:grid;gap:12px">
+      <div class="section-head"><div><h2>Bidaiak</h2><p class="hint">Kide bakoitzak aurreratzen dituen joan-etorrien gastuak. Emanaldiko kideen artean banatzen dira. Emanaldi bateko bidaiak "Itzulita" agertzen dira emanaldi horretako zorrak kitatzean.</p></div>${addBtn("viaje", "Idatzi bidaia")}</div>
+      ${filt}
+      ${loadingOr("viajes", body)}
+    </section>`;
+  }
+
+  function materialCalc(m) {
+    const ids = (Array.isArray(m.banatu) && m.banatu.length ? m.banatu : titulares().map((c) => c.id)).filter((id) => state.componentes.some((c) => c.id === id));
+    const paid = m.ordainketak && typeof m.ordainketak === "object" && Object.keys(m.ordainketak).length ? m.ordainketak : (m.ordaindu ? { [m.ordaindu]: num(m.zenbatekoa) } : {});
+    const total = round2(Object.values(paid).reduce((a, x) => a + num(x), 0));
+    const share = ids.length ? total / ids.length : 0;
+    const bal = {};
+    ids.forEach((id) => (bal[id] = -share));
+    Object.entries(paid).forEach(([id, x]) => { if (num(x) > 0) bal[id] = (bal[id] || 0) + num(x); });
+    Object.keys(bal).forEach((k) => (bal[k] = round2(bal[k])));
+    const pagadores = Object.entries(paid).filter(([, x]) => num(x) > 0).map(([id, x]) => ({ id, x: num(x) }));
+    return { total, share: round2(share), n: ids.length, ids, bal, transfers: liquidar(bal), pagadores };
+  }
+  const pagadoresTxt = (l) => l.pagadores.length ? l.pagadores.map((p) => l.pagadores.length > 1 ? `${compName(p.id)} ${money(p.x)}` : compName(p.id)).join(", ") : "—";
+  function viewMateriala() {
+    if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Materiala</h2>${noComps()}</section>`;
+    const list = state.materiala.filter((m) => inYear(m.fecha)).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+    const pend = {}, pagado = {}, cuota = {};
+    let total = 0, nPend = 0;
+    const items = list.map((m) => {
+      const l = materialCalc(m), pg = boloPagos(m, l);
+      total += l.total;
+      if (pg.pending.length) nPend++;
+      l.pagadores.forEach((p) => (pagado[p.id] = round2((pagado[p.id] || 0) + p.x)));
+      l.ids.forEach((id) => (cuota[id] = round2((cuota[id] || 0) + l.share)));
+      pg.pending.forEach((x) => { pend[x.from] = round2((pend[x.from] || 0) - x.rest); pend[x.to] = round2((pend[x.to] || 0) + x.rest); });
+      return { m, l, pg };
+    });
+    const deudas = liquidar(pend);
+    const cols = "88px minmax(0,1.6fr) minmax(0,1fr) 110px 110px";
+    const tabla = items.length ? `
+      <div class="card" style="--cols:${cols}">
+        <div class="ledger-head"><div class="hide-m">Data</div><div>Erosketa</div><div class="hide-m">Nork ordaindu du</div><div class="r">Zenbatekoa</div><div class="r hide-m">Egoera</div></div>
+        <ul class="ledger">${items.map(({ m, l, pg }) => `
+          <li class="row" tabindex="0" data-edit="materiala" data-id="${esc(m.id)}">
+            <div class="num hide-m">${fdate(m.fecha)}</div>
+            <div><div class="main">${esc(m.deskribapena || "Erosketa")}</div><div class="meta">${l.n} kideren artean · ${money(l.share)} bakoitzak<span class="only-m"> · ${fdate(m.fecha)} · ordaindu: ${esc(pagadoresTxt(l))} · ${pg.done || !l.transfers.length ? "kitatuta" : "kitatu gabe"}</span></div></div>
+            <div class="hide-m">${esc(pagadoresTxt(l))}</div>
+            <div class="r num"><strong>${money(l.total)}</strong></div>
+            <div class="r hide-m">${pg.done || !l.transfers.length ? `<span class="pill ok">Kitatuta</span>` : `<span class="pill warn">Kitatu gabe</span>`}</div>
+          </li>`).join("")}
+        </ul>
+        <div class="ledger-foot"><div class="hide-m"></div><div>Guztira</div><div class="hide-m"></div><div class="r num">${money(total)}</div><div class="hide-m"></div></div>
+      </div>` : `<div class="card empty"><strong>Ez dago erosketarik (${esc(periodoTxt())})</strong>Idatzi taldearentzat erositakoa, nork ordaindu duen eta noren artean banatzen den.</div>`;
+    const kideak = items.length ? `<div class="card" style="--cols:minmax(0,1.4fr) 1fr 1fr 1fr">
+        <div class="ledger-head"><div>Kidea</div><div class="r hide-m">Ordaindu du</div><div class="r hide-m">Dagokiona</div><div class="r">Saldoa</div></div>
+        <ul class="ledger">${state.componentes.map((c) => { const p = pagado[c.id] || 0, q = cuota[c.id] || 0, d = round2(p - q); return `
+          <li class="row" style="cursor:default"><div><div class="main">${esc(c.nombre)}</div><div class="meta only-m">ordaindu ${money(p)} · dagokio ${money(q)}</div></div>
+          <div class="r num hide-m">${money(p)}</div><div class="r num hide-m">${money(q)}</div>
+          <div class="r num" style="color:${d < 0 ? "var(--bad)" : d > 0 ? "var(--good)" : "inherit"}"><strong>${d > 0 ? "+" : ""}${money(d)}</strong></div></li>`; }).join("")}</ul></div>
+        <p class="hint">Saldoa: + berreskuratu behar duena, − jarri behar duena (ordainketak markatu aurretik).</p>` : "";
+    return `<section style="display:grid;gap:12px">
+        <div class="section-head"><div><h2>Materiala</h2><p class="hint">Taldearentzat erositakoa. Erosketa bakoitza aukeratutako kideen artean banatzen da, zati berdinetan.</p></div>${addBtn("materiala", "Erosketa berria")}</div>
+        ${loadingOr("materiala", tabla)}
+      </section>
+      ${items.length ? `<section style="display:grid;gap:10px"><h2>Kide bakoitza</h2>${kideak}</section>
+      <section style="display:grid;gap:10px">
+        <div><h2>Nork nori zor dio · materiala</h2><p class="hint">Oraindik egin gabe dauden ordainketak, gutxienera bilduta. "A → B": A-k B-ri ordaindu behar dio.</p></div>
+        <div class="card card-pad" style="display:grid;gap:10px">${deudas.length ? `${transferHtml(deudas)}${state.canWrite ? `<div id="payall-box"><button type="button" class="btn small" data-pay-all>Dena ordainduta markatu</button></div>` : ""}` : `<p class="kitatuta">✓ Dena kitatuta. Inork ez dio inori ezer zor.</p>`}</div>
+        <details class="card card-pad" ${nPend ? "open" : ""}><summary>Erosketaz erosketa · ${nPend ? nPend + " kitatu gabe" : "denak kitatuta"}</summary>${items.map(({ m, l, pg }) => `
+          <div class="bolo-liq"><div class="main">${esc(m.deskribapena || "Erosketa")} · ${fdate(m.fecha)} ${pg.done || !l.transfers.length ? `<span class="pill ok">Kitatuta</span>` : `<span class="pill warn">Kitatu gabe</span>`}</div>
+          <div class="meta">Ordaindu: ${esc(pagadoresTxt(l))} · ${money(l.total)} ÷ ${l.n} = ${money(l.share)} bakoitzak</div>
+          ${pg.list.length ? `<ul class="deudas">${pg.list.map((x) => `<li class="${x.paid ? "pagado" : ""}"><strong>${esc(compName(x.from))}</strong> <span class="arrow">→</span> <strong>${esc(compName(x.to))}</strong><span class="num">${money(x.amount)}</span>
+            <button type="button" class="pill ${x.paid ? "ok" : "neutral"}" data-pay="${esc(m.id)}" data-col="materiala" data-key="${esc(payKey(x))}" data-amount="${x.amount}" ${state.canWrite ? "" : "disabled"} title="Aldatu">${x.paid ? "✓ Ordainduta" : "Ordaindu gabe"}</button></li>`).join("")}</ul>` : `<p class="meta" style="margin:0">Inork ez dio inori ezer zor.</p>`}
+          </div>`).join("")}</details>
+      </section>` : ""}`;
+  }
+
+  function viewComponentes() {
+    const cols = "minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,.8fr)";
+    const sorted = [...state.componentes].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
+    const table = (list) => `
+      <div class="card" style="--cols:${cols}">
+        <div class="ledger-head"><div>Izena</div><div class="hide-m">Lotura</div><div>Instrumentua</div></div>
+        <ul class="ledger">${list.map((c) => `
+          <li class="row" tabindex="0" data-edit="componente" data-id="${esc(c.id)}">
+            <div><div class="main">${esc(c.nombre)}</div><div class="meta">${c.admin ? `<span class="pago-ok">★ admin (zu)</span>` : ""}<span class="only-m">${c.admin ? "" : c.uid ? ` <span class="pago-ok">✓ lotuta</span>` : ` <span class="pago-pend">lotu gabe</span>`}${c.instrumento ? " · " + esc(c.instrumento) : ""}</span></div></div>
+            <div class="meta hide-m">${c.admin ? "—" : c.uid ? `<span class="pago-ok">✓ lotuta</span> <button type="button" class="linkbtn" data-unlink="${esc(c.id)}">kendu</button>` : `<span class="pago-pend">lotu gabe</span>`}</div>
+            <div class="meta hide-m">${esc(c.instrumento || "—")}</div>
+          </li>`).join("")}
+        </ul>
+      </div>`;
+    const tit = sorted.filter((c) => !c.ordezkoa), ord = sorted.filter((c) => c.ordezkoa);
+    const body = tit.length ? table(tit) : `<div class="card empty"><strong>Oraindik ez dago kiderik</strong>Gehitu Sustraiko kide bakoitza.</div>`;
+    const ordHtml = `<section style="display:grid;gap:12px;margin-top:10px">
+      <div class="section-head"><div><h2>Ordezkoak</h2><p class="hint">Noizean behin jotzen dutenak. Emanaldi batean jotzen badute, markatu "Nork jo zuen" atalean.</p></div>${addBtn("ordezkoa", "Gehitu ordezkoa")}</div>
+      ${loadingOr("componentes", ord.length ? table(ord) : `<div class="card empty"><strong>Ez dago ordezkorik</strong>Gehitu taldean noizean behin jotzen dutenak.</div>`)}
+    </section>`;
+    const ajustes = `<div class="card card-pad ajustes-card" style="display:grid;gap:10px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+        <div><strong>Ezarpenak</strong><div class="hint" style="margin:0">Emanaldi eta bidaia guztiei aplikatzen zaizkie.</div></div>
+        ${state.canWrite ? `<button type="button" class="btn small" data-edit-ajustes>Aldatu</button>` : ""}</div>
+      <div style="display:flex;justify-content:space-between;gap:12px"><span>Gipuzkoan</span><span class="num"><strong>${money(tarifa().factura)}</strong> + BEZ · <strong>${money(tarifa().sinFactura)}</strong> fakturarik gabe</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px"><span>Gipuzkoatik kanpo</span><span class="num"><strong>${money(tarifa().factura2)}</strong> + BEZ · <strong>${money(tarifa().sinFactura2)}</strong> fakturarik gabe</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px"><span>Kideko ordainketa</span><span class="num"><strong>${money(tarifa().pago1)}</strong> Gipuzkoan · <strong>${money(tarifa().pago2)}</strong> Gipuzkoatik kanpo</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px"><span>Afaria edo bazkaria sartzen ez bada</span><span class="num"><strong>+${money(tarifa().extra)}</strong>${titulares().length ? ` (+${money(round2(tarifa().extra / titulares().length))}/kideko)` : ""}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px"><span>Kilometroko prezioa</span><span class="num"><strong>${money(num(state.ajustes.eurKm) || EURKM_DEF)}</strong>/km</span></div></div>`;
+    const rutas = [...state.rutas].sort((a, b) => (a.trayecto || "").localeCompare(b.trayecto || "", "es"));
+    const rutasHtml = `<section style="display:grid;gap:12px;margin-top:10px">
+      <div class="section-head"><div><h2>Gordetako ibilbideak</h2><p class="hint">Joaneko distantziak eta bidesariak. Ibilbide hauetako bat emanaldi batean idaztean, datu hauek erabiltzen dira, kalkulatu beharrean.</p></div>${addBtn("ruta", "Gehitu ibilbidea")}</div>
+      ${rutas.length ? `<div class="card" style="--cols:minmax(0,1.6fr) 80px 100px 72px">
+        <div class="ledger-head"><div>Ibilbidea</div><div class="r">Km</div><div class="r">Bidesariak</div><div></div></div>
+        <ul class="ledger">${rutas.map((r) => `<li class="row" tabindex="0" data-edit="ruta" data-id="${esc(r.id)}"><div><div class="main">${esc(r.trayecto)}</div><div class="meta">${r.autobidea === true || (r.autobidea === undefined && num(r.peajes) > 0) ? "autobidetik" : "bidesaririk gabe"}</div></div><div class="r num">${num(r.km)} km</div><div class="r num">${money(num(r.peajes))}</div><div class="r" data-del-box="${esc(r.id)}">${state.canWrite ? `<button type="button" class="del-x" data-del-ruta="${esc(r.id)}" aria-label="Ezabatu ${esc(r.trayecto)}" title="Ezabatu">×</button>` : ""}</div></li>`).join("")}</ul></div>`
+      : `<div class="card empty"><strong>Oraindik ez dago ibilbiderik gordeta</strong>Gehitu maiz egiten dituzuenak, edo zuzendu bat emanaldi batean eta bere kabuz gordeko da.</div>`}
+    </section>`;
+    return `<section style="display:grid;gap:12px">
+      <div class="section-head"><div><h2>Kideak</h2><p class="hint">Sustraiko kideak.</p></div>${addBtn("componente", "Gehitu kidea")}</div>
+      ${loadingOr("componentes", body)}
+    </section>${ordHtml}
+    <section style="display:grid;gap:12px;margin-top:10px">${ajustes}</section>${rutasHtml}`;
+  }
+
+  // ---------- Formularios ----------
+  const FORMS = {
+    componente: {
+      col: "componentes", title: ["Kide berria", "Editatu kidea"],
+      fields: () => [
+        { id: "nombre", label: "Izena", type: "text", required: true, full: true },
+        { id: "pin", label: "PINa (kideak bere izena lotzeko)", type: "text", full: true, placeholder: "6 zenbaki", hint: "Hutsik utzi ez aldatzeko. Ez da inon erakusten." },
+        { id: "instrumento", label: "Instrumentua edo zeregina", type: "text", full: true },
+        { id: "ordezkoa", label: "Ordezkoa?", type: "yesno", def: false, hint: "Ordezkoak ez dira emanaldietan bere kabuz markatzen" },
+      ],
+    },
+    ordezkoa: {
+      col: "componentes", title: ["Ordezko berria", "Editatu ordezkoa"],
+      fields: () => [
+        { id: "nombre", label: "Izena", type: "text", required: true, full: true },
+        { id: "pin", label: "PINa (kideak bere izena lotzeko)", type: "text", full: true, placeholder: "6 zenbaki", hint: "Hutsik utzi ez aldatzeko. Ez da inon erakusten." },
+        { id: "instrumento", label: "Instrumentua edo zeregina", type: "text", full: true },
+        { id: "ordezkoa", label: "Ordezkoa?", type: "yesno", def: true, hint: "Ordezkoak ez dira emanaldietan bere kabuz markatzen" },
+      ],
+    },
+    bolo: {
+      col: "bolos", title: ["Emanaldi berria", "Editatu emanaldia"],
+      fields: () => [
+        { id: "evento", label: "Emanaldiaren lekua", type: "text", required: true, placeholder: "Azpeitiko jaiak" },
+        { id: "fecha", label: "Emanaldiaren data", type: "date", required: true, def: today() },
+        { id: "cliente", label: "Bezeroa", type: "text", full: true, list: "dl-clientes", placeholder: "Udala, aretoa, elkartea…" },
+        { id: "clienteEmail", label: "Bezeroaren emaila", type: "text", full: true, placeholder: "kultura@udala.eus" },
+        { sep: "Tarifa" },
+        { id: "modalidad", label: "Tarifa", type: "select", def: "factura", full: true, options: modalidadOpts() },
+        { id: "cena", label: "Afaria edo bazkaria barne?", type: "cena3", def: true, full: true, hint: `Ezetz bada, +${money(tarifa().extra)} aurrekontuan, kideen artean banatuta` },
+        { id: "afariOrdainketak", label: "Nork ordaindu du afaria edo bazkaria? (€)", type: "pagadores", full: true, hint: "Emanaldiko kideen artean banatzen da, bidaiekin batera." },
+        { id: "presupuesto", label: "Aurrekontua (€, BEZik gabe)", type: "number", step: "0.01", min: "0", required: true, def: tarifa().factura, hint: "Bere kabuz betetzen da; alda dezakezu" },
+        { id: "pagoIntegrante", label: "Kideko ordainketa (€)", type: "number", step: "0.01", min: "0", required: true, def: tarifa().pago1, hint: `${money(tarifa().pago1)} Gipuzkoan · ${money(tarifa().pago2)} Gipuzkoatik kanpo` },
+        { id: "facturaNum", label: "Faktura zenbakia", type: "text", def: "", suggest: true, full: true },
+        { id: "facturaEmitida", label: "Faktura emanda?", type: "yesno", def: false },
+        { id: "cobrado", label: "Kobratuta?", type: "yesno", def: false },
+        { sep: "Kideak" },
+        { id: "tocan", label: "Nork jo zuen (haien artean banatzen da)", type: "multi", full: true, options: compOpts(), defSel: titulares().map((c) => c.id) },
+        { sep: "Autoa" },
+        { id: "coches", label: "Nork hartu du autoa?", type: "coches", full: true },
+        { id: "idaVuelta", label: "Joan-etorria?", type: "yesno", def: true, hint: "Kalkulatzean, km-ak eta bidesariak bikoizten dira" },
+        { id: "eurKm", label: "Km-ko prezioa (€)", type: "number", step: "0.01", min: "0", def: num(state.ajustes.eurKm) || EURKM_DEF },
+        { id: "notas", label: "Oharrak", type: "textarea", full: true },
+      ],
+    },
+    materiala: {
+      col: "materiala", title: ["Erosketa berria", "Editatu erosketa"],
+      fields: () => [
+        { id: "deskribapena", label: "Zer erosi da", type: "text", required: true, full: true, placeholder: "Kableak, atrilak, baxu-sokak…" },
+        { id: "fecha", label: "Data", type: "date", required: true, def: today() },
+        { id: "ordainketak", label: "Nork zenbat ordaindu du (€)", type: "pagadores", full: true, hint: "Bete ordaindu dutenen zenbatekoa bakarrik. Guztira berez kalkulatzen da." },
+        { id: "banatu", label: "Noren artean banatzen da", type: "multi", full: true, options: compOpts(), defSel: titulares().map((c) => c.id) },
+        { id: "notas", label: "Oharrak", type: "textarea", full: true },
+      ],
+    },
+    ruta: {
+      col: "rutas", title: ["Ibilbide berria", "Editatu ibilbidea"],
+      fields: () => [
+        { id: "trayecto", label: "Ibilbidea (abiapuntua – helmuga)", type: "text", required: true, full: true, placeholder: "Azpeitia – Gasteiz" },
+        { id: "km", label: "Km (joatea bakarrik)", type: "number", step: "1", min: "0", required: true },
+        { id: "peajes", label: "Bidesariak (€, joatea bakarrik)", type: "number", step: "0.01", min: "0", def: 0 },
+      ],
+    },
+    viaje: {
+      col: "viajes", title: ["Idatzi bidaia", "Editatu bidaia"],
+      fields: () => [
+        { id: "fecha", label: "Data", type: "date", required: true, def: today() },
+        { id: "componente", label: "Kidea", type: "select", required: true, options: state.componentes.map((c) => [c.id, c.nombre]) },
+        { id: "boloId", label: "Emanaldia", type: "select", full: true, options: [["", "Emanaldirik gabe"], ...[...state.bolos].sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((b) => [b.id, boloName(b.id)])] },
+        { id: "trayecto", label: "Ibilbidea", type: "text", placeholder: "Donostia – Bilbo", full: true },
+        { id: "tipo", label: "Gastu mota", type: "select", options: TIPOS_GASTO.map((t) => [t, tipoEu(t)]), def: TIPOS_GASTO[0] },
+        { id: "km", label: "Kilometroak", type: "number", step: "1", min: "0" },
+        { id: "eurKm", label: "Km-ko prezioa (€)", type: "number", step: "0.01", min: "0", def: num(state.ajustes.eurKm) || EURKM_DEF },
+        { id: "peajes", label: "Bidesariak (€)", type: "number", step: "0.01", min: "0" },
+        { id: "importe", label: "Zenbatekoa guztira (€)", type: "number", step: "0.01", min: "0", required: true },
+        { id: "reembolsado", label: "Itzuli zaio dagoeneko", type: "yesno", def: false },
+        { id: "notas", label: "Oharrak", type: "textarea", full: true },
+      ],
+    },
+  };
+
+  function nextFactura() {
+    const y = String(new Date().getFullYear()), re = new RegExp("^" + y + "-(\\d+)$");
+    let max = 0;
+    state.bolos.forEach((b) => { const m = re.exec(String(b.facturaNum || "")); if (m) max = Math.max(max, +m[1]); });
+    return y + "-" + String(max + 1).padStart(3, "0");
+  }
+
+  let current = null;
+  function openForm(kind, id, prefill) {
+    const def = FORMS[kind];
+    const item = id ? state[def.col].find((x) => x.id === id) : null;
+    const values = Object.assign({}, prefill || {}, item || {});
+    current = { kind, id: id || null };
+    const ro = !state.canWrite;
+    const clientes = [...new Set(state.bolos.map((x) => x.cliente).filter(Boolean))];
+    const html = def.fields().map((f) => {
+      if (f.sep) return `<div class="field full sep">${esc(f.sep)}</div>`;
+      let v = values[f.id] !== undefined ? values[f.id] : f.def;
+      const fid = "fld-" + f.id, req = f.required ? " *" : "";
+      let input;
+      if (f.type === "select") input = `<select id="${fid}" ${ro ? "disabled" : ""}>${f.required && !v ? `<option value="">Aukeratu…</option>` : ""}${f.options.map(([val, lab]) => `<option value="${esc(val)}" ${String(v ?? "") === String(val) ? "selected" : ""}>${esc(lab)}</option>`).join("")}</select>`;
+      else if (f.type === "textarea") input = `<textarea id="${fid}" ${ro ? "readonly" : ""}>${esc(v || "")}</textarea>`;
+      else if (f.type === "yesno") input = `<div class="seg" role="radiogroup" aria-labelledby="${fid}-l">
+          <label><input type="radio" name="${fid}" value="1" ${v ? "checked" : ""} ${ro ? "disabled" : ""}><span>Bai</span></label>
+          <label><input type="radio" name="${fid}" value="0" ${!v ? "checked" : ""} ${ro ? "disabled" : ""}><span>Ez</span></label></div>`;
+      else if (f.type === "cena3") { const val = v === false ? "0" : v === "zehazteko" ? "z" : "1"; input = `<div class="seg" role="radiogroup" aria-labelledby="${fid}-l">
+          <label><input type="radio" name="${fid}" value="1" ${val === "1" ? "checked" : ""} ${ro ? "disabled" : ""}><span>Bai</span></label>
+          <label><input type="radio" name="${fid}" value="0" ${val === "0" ? "checked" : ""} ${ro ? "disabled" : ""}><span>Ez</span></label>
+          <label><input type="radio" name="${fid}" value="z" ${val === "z" ? "checked" : ""} ${ro ? "disabled" : ""}><span>Zehazteko</span></label></div>`; }
+      else if (f.type === "coches") {
+        const list = Array.isArray(v) ? v : [];
+        const cSorted = [...state.componentes].sort((a, b) => (!!a.ordezkoa - !!b.ordezkoa) || (a.nombre || "").localeCompare(b.nombre || "", "es"));
+        input = `<div class="coches" id="${fid}">${cSorted.map((c, ci) => { const it = list.find((x) => x.c === c.id); return `${c.ordezkoa && (ci === 0 || !cSorted[ci - 1].ordezkoa) ? `<div class="meta" style="font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.04em;padding-top:8px;border-top:2px solid var(--line)">Ordezkoak</div>` : ""}
+          <div class="coche-row" data-c="${esc(c.id)}" data-tray="${esc(it ? it.trayecto || "" : "")}">
+            <label class="check"><input type="checkbox" class="coche-on" ${it ? "checked" : ""} ${ro ? "disabled" : ""}> <span>${esc(c.nombre)}${c.instrumento ? ` <span class="meta" style="font-size:12px">· ${esc(c.instrumento)}</span>` : ""}</span></label>
+            <div class="coche-detail">
+              <div class="coche-line">
+                <input type="text" class="coche-tray" list="dl-rutas" placeholder="Idatzi ibilbidea: Azpeitia – Gasteiz" aria-label="${esc(c.nombre)}ren ibilbidea" value="${esc(it ? it.trayecto || "" : "")}" ${ro ? "readonly" : ""}>
+                ${ro ? "" : `<button type="button" class="btn small coche-calc">Kalkulatu</button>`}
+              </div>
+              <div class="coche-line">
+                <label class="mini">km <input type="number" class="coche-km" step="1" min="0" inputmode="decimal" value="${esc(it ? it.km ?? "" : "")}" ${ro ? "readonly" : ""}></label>
+                <label class="mini ap-toggle"><input type="checkbox" class="coche-ap" ${(it ? (it.autobidea !== undefined ? it.autobidea : num(it.peajes) > 0) : true) ? "checked" : ""} ${ro ? "disabled" : ""}> Bidesaria</label>
+                <label class="mini">bidesariak € <input type="number" class="coche-peajes" step="0.01" min="0" inputmode="decimal" value="${esc(it ? it.peajes ?? "" : "")}" ${ro ? "readonly" : ""}></label>
+                <span class="num coche-imp"></span>
+              </div>
+              <div class="coche-note meta">${esc(it && it.nota ? it.nota : "")}</div>
+              <div class="coche-links meta"></div>
+            </div>
+          </div>`; }).join("")}</div>`;
+      }
+      else if (f.type === "pagadores") {
+        const map = v && typeof v === "object" ? v : (kind === "materiala" && values.ordaindu ? { [values.ordaindu]: values.zenbatekoa } : {});
+        input = `<div class="coches" id="${fid}">${state.componentes.map((c) => `<div class="pag-row"><label for="pag-${esc(c.id)}">${esc(c.nombre)}</label><input type="number" id="pag-${esc(c.id)}" class="pag-in" data-c="${esc(c.id)}" step="0.01" min="0" inputmode="decimal" placeholder="0" value="${esc(has(map[c.id]) && num(map[c.id]) ? map[c.id] : "")}" ${ro ? "readonly" : ""}></div>`).join("")}<div class="pag-row pag-tot"><span>Guztira</span><span class="num" id="pag-total"></span></div></div>`;
+      }
+      else if (f.type === "multi") {
+        const sel = Array.isArray(v) && v.length ? v : (f.defSel || f.options.map((o) => o[0]));
+        const chk = ([val, lab, , ins]) => `<label><input type="checkbox" value="${esc(val)}" ${sel.includes(val) ? "checked" : ""} ${ro ? "disabled" : ""}> <span>${esc(lab)}${ins ? ` <span class="meta" style="font-size:12px">· ${esc(ins)}</span>` : ""}</span></label>`;
+        const tit = f.options.filter((o) => !o[2]), ord = f.options.filter((o) => o[2]);
+        input = ord.length
+          ? `<div id="${fid}" style="display:grid;gap:6px"><div class="multi">${tit.map(chk).join("") || '<span class="meta">Kiderik ez</span>'}</div><div class="multi"><span class="meta" style="font-weight:600;grid-column:1/-1;text-transform:uppercase;font-size:12px;letter-spacing:.04em">Ordezkoak</span>${ord.map(chk).join("")}</div></div>`
+          : `<div class="multi" id="${fid}">${tit.map(chk).join("")}</div>`;
+      } else input = `<input id="${fid}" type="${f.type}" ${f.step ? `step="${f.step}"` : ""} ${f.min ? `min="${f.min}"` : ""} ${f.list ? `list="${f.list}"` : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""} value="${esc(v ?? "")}" ${f.type === "number" ? 'inputmode="decimal"' : ""} ${ro ? "readonly" : ""}>`;
+      const extra = f.suggest && !ro ? ` <button type="button" class="linkbtn" id="btn-sug">Hurrengo zk.</button>` : "";
+      return `<div class="field ${f.full ? "full" : ""}" id="wrap-${f.id}"><label for="${fid}" id="${fid}-l">${esc(f.label)}${req}${extra}</label>${input}${f.hint ? `<span class="hint" style="margin:0">${esc(f.hint)}</span>` : ""}</div>`;
+    }).join("");
+    $("dialog").innerHTML = `
+      <h3>${def.title[id ? 1 : 0]}</h3>
+      <div class="form-grid">${html}</div>
+      ${kind === "bolo" ? `<div class="calc" id="calc"></div>` : ""}
+      ${kind === "viaje" ? `<p class="hint" id="km-hint" style="margin:0"></p>` : ""}
+      <div class="err" id="form-err" role="alert"></div>
+      <div class="actions">
+        ${id && !ro && !(kind === "componente" && state.componentes.some((c) => c.id === id && c.admin)) ? `<button type="button" class="btn danger" id="btn-del">Ezabatu</button>` : ""}
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="btn-cancel">${ro ? "Itxi" : "Utzi"}</button>
+        ${ro ? "" : `<button type="submit" class="btn primary" id="btn-save">Gorde</button>`}
+      </div>
+      <datalist id="dl-clientes">${clientes.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>
+      <datalist id="dl-rutas">${state.rutas.map((r) => `<option value="${esc(r.trayecto)}">`).join("")}</datalist>`;
+    $("overlay").hidden = false;
+    const first = $("dialog").querySelector("input:not([type=checkbox]):not([type=radio]), select");
+    if (first) first.focus();
+    if (kind === "bolo") { syncFacturaNum(); syncPagoExtra(); updateCalc(); updateCoches(); }
+    if (kind === "viaje") updateKm(false);
+    if (kind === "materiala" || kind === "bolo") updatePagTotal();
+  }
+
+  function updatePagTotal() { const el = $("pag-total"); if (!el) return; let t = 0; $("dialog").querySelectorAll(".pag-in").forEach((i) => (t += num(i.value))); el.textContent = money(round2(t)); }
+  function readForm() {
+    const def = FORMS[current.kind], data = {};
+    let missing = null;
+    def.fields().forEach((f) => {
+      if (f.sep) return;
+      const fid = "fld-" + f.id;
+      let v;
+      if (f.type === "yesno") { const r = $("dialog").querySelector(`input[name="${fid}"]:checked`); v = r ? r.value === "1" : false; }
+      else if (f.type === "cena3") { const r = $("dialog").querySelector(`input[name="${fid}"]:checked`); v = !r || r.value === "1" ? true : r.value === "0" ? false : "zehazteko"; }
+      else if (f.type === "multi") v = [...$(fid).querySelectorAll("input:checked")].map((i) => i.value);
+      else if (f.type === "pagadores") { v = {}; $(fid).querySelectorAll(".pag-in").forEach((i) => { const n = round2(num(i.value)); if (n > 0) v[i.dataset.c] = n; }); }
+      else if (f.type === "coches") v = [...$(fid).querySelectorAll(".coche-row")].filter((r) => r.querySelector(".coche-on").checked).map((r) => ({ c: r.dataset.c, autobidea: r.querySelector(".coche-ap").checked, manual: !!r.dataset.manual, trayecto: r.querySelector(".coche-tray").value.trim(), nota: r.querySelector(".coche-note").textContent, km: r.querySelector(".coche-km").value === "" ? null : round2(num(r.querySelector(".coche-km").value)), peajes: r.querySelector(".coche-peajes").value === "" ? null : round2(num(r.querySelector(".coche-peajes").value)) }));
+      else { const el = $(fid); if (!el) return; v = f.type === "number" ? (el.value === "" ? null : round2(num(el.value))) : el.value.trim(); }
+      if (f.required && (v === "" || v === null)) missing = missing || f.label;
+      data[f.id] = v;
+    });
+    if (current.kind === "bolo" && has(data.pagoIntegrante)) { const pe = $("fld-pagoIntegrante"); if (pe) data.pagoIntegrante = round2(data.pagoIntegrante - num(pe.dataset.extra)); }
+    return { data, missing };
+  }
+
+  function updateCalc() {
+    const { data } = readForm();
+    data.id = current.id || "__nuevo__";
+    const c = boloCalc(data);
+    const n = (data.tocan || []).length;
+    $("calc").innerHTML = `
+      <div><span>${c.facturado ? "Aurrekontua (BEZik gabe)" : "Aurrekontua (fakturarik gabe)"}</span><span class="num">${money(c.ingreso)}</span></div>
+      <div><span>− Kideei ordainketa (${n} × ${money(c.pagoBase)})</span><span class="num">${money(round2(c.pagoBase * n))}</span></div>
+      ${c.extraCena ? `<div><span>− Afaririk gabeko gehigarria kideei (${money(c.extraCena)} ÷ ${n} = ${money(c.extraPor)} bakoitzak)</span><span class="num">${money(round2(c.extraPor * n))}</span></div>` : ""}
+      ${(() => {
+        const otros = state.viajes.filter((v) => v.boloId === (current.id || "__nuevo__") && !v.auto);
+        const rate = has(data.eurKm) ? num(data.eurKm) : (num(state.ajustes.eurKm) || EURKM_DEF);
+        const coches = (data.coches || []).map((it) => ({ componente: it.c, importe: cocheImporte(it, rate) }));
+        const l = boloViajes(data, [...otros, ...coches]);
+        if (!l.total) return "";
+        return `<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div><span><strong>Bidaiak${afariGastuak(data).length ? " eta afaria" : ""}</strong> (${money(l.total)} ÷ ${l.n} = ${money(l.share)} bakoitzak)</span><span></span></div>${l.transfers.map((x) => `<div><span>${esc(compName(x.from))} → ${esc(compName(x.to))}</span><span class="num">${money(x.amount)}</span></div>`).join("") || `<div><span>Inork ez dio inori ezer zor</span><span></span></div>`}</div>`;
+      })()}
+      <div class="tot"><span>Kudeaketa gastuak</span><span class="num" style="color:${c.gestion < 0 ? "var(--bad)" : "inherit"}">${money(c.gestion)}</span></div>
+      ${c.facturado ? `<div style="margin-top:6px;color:var(--muted)"><span>Bezeroari kobratzekoa (%${IVA_DEF} BEZarekin)</span><span class="num">${money(c.aCobrar)}</span></div>` : ""}`;
+  }
+  function updateKm(fromKm) {
+    const km = num($("fld-km").value), rate = $("fld-eurKm").value === "" ? (num(state.ajustes.eurKm) || EURKM_DEF) : num($("fld-eurKm").value), peajes = num($("fld-peajes").value);
+    const coche = $("fld-tipo").value === TIPOS_GASTO[0];
+    ["km", "eurKm", "peajes"].forEach((k) => { const w = $("wrap-" + k); if (w) w.style.display = coche ? "" : "none"; });
+    const hint = $("km-hint");
+    if (coche && (km > 0 || peajes > 0)) {
+      const calc = round2(km * rate + peajes);
+      hint.textContent = `${km} km × ${money(rate)}/km${peajes ? " + " + money(peajes) + " bidesari" : ""} = ${money(calc)}`;
+      if (fromKm) $("fld-importe").value = calc.toFixed(2);
+    } else hint.textContent = "";
+  }
+
+  $("dialog").addEventListener("input", (e) => {
+    if (!current) return;
+    if (current.kind === "bolo" && (e.target.classList.contains("coche-km") || e.target.classList.contains("coche-peajes"))) { const row = e.target.closest(".coche-row"); delete row.dataset.km1; row.dataset.manual = "1"; const n = row.querySelector(".coche-note"); delete n.dataset.base; n.textContent = "Eskuz aldatua. Gordetzean, ibilbide hau gogoratuko da hurrengorako."; }
+    if (current.kind === "materiala" || current.kind === "bolo") updatePagTotal();
+    if (current.kind === "bolo") { updateCalc(); updateCoches(); }
+    if (current.kind === "viaje" && ["fld-km", "fld-tipo", "fld-eurKm", "fld-peajes"].includes(e.target.id)) updateKm(true);
+  });
+  function boloTarifa() {
+    const mod = $("fld-modalidad").value;
+    const r = $("dialog").querySelector('input[name="fld-cena"]:checked');
+    const cena = r ? r.value !== "0" : true;
+    $("fld-presupuesto").value = precioAuto(mod, cena);
+    $("fld-pagoIntegrante").value = pagoAuto(mod);
+    $("fld-pagoIntegrante").dataset.extra = "0";
+    syncPagoExtra();
+    syncFacturaNum();
+  }
+  function syncPagoExtra() {
+    const el = $("fld-pagoIntegrante"); if (!el) return;
+    const r = $("dialog").querySelector('input[name="fld-cena"]:checked');
+    const tc = $("fld-tocan"), n = tc ? tc.querySelectorAll("input:checked").length : 0;
+    const ex = r && r.value === "0" && n ? round2(tarifa().extra / n) : 0;
+    const old = num(el.dataset.extra);
+    if (ex !== old) { if (el.value !== "") el.value = round2(num(el.value) - old + ex); el.dataset.extra = ex; }
+  }
+  function syncAfari() { const w = $("wrap-afariOrdainketak"); if (!w) return; const r = $("dialog").querySelector('input[name="fld-cena"]:checked'); w.style.display = r && r.value === "0" ? "" : "none"; }
+  function syncFacturaNum() { syncAfari(); const sf = esSinFactura($("fld-modalidad").value); ["wrap-facturaNum", "wrap-facturaEmitida"].forEach((k) => { const w = $(k); if (w) w.style.display = sf ? "none" : ""; }); }
+  $("dialog").addEventListener("change", (e) => {
+    if (!current) return;
+    if (current.kind === "bolo" && (e.target.id === "fld-modalidad" || e.target.name === "fld-cena")) boloTarifa();
+    if (current.kind === "bolo" && e.target.classList.contains("coche-ap")) { const row = e.target.closest(".coche-row"); if (!e.target.checked) { row.querySelector(".coche-peajes").value = "0.00"; } if (row.querySelector(".coche-tray").value.trim()) { row.dataset.tray = ""; calcRuta(row, row.querySelector(".coche-calc")); } }
+    if (current.kind === "bolo" && e.target.classList.contains("coche-tray")) { const row = e.target.closest(".coche-row"); if (e.target.value.trim() && e.target.value.trim() !== row.dataset.tray) calcRuta(row, row.querySelector(".coche-calc")); }
+    if (current.kind === "bolo" && e.target.name === "fld-idaVuelta") { const ida = e.target.value === "1"; $("dialog").querySelectorAll(".coche-row").forEach((row) => applyIda(row, ida)); }
+    if (current.kind === "bolo") { syncPagoExtra(); updateCalc(); updateCoches(); }
+    if (current.kind === "viaje" && e.target.id === "fld-tipo") updateKm(true);
+  });
+
+  function closeForm() { $("overlay").hidden = true; current = null; $("dialog").innerHTML = ""; render(); }
+  $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeForm(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("overlay").hidden) closeForm(); });
+
+  $("dialog").addEventListener("click", (e) => {
+    const id = e.target.id;
+    if (id === "btn-cancel") return closeForm();
+    if (id === "btn-del") return confirmDelete();
+    if (id === "btn-del-yes") return doDelete();
+    if (id === "btn-del-no") return openForm(current.kind, current.id);
+    if (id === "btn-sug") { e.preventDefault(); $("fld-facturaNum").value = nextFactura(); return; }
+    if (id === "btn-save-aj") return saveAjustes();
+    const cb = e.target.closest(".coche-calc"); if (cb) return calcRuta(cb.closest(".coche-row"), cb);
+  });
+
+  function confirmDelete() {
+    const { kind, id } = current;
+    let extra = "";
+    if (kind === "componente") { const n = state.viajes.filter((v) => v.componente === id).length; if (n) extra = ` Bere ${n} bidaiak kiderik gabe geratuko dira.`; }
+    if (kind === "bolo") { const na = state.viajes.filter((v) => v.boloId === id && v.auto).length, nm = state.viajes.filter((v) => v.boloId === id && !v.auto).length; if (na) extra += ` Bere ${na} auto-bidaiak ere ezabatuko dira.`; if (nm) extra += ` Beste ${nm} bidaia emanaldirik gabe geratuko dira.`; }
+    const nombre = { componente: "kide", bolo: "emanaldi", viaje: "bidaia", ruta: "ibilbide", materiala: "erosketa" }[kind];
+    $("dialog").innerHTML = `<h3>${nombre.charAt(0).toUpperCase() + nombre.slice(1)} hau ezabatu?</h3><p style="margin:0">Ezin da desegin.${esc(extra)}</p>
+      <div class="actions"><button type="button" class="btn" id="btn-del-no">Itzuli</button><button type="button" class="btn primary" id="btn-del-yes" style="background:var(--bad);border-color:var(--bad)">Bai, ezabatu</button></div>`;
+  }
+  async function doDelete() {
+    const { kind, id } = current;
+    try {
+      await state.db.collection(FORMS[kind].col).doc(id).delete();
+      if (kind === "bolo") { for (const v of state.viajes.filter((x) => x.auto && x.boloId === id)) await state.db.collection("viajes").doc(v.id).delete(); }
+      closeForm(); toast("Ezabatuta");
+    }
+    catch (er) { closeForm(); handleWriteError(er); }
+  }
+
+  $("dialog").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!current || !state.db || current.kind === "ajustes") return;
+    const def = FORMS[current.kind];
+    const { data, missing } = readForm();
+    if (missing) { $("form-err").textContent = `Falta da: ${missing}.`; return; }
+    if (current.kind === "bolo" && (!data.tocan || !data.tocan.length)) { $("form-err").textContent = "Markatu jo zuen kide bat gutxienez."; return; }
+    const prev = current.id ? state[def.col].find((x) => x.id === current.id) : null;
+    data.actualizado = new Date().toISOString();
+    data.creado = prev && prev.creado ? prev.creado : data.actualizado;
+    if ((current.kind === "bolo" || current.kind === "materiala") && prev && prev.ordainduak) data.ordainduak = prev.ordainduak;
+    if ((current.kind === "componente" || current.kind === "ordezkoa") && prev) { if (prev.uid) data.uid = prev.uid; if (prev.admin) data.admin = true; }
+    const newPin = (current.kind === "componente" || current.kind === "ordezkoa") ? String(data.pin || "").trim() : "";
+    delete data.pin; delete data.email;
+    if (newPin && !/^\d{4,8}$/.test(newPin)) { $("form-err").textContent = "PINak 4-8 zenbaki izan behar ditu."; return; }
+    if (current.kind === "bolo" && data.cena !== false) data.afariOrdainketak = {};
+    if (current.kind === "bolo") data.extraCena = data.cena === false ? (prev && prev.cena === false && has(prev.extraCena) ? num(prev.extraCena) : tarifa().extra) : 0;
+    if (current.kind === "materiala" && (!data.banatu || !data.banatu.length)) { $("form-err").textContent = "Markatu kide bat gutxienez banaketan."; return; }
+    if (current.kind === "materiala" && !Object.keys(data.ordainketak || {}).length) { $("form-err").textContent = "Idatzi nork zenbat ordaindu duen."; return; }
+    if (current.kind === "materiala") { data.zenbatekoa = round2(Object.values(data.ordainketak).reduce((a, x) => a + num(x), 0)); delete data.ordaindu; }
+    const btn = $("btn-save"); btn.disabled = true; btn.textContent = "Gordetzen…";
+    try {
+      const col = state.db.collection(def.col);
+      if (current.kind === "ruta" && !rutaKey(data.trayecto)) { btn.disabled = false; btn.textContent = "Gorde"; $("form-err").textContent = "Idatzi abiapuntua eta helmuga marratxo batez bereizita: Azpeitia – Gasteiz."; return; }
+      if (current.kind === "ruta" && current.id && current.id !== rutaKey(data.trayecto)) await col.doc(current.id).delete();
+      const ref = current.kind === "ruta" ? col.doc(rutaKey(data.trayecto)) : (current.id ? col.doc(current.id) : col.doc());
+      await ref.set(data);
+      if (newPin && window.sustraiSetPin) await window.sustraiSetPin(ref.id, newPin);
+      if (current.kind === "bolo") { await syncCoches(ref.id, data); await guardarRutas(data); }
+      closeForm(); toast("Gordeta");
+    } catch (er) { btn.disabled = false; btn.textContent = "Gorde"; handleWriteError(er, true); }
+  });
+
+  async function guardarRutas(b) {
+    const ida = b.idaVuelta !== false;
+    for (const it of (b.coches || [])) {
+      if (!it.manual || !it.trayecto || !has(it.km)) continue;
+      const key0 = rutaKey(it.trayecto); if (!key0) continue;
+      const key = key0 + (it.autobidea ? "__ap" : "__doan");
+      const div = ida ? 2 : 1;
+      try { await state.db.collection("rutas").doc(key).set({ autobidea: !!it.autobidea, trayecto: it.trayecto, km: round2(num(it.km) / div), peajes: round2(num(it.peajes) / div), actualizado: new Date().toISOString() }); } catch (er) {}
+    }
+  }
+  const cocheImporte = (it, rate) => round2(num(it.km) * rate + num(it.peajes));
+  async function syncCoches(boloId, b) {
+    const rate = has(b.eurKm) ? num(b.eurKm) : (num(state.ajustes.eurKm) || EURKM_DEF);
+    const col = state.db.collection("viajes");
+    const want = (b.coches || []).filter((it) => it.c);
+    const keep = new Set();
+    for (const it of want) {
+      const id = "auto-" + boloId + "-" + it.c;
+      keep.add(id);
+      const prev = state.viajes.find((x) => x.id === id);
+      const body = {
+        auto: true, boloId, componente: it.c, fecha: b.fecha, trayecto: it.trayecto || "", tipo: TIPOS_GASTO[0],
+        km: it.km, eurKm: rate, peajes: it.peajes, importe: cocheImporte(it, rate),
+        reembolsado: prev ? !!prev.reembolsado : false, notas: "Emanalditik", actualizado: new Date().toISOString(),
+        creado: prev && prev.creado ? prev.creado : new Date().toISOString(),
+      };
+      if (!prev || ["fecha", "trayecto", "km", "eurKm", "peajes", "importe", "componente"].some((k) => prev[k] !== body[k])) await col.doc(id).set(body);
+    }
+    for (const v of state.viajes.filter((x) => x.auto && x.boloId === boloId && !keep.has(x.id))) await col.doc(v.id).delete();
+  }
+  function applyIda(row, ida) {
+    if (!row.dataset.km1) return;
+    const km = num(row.dataset.km1), pe = num(row.dataset.pe1);
+    row.querySelector(".coche-km").value = ida ? km * 2 : km;
+    row.querySelector(".coche-peajes").value = (ida ? round2(pe * 2) : pe).toFixed(2);
+    const n = row.querySelector(".coche-note");
+    if (n.dataset.base) n.textContent = n.dataset.base.replace("{IDA}", ida ? ", ×2 joan-etorria" : ", joatea bakarrik");
+  }
+  function rutaPrompt(tray, ap) {
+    const refs = state.rutas.slice(0, 40).map((r) => `- ${String(r.trayecto).replace(/[\n"]/g, " ").slice(0, 80)}: ${num(r.km)} km, ${num(r.peajes)} € de peajes (solo ida)`).join("\n");
+    return `Eres un asistente que estima rutas en coche en España (sobre todo País Vasco y Navarra).
+Trayecto: "${tray.replace(/"/g, "'")}" (solo ida, de centro a centro de cada localidad).
+Trayectos ya medidos por el grupo (son datos reales: úsalos como referencia para calibrar distancias y peajes de rutas parecidas o que compartan tramos):
+${refs || "- (ninguno)"}
+Referencias de peajes 2026 en Gipuzkoa para turismos (AP-8, Bidegi): barrera de Irun unos 2,24 €; barrera de Zarautz unos 2,80 €. La N-1, GI-20, A-15 y N-121-A no tienen peaje para turismos. La AP-15 de Navarra y la AP-68 sí tienen peaje.
+${ap ? "Usa la ruta más rápida aunque tenga autopistas de peaje (AP-8 y otras), como la propondría la Guía Michelin." : "La ruta debe EVITAR todos los peajes: solo carreteras gratuitas (N-1, GI-20, GI-636, N-121-A, N-634…), la más rápida sin peaje. peajes debe ser 0."}
+Calcula:
+- km: distancia por carretera en kilómetros, solo ida, número entero.
+- peajes: coste total de peajes en euros para un turismo, solo ida, por esa ruta (0 si la ruta habitual no tiene peaje).
+- ruta: carreteras principales, muy breve (ej. "GI-631, AP-1").
+Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
+  }
+  function rutaGuardada(tray, ap) {
+    const key = rutaKey(tray); if (!key) return null;
+    return state.rutas.find((x) => x.id === key + (ap ? "__ap" : "__doan")) || state.rutas.find((x) => x.id === key && (ap ? num(x.peajes) > 0 : num(x.peajes) === 0)) || null;
+  }
+  async function bidesariaJoaneko(tray, ap) {
+    if (!ap) return 0;
+    const g = rutaGuardada(tray, true); if (g) return num(g.peajes);
+    let sample = null; try { sample = await window.claude.use("sample"); } catch (er) {}
+    if (!sample) throw new Error("no sample");
+    const v = await sample.json(rutaPrompt(tray, true), { modelTier: "complex" });
+    return round2(num(v && v.peajes));
+  }
+  async function cambiarBidesaria(v) {
+    if (!state.db || !state.canWrite || busy.has(v.id)) return;
+    const ap = !(v.autobidea !== undefined ? v.autobidea : num(v.peajes) > 0);
+    const b = v.boloId && state.bolos.find((x) => x.id === v.boloId);
+    const ida = v.auto && b ? b.idaVuelta !== false : false;
+    if (ap && !v.trayecto) { toast("Bidaiak ez du ibilbiderik: idatzi ibilbidea bidesaria kalkulatzeko."); return; }
+    busy.add(v.id); toast(ap ? "Bidesaria kalkulatzen…" : "Bidesaria kentzen…");
+    try {
+      const pe1 = await bidesariaJoaneko(v.trayecto, ap);
+      const peajes = round2(ida ? pe1 * 2 : pe1);
+      const rate = num(v.eurKm) || num(state.ajustes.eurKm) || EURKM_DEF;
+      const importe = round2(num(v.km) * rate + peajes);
+      if (v.auto && b) {
+        const coches = (b.coches || []).map((it) => it.c === v.componente ? { ...it, autobidea: ap, peajes, nota: ap ? `Autobidetik: ${money(pe1)} bidesari joaneko${ida ? ", ×2 joan-etorria" : ""}.` : "Bidesaririk gabe." } : it);
+        await state.db.collection("bolos").doc(b.id).update({ coches, actualizado: new Date().toISOString() });
+      }
+      await state.db.collection("viajes").doc(v.id).update({ autobidea: ap, peajes, importe, actualizado: new Date().toISOString() });
+      if (ap && v.trayecto && !rutaGuardada(v.trayecto, true) && rutaKey(v.trayecto)) { try { await state.db.collection("rutas").doc(rutaKey(v.trayecto) + "__ap").set({ trayecto: v.trayecto, km: round2(num(v.km) / (ida ? 2 : 1)), peajes: pe1, autobidea: true, actualizado: new Date().toISOString() }); } catch (er) {} }
+      toast(ap ? `Bidesaria: ${money(peajes)} ✓` : "Bidesaria kenduta");
+    } catch (er) {
+      if (er && er.code) handleWriteError(er); else toast("Ezin izan da bidesaria kalkulatu. Editatu emanaldia eta jarri eskuz.");
+    } finally { busy.delete(v.id); }
+  }
+  // ---------- PDF: zorren txostena ----------
+  function pdfBytes(pages) {
+    const enc = (s) => {
+      let o = "";
+      for (const ch of String(s)) {
+        const c = ch.codePointAt(0);
+        let k = c < 256 ? c : { 0x20ac: 0x80, 0x2013: 0x96, 0x2014: 0x97, 0x2026: 0x85, 0x2019: 0x92, 0x2018: 0x91, 0x201c: 0x93, 0x201d: 0x94, 0x2022: 0x95, 0x202f: 0x20, 0x2192: -1 }[c];
+        if (k === -1) { o += "->"; continue; }
+        if (k === undefined) k = 0x3f;
+        const x = String.fromCharCode(k);
+        o += x === "(" || x === ")" || x === "\\" ? "\\" + x : x;
+      }
+      return o;
+    };
+    const objs = [];
+    const add = (s) => { objs.push(s); return objs.length; };
+    add("<< /Type /Catalog /Pages 2 0 R >>");
+    add("");
+    add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+    add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+    const kids = [];
+    pages.forEach((ops, i) => {
+      const body = ops.map((o) => o.t !== undefined ? `${o.c || "0 0 0"} rg BT /F${o.b ? 2 : 1} ${o.s} Tf ${o.x.toFixed(2)} ${o.y.toFixed(2)} Td (${enc(o.t)}) Tj ET` : o.raw).join("\n")
+        + `\n0.45 0.45 0.45 rg BT /F1 8 Tf 40 28 Td (${enc("Sustrai kontuak · " + (i + 1) + "/" + pages.length)}) Tj ET`;
+      const c = add(`<< /Length ${body.length} >>\nstream\n${body}\nendstream`);
+      kids.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${c} 0 R >>`));
+    });
+    objs[1] = `<< /Type /Pages /Kids [${kids.map((k) => k + " 0 R").join(" ")}] /Count ${kids.length} >>`;
+    let out = "%PDF-1.4\n%\xe2\xe3\xcf\xd3\n";
+    const offs = [];
+    objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map((n) => String(n).padStart(10, "0") + " 00000 n \n").join("");
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    const bytes = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 255;
+    return bytes;
+  }
+  function pdfWidth(s, size) {
+    let w = 0;
+    for (const ch of String(s)) w += /[0-9€]/.test(ch) ? 556 : /[ ,.:;  iljtf]/.test(ch) ? 278 : ch === "-" || ch === "r" ? 333 : /[A-ZÑ]/.test(ch) ? 667 : /[mwMW]/.test(ch) ? 833 : 540;
+    return (w / 1000) * size;
+  }
+  function deudasReport() {
+    const bolos = state.bolos.filter((b) => inYear(b.fecha)).sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+    const porBolo = [], pendG = {}, meses = [];
+    bolos.forEach((b) => {
+      const l = boloViajes(b); if (!l.total) return;
+      const pg = boloPagos(b, l);
+      porBolo.push({ b, l, pg });
+      pg.pending.forEach((x) => { pendG[x.from] = round2((pendG[x.from] || 0) - x.rest); pendG[x.to] = round2((pendG[x.to] || 0) + x.rest); });
+      if (pg.pending.length) {
+        const m = (b.fecha || "").slice(0, 7);
+        let e = meses.find((x) => x.m === m); if (!e) { e = { m, bal: {}, n: 0 }; meses.push(e); }
+        e.n++;
+        pg.pending.forEach((x) => { e.bal[x.from] = round2((e.bal[x.from] || 0) - x.rest); e.bal[x.to] = round2((e.bal[x.to] || 0) + x.rest); });
+      }
+    });
+    meses.forEach((e) => (e.tr = liquidar(e.bal)));
+    return { porBolo, meses, deudas: liquidar(pendG) };
+  }
+  async function exportPdf() {
+    const R = deudasReport();
+    const pages = []; let ops = [], y = 800;
+    const L = 40, RX = 555, RED = "0.82 0.10 0.11", GREY = "0.40 0.40 0.40", GREEN = "0.11 0.48 0.27";
+    const newPage = () => { pages.push(ops); ops = []; y = 800; };
+    const need = (h) => { if (y - h < 50) newPage(); };
+    const text = (t, o = {}) => ops.push({ t, x: o.x ?? L, y, s: o.s || 10, b: !!o.b, c: o.c });
+    const right = (t, o = {}) => text(t, { ...o, x: RX - pdfWidth(t, o.s || 10) * (o.b ? 1.07 : 1) });
+    const rule = (w = 0.5, c = "0.80 0.80 0.80") => ops.push({ raw: `${c} RG ${w} w ${L} ${y.toFixed(2)} m ${RX} ${y.toFixed(2)} l S` });
+    const trLines = (list, withState) => list.forEach((x) => {
+      need(16);
+      text(`${compName(x.from)}  ->  ${compName(x.to)}`, { x: L + 12, c: withState && x.paid ? GREY : undefined });
+      if (withState) text(x.paid ? "Ordainduta" : "Ordaindu gabe", { x: 400, s: 9, c: x.paid ? GREEN : RED });
+      right(money(x.amount), { b: true, c: withState && x.paid ? GREY : undefined });
+      y -= 15;
+    });
+    text("SUSTRAI", { s: 22, b: true }); text("· nork nori zor dio", { x: L + pdfWidth("SUSTRAI ", 22) + 4, s: 22, b: true, c: RED }); y -= 20;
+    text(`Epea: ${periodoTxt()}  ·  ${fdate(today())}an sortua`, { s: 10, c: GREY }); y -= 12;
+    rule(2, RED); y -= 24;
+    text("Ordaintzeko daudenak", { s: 14, b: true }); y -= 16;
+    text('"A -> B": A-k B-ri ordaindu behar dio.', { s: 9, c: GREY }); y -= 12;
+    text("Emanaldi bakoitzeko bidaiak eta afariak jo zuten kideen artean banatzen dira, zati berdinetan.", { s: 9, c: GREY }); y -= 20;
+    if (!R.deudas.length) { text("Dena kitatuta. Inork ez dio inori ezer zor.", { b: true, c: GREEN }); y -= 18; }
+    else {
+      R.meses.forEach((e) => { need(36); text(mesLargo(e.m).toUpperCase(), { b: true, s: 10.5 }); right(`${e.n} emanaldi kitatu gabe`, { s: 9, c: GREY }); y -= 6; rule(); y -= 14; trLines(e.tr, false); y -= 8; });
+      if (R.meses.length > 1) { need(36); text("GUZTIRA, HILABETEAK BATUTA", { b: true, s: 10.5, c: RED }); y -= 6; rule(1, RED); y -= 14; trLines(R.deudas, false); y -= 8; }
+    }
+    y -= 10; need(40); text("Emanaldiz emanaldi", { s: 14, b: true }); y -= 20;
+    R.porBolo.forEach(({ b, l, pg }) => {
+      const gastos = [...viajesDeBolo(b).map((v) => ({ c: v.componente, i: num(v.importe), k: v.tipo === TIPOS_GASTO[0] ? "autoa" + (num(v.km) ? ` ${String(num(v.km)).replace(".", ",")} km` : "") : tipoEu(v.tipo).toLowerCase() })), ...afariGastuak(b).map((a) => ({ c: a.componente, i: a.importe, k: "afaria/bazkaria" }))];
+      need(60 + 15 * (gastos.length + pg.list.length));
+      text(`${b.evento || "Emanaldia"}  ·  ${fdate(b.fecha)}`, { b: true, s: 11 }); right(pg.done ? "Kitatuta" : "Kitatu gabe", { s: 9, b: true, c: pg.done ? GREEN : RED }); y -= 6; rule(); y -= 14;
+      gastos.forEach((g) => { need(14); text(`${compName(g.c)} · ${g.k}`, { x: L + 12, s: 9, c: GREY }); right(money(g.i), { s: 9, c: GREY }); y -= 13; });
+      need(16); text(`Guztira ${money(l.total)} ÷ ${l.n} kide = ${money(l.share)} bakoitzak`, { x: L + 12, s: 9 }); y -= 16;
+      if (pg.list.length) trLines(pg.list, true); else { text("Inork ez dio inori ezer zor.", { x: L + 12, s: 9, c: GREY }); y -= 15; }
+      y -= 12;
+    });
+    const vias = state.viajes.filter((v) => inYear(v.fecha) && v.componente);
+    if (vias.length) {
+      y -= 10; need(60); text("Kide bakoitzaren bidaiak", { s: 14, b: true }); y -= 20;
+      [...state.componentes].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es")).forEach((c) => {
+        const vs = vias.filter((v) => v.componente === c.id).sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+        if (!vs.length) return;
+        const kmT = round2(vs.reduce((s, v) => s + num(v.km), 0)), eT = round2(vs.reduce((s, v) => s + num(v.importe), 0));
+        need(50 + 14 * Math.min(vs.length, 4));
+        text(c.nombre, { b: true, s: 11 }); right(`${vs.length} bidaia`, { s: 9, c: GREY }); y -= 6; rule(); y -= 14;
+        vs.forEach((v) => {
+          need(16);
+          const b = state.bolos.find((x) => x.id === v.boloId);
+          let desc = [b ? (b.evento || "Emanaldia") : "Emanaldirik gabe", v.trayecto, v.tipo === TIPOS_GASTO[0] ? "" : tipoEu(v.tipo)].filter(Boolean).join(" · ");
+          while (desc.length > 4 && pdfWidth(desc, 9) > 290) desc = desc.slice(0, -2);
+          if (desc !== [b ? (b.evento || "Emanaldia") : "Emanaldirik gabe", v.trayecto, v.tipo === TIPOS_GASTO[0] ? "" : tipoEu(v.tipo)].filter(Boolean).join(" · ")) desc = desc.trim() + "…";
+          text(fdate(v.fecha), { x: L + 12, s: 9, c: GREY });
+          text(desc, { x: L + 72, s: 9 });
+          if (num(v.km)) { const k = String(num(v.km)).replace(".", ",") + " km"; text(k, { x: 470 - pdfWidth(k, 9), s: 9, c: GREY }); }
+          right(money(num(v.importe)), { s: 9 });
+          y -= 14;
+        });
+        need(18); y -= 2;
+        text("Guztira", { x: L + 12, s: 9, b: true });
+        if (kmT) { const k = String(kmT).replace(".", ",") + " km"; text(k, { x: 470 - pdfWidth(k, 9) * 1.07, s: 9, b: true }); }
+        right(money(eT), { s: 9, b: true }); y -= 22;
+      });
+    }
+    pages.push(ops);
+    const bytes = pdfBytes(pages);
+    const fname = `Sustrai-zorrak-${state.year === "all" ? "guztia" : state.year}-${today()}.pdf`;
+    let dl = null; try { dl = await window.claude.use("downloads"); } catch (er) {}
+    if (!dl) { toast("Ikuspegi honetan ezin da PDFa deskargatu."); return; }
+    try { await dl.save({ filename: fname, data: new Blob([bytes], { type: "application/pdf" }) }); toast("PDFa deskargatuta ✓"); }
+    catch (er) { if (er && er.code === "declined") return; toast(er && er.code === "rate_limited" ? "Itxaron pixka bat eta saiatu berriro." : "Ezin izan da PDFa deskargatu."); }
+  }
+
+  // ---------- Google Maps (Claude mahaigaineko aplikazioaren nabigatzailea) ----------
+  const GM = "host:claude_browser";
+  let gmTab = null, gmLast = "", gmLastUrl = "", gmOff = false;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function gmapsDisponible() {
+    if (gmOff) return false;
+    let mcp = null; try { mcp = await window.claude.use("mcp"); } catch (er) {}
+    if (!mcp) { gmOff = true; return false; }
+    try { const l = await mcp.listTools(GM); if (!l || !l.servers || !l.servers.some((s) => s.server === GM)) { gmOff = true; return false; } } catch (er) { gmOff = true; return false; }
+    return true;
+  }
+  const gmText = (r) => {
+    const blocks = r && Array.isArray(r.content) ? r.content.filter((b) => b && b.type === "text").map((b) => b.text).join("\n") : "";
+    if (blocks) return blocks;
+    const p = r && r.payload !== undefined ? r.payload : r;
+    return typeof p === "string" ? p : JSON.stringify(p || "");
+  };
+  function gmParse(t, laburrena) {
+    const i = t.indexOf("Copiar enlace"), s = i >= 0 ? t.slice(i) : t;
+    const re = /(\d{1,4}(?:[.,]\d+)?)\s*km\s*\n\s*por\s+([^\n]+)/g;
+    const all = []; let m;
+    while ((m = re.exec(s))) {
+      const km = Math.round(num(m[1].replace(",", ".")) * 10) / 10;
+      if (!km) continue;
+      const rest = s.slice(m.index + m[0].length).split(/\n\s*\d+\s*(?:h|min)\b/)[0];
+      all.push({ km, ruta: m[2].trim().slice(0, 80), peaje: /peaje|toll|péage|bidesari/i.test(rest) });
+    }
+    if (!all.length) return null;
+    return laburrena ? all.reduce((a, b) => (b.km < a.km ? b : a)) : all[0];
+  }
+  async function gmapsKm(tray, ap) {
+    const mcp = await window.claude.use("mcp");
+    let pts = tray.split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+/).map((x) => x.trim()).filter(Boolean);
+    if (pts.length < 2) pts = tray.split("-").map((x) => x.trim()).filter(Boolean);
+    if (pts.length < 2) return null;
+    const enc = (x) => encodeURIComponent(x).replace(/%20/g, "+");
+    const url = `https://www.google.com/maps/dir/${enc(pts[0])}/${enc(pts[pts.length - 1])}/${ap ? "" : "data=!4m3!4m2!2m1!2b1"}?hl=es`;
+    const fatal = (er) => er && ["server_not_connected", "not_in_manifest", "blocked_by_policy", "not_granted", "capability_disabled", "capability_removed", "cancelled", "approval_required"].includes(er.code);
+    let ok = false;
+    if (gmTab !== null) {
+      try { await mcp.callTool(GM, "navigate", { url, tabId: gmTab }, { cache: false }); ok = true; }
+      catch (er) { if (fatal(er)) { if (er.code !== "cancelled") gmOff = true; throw er; } gmTab = null; }
+    }
+    if (!ok) {
+      try {
+        const r = await mcp.callTool(GM, "preview_start", { url }, { cache: false });
+        const m = /tab_?id["'\s]*[:=]\s*["']?([\w-]+)/i.exec(gmText(r));
+        gmTab = m ? (/^\d+$/.test(m[1]) ? +m[1] : m[1]) : null;
+      } catch (er) { if (fatal(er) && er.code !== "cancelled") gmOff = true; throw er; }
+    }
+    for (let i = 0; i < 8; i++) {
+      await sleep(1500);
+      try {
+        const r = await mcp.callTool(GM, "get_page_text", gmTab !== null ? { tabId: gmTab } : {}, { cache: false });
+        const t = gmText(r);
+        if (t === gmLast && url !== gmLastUrl) continue;
+        const res = gmParse(t, !ap);
+        if (res) { gmLast = t; gmLastUrl = url; return res; }
+      } catch (er) { if (fatal(er)) throw er; }
+    }
+    return null;
+  }
+  async function calcRuta(row, btn) {
+    if (row.dataset.busy) return;
+    const tray = row.querySelector(".coche-tray").value.trim();
+    const note = row.querySelector(".coche-note");
+    if (!tray) { note.textContent = "Idatzi ibilbidea, adibidez: Azpeitia – Gasteiz."; return; }
+    const r0 = $("dialog").querySelector('input[name="fld-idaVuelta"]:checked');
+    const ida0 = r0 ? r0.value === "1" : true;
+    const key = rutaKey(tray);
+    const ap = row.querySelector(".coche-ap").checked;
+    const saved = key && (state.rutas.find((x) => x.id === key + (ap ? "__ap" : "__doan")) || state.rutas.find((x) => x.id === key && (ap ? num(x.peajes) > 0 : num(x.peajes) === 0)));
+    if (saved) {
+      row.dataset.km1 = num(saved.km); row.dataset.pe1 = num(saved.peajes); row.dataset.tray = tray; delete row.dataset.manual;
+      note.dataset.base = `Gordetako ibilbidea${ap ? " (autobidetik)" : " (bidesaririk gabe)"}: ${num(saved.km)} km eta ${money(num(saved.peajes))} bidesari joaneko{IDA}.`;
+      applyIda(row, ida0); updateCoches(); return;
+    }
+    if (!key) { note.textContent = "Idatzi abiapuntua eta helmuga marratxo batez bereizita: Azpeitia – Gasteiz."; return; }
+    let sample = null;
+    try { sample = await window.claude.use("sample"); } catch (er) {}
+    // 1) Google Maps, Claude mahaigaineko aplikazioaren nabigatzailearen bidez (ahal denean)
+    const rutaHook = typeof window.sustraiRouteKm === "function";
+    if (rutaHook || await gmapsDisponible()) {
+      row.dataset.busy = "1";
+      if (btn) { btn.disabled = true; btn.textContent = "Kalkulatzen…"; }
+      note.textContent = "Ibilbidea kalkulatzen…";
+      try {
+        const gm = rutaHook ? await window.sustraiRouteKm(tray, ap) : await gmapsKm(tray, ap);
+        if (gm) {
+          let pe = 0, peNota = "";
+          if (ap) {
+            const g = rutaGuardada(tray, true);
+            if (g && num(g.peajes) > 0) { pe = num(g.peajes); peNota = "gordetako bidesaria"; }
+            else if (sample) {
+              note.textContent = "Bidesaria kalkulatzen…";
+              try { const v = await sample.json(rutaPrompt(tray, true), { modelTier: "complex" }); pe = round2(num(v && v.peajes)); peNota = "bidesaria estimatua"; } catch (er) { peNota = "jarri bidesaria eskuz"; }
+            } else peNota = "jarri bidesaria eskuz";
+          }
+          const r1 = $("dialog").querySelector('input[name="fld-idaVuelta"]:checked');
+          const ida1 = r1 ? r1.value === "1" : true;
+          row.dataset.km1 = gm.km; row.dataset.pe1 = pe; row.dataset.tray = tray; row.dataset.manual = "1";
+          applyIda(row, ida1);
+          note.dataset.base = `${gm.fuente || "Google Maps"}: ${String(gm.km).replace(".", ",")} km joaneko, ${gm.ruta} bidez${ap ? `; ${money(pe)} bidesari (${peNota})` : ", bidesaririk gabe"}{IDA}. Gordetzean, ibilbide hau gogoratuko da.`;
+          note.textContent = note.dataset.base.replace("{IDA}", ida1 ? ", ×2 joan-etorria" : ", joatea bakarrik");
+          delete row.dataset.busy; if (btn) { btn.disabled = false; btn.textContent = "Berriro kalkulatu"; }
+          updateCoches(); updateCalc();
+          return;
+        }
+      } catch (er) {}
+      delete row.dataset.busy; if (btn) { btn.disabled = false; btn.textContent = "Kalkulatu"; }
+    }
+    if (!sample) { if (!note.textContent || /kalkulatzen/i.test(note.textContent)) note.textContent = rutaHook ? "Ezin izan da ibilbidea kalkulatu. Egiaztatu herrien izenak edo idatzi km-ak eskuz." : "Kalkulu automatikoa ez dago erabilgarri. Idatzi km-ak eta bidesariak eskuz (edo jarri OpenRouteService gakoa config.js-n)."; return; }
+    const r = $("dialog").querySelector('input[name="fld-idaVuelta"]:checked');
+    const ida = r ? r.value === "1" : true;
+    row.dataset.busy = "1";
+    if (btn) { btn.disabled = true; btn.textContent = "Kalkulatzen…"; }
+    note.textContent = "Distantzia eta bidesariak kalkulatzen…";
+    const prompt = rutaPrompt(tray, ap);
+    try {
+      const v = await sample.json(prompt, { modelTier: "complex" });
+      const km = Math.round(num(v && v.km)), pe = ap ? round2(num(v && v.peajes)) : 0;
+      if (!km) throw new Error("sin km");
+      row.dataset.km1 = km; row.dataset.pe1 = pe; row.dataset.tray = tray; delete row.dataset.manual;
+      applyIda(row, ida);
+      note.dataset.base = `Estimazioa${ap ? " (autobidetik)" : " (bidesaririk gabe)"}: ${km} km eta ${money(pe)} bidesari joaneko{IDA}${v.ruta ? " · " + String(v.ruta).slice(0, 80) + " bidez" : ""}. Egiaztatu; zuzentzen baduzu, gogoratuko da.`;
+      note.textContent = note.dataset.base.replace("{IDA}", ida ? ", ×2 joan-etorria" : ", joatea bakarrik");
+      updateCoches();
+    } catch (er) {
+      note.textContent = er && er.code === "rate_limited" ? "Kontsulta gehiegi jarraian. Itxaron pixka bat eta saiatu berriro." : er && er.code === "not_granted" ? "Ez duzu kalkulu automatikoa baimendu. Idatzi km-ak eta bidesariak eskuz." : "Ezin izan dut ibilbide hori kalkulatu. Idatzi herri edo hirien izenekin, edo jarri km-ak eskuz.";
+    } finally { delete row.dataset.busy; if (btn) { btn.disabled = false; btn.textContent = "Berriro kalkulatu"; } updateCoches(); }
+  }
+  function updateCoches() {
+    const box = $("fld-coches"); if (!box) return;
+    const rate = $("fld-eurKm").value === "" ? (num(state.ajustes.eurKm) || EURKM_DEF) : num($("fld-eurKm").value);
+    box.querySelectorAll(".coche-row").forEach((r) => {
+      const on = r.querySelector(".coche-on").checked;
+      r.querySelector(".coche-detail").style.display = on ? "" : "none";
+      const apOn = r.querySelector(".coche-ap").checked, pin = r.querySelector(".coche-peajes");
+      pin.disabled = !apOn || !state.canWrite; if (!apOn && pin.value !== "" && num(pin.value) !== 0) pin.value = "0.00";
+      const pts = rutaPuntos(r.querySelector(".coche-tray").value), lk = r.querySelector(".coche-links");
+      if (lk) {
+        let rawPts = r.querySelector(".coche-tray").value.split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+/).map((x) => x.trim()).filter(Boolean);
+        if (rawPts.length < 2) rawPts = r.querySelector(".coche-tray").value.split("-").map((x) => x.trim()).filter(Boolean);
+        if (pts.length >= 2 && rawPts.length >= 2) {
+          const o = encodeURIComponent(rawPts[0]), d = encodeURIComponent(rawPts[rawPts.length - 1]);
+          const html = `Egiaztatu: <a href="https://www.viamichelin.es/itinerarios" target="_blank" rel="noopener">ViaMichelin</a> · <a href="https://www.google.com/maps/dir/?api=1&origin=${o}&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a>`;
+          if (lk.innerHTML !== html) lk.innerHTML = html;
+        } else lk.innerHTML = "";
+      }
+      r.querySelector(".coche-imp").textContent = on ? money(cocheImporte({ km: r.querySelector(".coche-km").value, peajes: r.querySelector(".coche-peajes").value }, rate)) : "";
+    });
+  }
+
+  function openAjustes() {
+    current = { kind: "ajustes" };
+    $("dialog").innerHTML = `<h3>Ezarpenak</h3>
+      <div class="form-grid">
+        <div class="field"><label for="fld-tFac">Gipuzkoan fakturarekin (€ + BEZ)</label><input id="fld-tFac" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().factura)}"></div>
+        <div class="field"><label for="fld-tSin">Gipuzkoan fakturarik gabe (€)</label><input id="fld-tSin" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().sinFactura)}"></div>
+        <div class="field"><label for="fld-tFac2">Gipuzkoatik kanpo fakturarekin (€ + BEZ)</label><input id="fld-tFac2" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().factura2)}"></div>
+        <div class="field"><label for="fld-tSin2">Gipuzkoatik kanpo fakturarik gabe (€)</label><input id="fld-tSin2" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().sinFactura2)}"></div>
+        <div class="field full"><label for="fld-tExtra">Gehigarria, afaria edo bazkaria sartzen ez bada (€)</label><input id="fld-tExtra" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().extra)}"></div>
+        <div class="field"><label for="fld-p1">Kideko ordainketa · Gipuzkoan (€)</label><input id="fld-p1" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().pago1)}"></div>
+        <div class="field"><label for="fld-p2">Kideko ordainketa · Gipuzkoatik kanpo (€)</label><input id="fld-p2" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(tarifa().pago2)}"></div>
+      </div>
+      <p class="hint" style="margin:0">Tarifa berriak hemendik aurrera idazten dituzun emanaldiei bakarrik aplikatzen zaizkie.</p>
+      <div class="field"><label for="fld-eurKm">Kilometroko prezioa (€)</label><input id="fld-eurKm" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(num(state.ajustes.eurKm) || EURKM_DEF)}"></div>
+      <p class="hint" style="margin:0">0,26 €/km da Ogasunak zergarik gabe onartzen duena.</p>
+      <div class="err" id="form-err" role="alert"></div>
+      <div class="actions"><span class="spacer"></span><button type="button" class="btn" id="btn-cancel">Utzi</button><button type="button" class="btn primary" id="btn-save-aj">Gorde</button></div>`;
+    $("overlay").hidden = false;
+    $("fld-tFac").focus();
+  }
+  async function saveAjustes() {
+    const v = num($("fld-eurKm").value);
+    if (v <= 0) { $("form-err").textContent = "Jarri 0 baino handiagoa den km-ko prezioa."; return; }
+    const tf = num($("fld-tFac").value), ts = num($("fld-tSin").value), tf2 = num($("fld-tFac2").value), ts2 = num($("fld-tSin2").value), te = num($("fld-tExtra").value), p1 = num($("fld-p1").value), p2 = num($("fld-p2").value);
+    try { await state.db.doc("ajustes/general").set({ eurKm: round2(v), tarifaFactura: round2(tf), tarifaSinFactura: round2(ts), tarifaFactura2: round2(tf2), tarifaSinFactura2: round2(ts2), extraSinCena: round2(te), pago1: round2(p1), pago2: round2(p2) }); closeForm(); toast("Gordeta"); }
+    catch (er) { handleWriteError(er, true); }
+  }
+
+  function handleWriteError(er, inForm) {
+    const code = er && er.code;
+    let msg = "Ezin izan da gorde. Saiatu berriro.";
+    if (code === "invalid_argument") { msg = "Ez duzu datu hauek aldatzeko baimenik. Eskatu aplikazioa partekatzen duenari laguntzaile sarbidea."; state.canWrite = false; }
+    if (code === "quota_exceeded") msg = "Datu-basea beteta dago. Ezabatu datu zaharrak idazten jarraitzeko.";
+    if (code === "resource_exhausted") msg = "Aldaketa gehiegi jarraian. Itxaron segundo batzuk.";
+    if (inForm && $("form-err")) $("form-err").textContent = msg; else toast(msg);
+  }
+
+  let toastTimer;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2600); }
+
+  // ---------- Clicks en la vista ----------
+  $("view").addEventListener("click", (e) => {
+    const t = e.target;
+    const add = t.closest("[data-add]"); if (add) return openForm(add.dataset.add);
+    if (t.closest("[data-edit-ajustes]")) return openAjustes();
+    const dr = t.closest("[data-del-ruta]");
+    if (dr) { const box = dr.parentElement; box.innerHTML = `<span class="del-confirm"><button type="button" class="btn small" data-del-no>Ez</button><button type="button" class="btn small primary" data-del-yes="${esc(dr.dataset.delRuta)}" style="background:var(--bad);border-color:var(--bad)">Bai</button></span>`; return; }
+    if (t.closest("[data-del-no]")) return render();
+    const dy = t.closest("[data-del-yes]");
+    if (dy) { (async () => { try { await state.db.collection("rutas").doc(dy.dataset.delYes).delete(); toast("Ibilbidea ezabatuta"); } catch (er) { handleWriteError(er); render(); } })(); return; }
+    if (t.closest("[data-del-box]")) return;
+    const ta = t.closest("[data-toggle-ap]"); if (ta) { const v = state.viajes.find((x) => x.id === ta.dataset.toggleAp); if (v) cambiarBidesaria(v); return; }
+    const tr = t.closest("[data-toggle-reemb]"); if (tr) return toggle("viajes", tr.dataset.toggleReemb, "reembolsado");
+    const tf = t.closest("[data-toggle-fact]"); if (tf) { e.stopPropagation(); return toggle("bolos", tf.dataset.toggleFact, "facturaEmitida"); }
+    const tc = t.closest("[data-toggle-cobro]"); if (tc) return toggle("bolos", tc.dataset.toggleCobro, "cobrado");
+    const pb = t.closest("[data-pay]");
+    if (pb) { if (pb.disabled) return; return togglePago(pb.dataset.pay, pb.dataset.key, num(pb.dataset.amount), pb.dataset.col); }
+    if (t.closest("[data-pay-all]")) { $("payall-box").innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span>Zerrenda honetako ordainketa guztiak eginda?</span><button type="button" class="btn small" data-pay-all-no>Ez</button><button type="button" class="btn small primary" data-pay-all-yes>Bai, dena ordainduta</button></div>`; return; }
+    if (t.closest("[data-pay-all-no]")) return render();
+    const pm = t.closest("[data-pay-month]"); if (pm) return pagarTodo(pm.dataset.payMonth);
+    if (t.closest("[data-pay-all-yes]")) return state.tab === "materiala" ? pagarMaterial() : pagarTodo();
+    const fc = t.closest("[data-filtro-cobro]");
+    if (fc) { const v = fc.dataset.filtroCobro; state.filtroCobro = v !== "all" && state.filtroCobro === v ? "all" : v; render(); if (state.filtroCobro !== "all") { const el = $("bolos-list"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
+    if (t.closest("[data-pdf]")) return exportPdf();
+    const ul = t.closest("[data-unlink]"); if (ul) { e.stopPropagation(); { const cu = state.componentes.find((x) => x.id === ul.dataset.unlink); if (cu && window.sustraiUnlink) window.sustraiUnlink(cu.id).catch(() => {}); } state.db.collection("componentes").doc(ul.dataset.unlink).update({ uid: null, actualizado: new Date().toISOString() }).then(() => toast("Lotura kenduta")).catch(handleWriteError); return; }
+    if (t.closest("[data-claim]")) {
+      const id = $("claim-sel") && $("claim-sel").value; if (!id) return toast("Aukeratu zure izena.");
+      const c = state.componentes.find((x) => x.id === id); if (!c || c.admin) return toast("Izen hori ezin da aukeratu.");
+      const pin = ($("claim-pin") && $("claim-pin").value || "").trim(); if (!pin) return toast("Idatzi zure PINa.");
+      window.sustraiClaim(id, pin).then(() => { toast("Lotuta ✓ Kaixo, " + c.nombre + "!"); setTimeout(() => location.reload(), 700); }).catch(() => toast("PIN okerra edo izen hori hartuta dago."));
+      return;
+    }
+    const gc = t.closest("[data-goto-comp]"); if (gc) { state.filtroComp = gc.dataset.gotoComp; return goTab("viajes"); }
+    const row = t.closest("[data-edit]"); if (row) return openForm(row.dataset.edit, row.dataset.id);
+  });
+  $("view").addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && (e.target.classList.contains("row") || e.target.classList.contains("tile-btn"))) { e.preventDefault(); e.target.click(); } });
+  $("view").addEventListener("change", (e) => { if (e.target.id === "f-comp") { state.filtroComp = e.target.value; render(); } });
+
+  async function togglePago(boloId, key, amount, col) {
+    col = col || "bolos";
+    if (!state.db || !state.canWrite || busy.has(boloId)) return;
+    const b = state[col].find((x) => x.id === boloId); if (!b) return;
+    const cur = num((b.ordainduak || {})[key]);
+    const paid = cur >= amount - 0.009;
+    busy.add(boloId);
+    try { await state.db.collection(col).doc(boloId).update({ ordainduak: { [key]: paid ? 0 : amount } }); toast(paid ? "Ordaindu gabe gisa markatuta" : "Ordainduta ✓"); }
+    catch (er) { handleWriteError(er); }
+    finally { busy.delete(boloId); }
+  }
+  async function pagarTodo(mes) {
+    if (!state.db || !state.canWrite) return;
+    const bolos = state.bolos.filter((b) => inYear(b.fecha) && (!mes || (b.fecha || "").slice(0, 7) === mes));
+    try {
+      for (const b of bolos) {
+        const l = boloViajes(b); if (!l.total) continue;
+        const pg = boloPagos(b, l); if (!pg.pending.length) continue;
+        const upd = {}; pg.pending.forEach((x) => (upd[payKey(x)] = x.amount));
+        await state.db.collection("bolos").doc(b.id).update({ ordainduak: upd });
+      }
+      toast(mes ? mesLargo(mes) + " kitatuta ✓" : "Dena kitatuta ✓");
+    } catch (er) { handleWriteError(er); render(); }
+  }
+  async function pagarMaterial() {
+    if (!state.db || !state.canWrite) return;
+    try {
+      for (const m of state.materiala.filter((x) => inYear(x.fecha))) {
+        const pg = boloPagos(m, materialCalc(m)); if (!pg.pending.length) continue;
+        const upd = {}; pg.pending.forEach((x) => (upd[payKey(x)] = x.amount));
+        await state.db.collection("materiala").doc(m.id).update({ ordainduak: upd });
+      }
+      toast("Materiala kitatuta ✓");
+    } catch (er) { handleWriteError(er); render(); }
+  }
+  const busy = new Set();
+  async function toggle(col, id, field) {
+    if (!state.db || !state.canWrite || busy.has(id)) return;
+    const item = state[col].find((x) => x.id === id); if (!item) return;
+    busy.add(id);
+    try { await state.db.collection(col).doc(id).update({ [field]: !item[field], actualizado: new Date().toISOString() }); }
+    catch (er) { handleWriteError(er); }
+    finally { busy.delete(id); }
+  }
+
+  // ---------- Datos ----------
+  const setStatus = (text) => { $("sync-status").textContent = text; };
+  const showBanner = (text) => { const b = $("banner"); b.textContent = text; b.hidden = !text; };
+
+  async function start() {
+    render();
+    let db = null, user = null;
+    try { [db, user] = await Promise.all([window.claude && window.claude.use ? window.claude.use("db") : null, window.claude && window.claude.use ? window.claude.use("user") : null]); } catch (e) {}
+    if (!db) {
+      setStatus("Daturik gabe: konexiorik ez");
+      showBanner("Ezin izan da datu-basera konektatu. Egiaztatu internet konexioa eta config.js fitxategia.");
+      Object.keys(state.loaded).forEach((k) => (state.loaded[k] = true));
+      state.canWrite = false;
+      render();
+      return;
+    }
+    state.db = db;
+    if (user && typeof user.can === "function") {
+      try { const c = await user.can("data.write"); if (c === false) { state.canWrite = false; showBanner("Kontuak ikus ditzakezu, baina ezin dituzu aldatu."); } } catch (e) {}
+    }
+    try { state.limited = !(user && (await user.isOwner())); } catch (e) { state.limited = true; }
+    if (state.limited && user) { try { const me = await user.me(); state.myEmail = me.email ? String(me.email).trim().toLowerCase() : null; state.myId = me.id || null; } catch (e) {} }
+    if (!state.limited) state.tab = hashTab() || "bolos";
+    render();
+    const timer = setTimeout(() => setStatus("Oraindik ezin dira datuak kargatu"), 10000);
+    const cols = Object.keys(state.loaded), ok = new Set();
+    cols.forEach((c) => {
+      db.collection(c).onSnapshot((snap) => {
+        state[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+        state.loaded[c] = true;
+        if (!snap.metadata.fromCache) { ok.add(c); if (ok.size === cols.length) { clearTimeout(timer); setStatus("Hodeian gordeta · taldearekin partekatuta"); } }
+        if ($("overlay").hidden) render(); else renderTabs();
+      }, (err) => {
+        clearTimeout(timer);
+        state.loaded[c] = true;
+        setStatus("Errorea datuak kargatzean");
+        if (err && err.code === "revoked") { state.canWrite = false; showBanner("Jada ez duzu kontu hauetarako sarbiderik."); }
+        render();
+      });
+    });
+    db.doc("ajustes/general").onSnapshot((snap) => { if (snap.exists) { state.ajustes = Object.assign({ eurKm: EURKM_DEF }, snap.data()); if ($("overlay").hidden) render(); } }, () => {});
+  }
+  start();
+})();
+</script>
+</body>
+</html>
