@@ -11,7 +11,7 @@ window.SUSTRAI_CONFIG = {
   },
 
   // 2) Zure Google emaila (admina). firestore.rules fitxategian ere bera jarri.
-  adminEmail: "ZURE_EMAILA@gmail.com",
+  adminEmail: "aitoramilibia@gmail.com",
 
   // 3) Aukerakoa: OpenRouteService gakoa, km-ak bere kabuz kalkulatzeko.
   //    Hutsik utziz gero, km-ak eskuz idatzi beharko dira.
