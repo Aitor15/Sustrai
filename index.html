@@ -543,7 +543,7 @@ main { overflow-x: clip; }
   function viewBolos() {
     if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Emanaldiak</h2>${noComps()}</section>`;
     const t = totals();
-    const list = [...t.bolos].filter((b) => state.filtroCobro === "all" || (state.filtroCobro === "facpend" ? boloCalc(b).facturado && !b.facturaEmitida : state.filtroCobro === "fac" ? boloCalc(b).facturado : state.filtroCobro === "sinfac" ? !boloCalc(b).facturado : state.filtroCobro === "si" ? !!b.cobrado : !b.cobrado)).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+    const list = [...t.bolos].filter((b) => state.filtroCobro === "all" || (state.filtroCobro === "facpend" ? boloCalc(b).facturado && !b.facturaEmitida : state.filtroCobro === "fac" ? boloCalc(b).facturado : state.filtroCobro === "sinfac" ? !boloCalc(b).facturado : state.filtroCobro === "si" ? !!b.cobrado : !b.cobrado)).sort((a, b) => (a.fecha || "9999").localeCompare(b.fecha || "9999"));
     const cols = "minmax(0,1fr) 130px 130px 110px";
     let sp = 0, sc = 0, sg = 0;
     const rows = list.map((b) => {
@@ -586,7 +586,7 @@ main { overflow-x: clip; }
       tocan.forEach((id) => (acc[id] = (acc[id] || 0) - share));
       vs.forEach((v) => { if (v.componente) acc[v.componente] = (acc[v.componente] || 0) + num(v.importe); });
     };
-    [...t.bolos].sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).forEach((b) => {
+    [...t.bolos].sort((a, b) => (a.fecha || "9999").localeCompare(b.fecha || "9999")).forEach((b) => {
       const l = boloViajes(b);
       if (!l.total) return;
       const pg = boloPagos(b, l);
@@ -910,7 +910,7 @@ main { overflow-x: clip; }
       fields: () => [
         { id: "fecha", label: "Data", type: "date", required: true, def: today() },
         { id: "componente", label: "Kidea", type: "select", required: true, options: state.componentes.map((c) => [c.id, c.nombre]) },
-        { id: "boloId", label: "Emanaldia", type: "select", full: true, options: [["", "Emanaldirik gabe"], ...[...state.bolos].sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((b) => [b.id, boloName(b.id)])] },
+        { id: "boloId", label: "Emanaldia", type: "select", full: true, options: [["", "Emanaldirik gabe"], ...[...state.bolos].sort((a, b) => (a.fecha || "9999").localeCompare(b.fecha || "9999")).map((b) => [b.id, boloName(b.id)])] },
         { id: "trayecto", label: "Ibilbidea", type: "text", placeholder: "Donostia – Bilbo", full: true },
         { id: "tipo", label: "Gastu mota", type: "select", options: TIPOS_GASTO.map((t) => [t, tipoEu(t)]), def: TIPOS_GASTO[0] },
         { id: "km", label: "Kilometroak", type: "number", step: "1", min: "0" },
