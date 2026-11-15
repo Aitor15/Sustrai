@@ -61,6 +61,12 @@
     await fs.collection("loturak").doc(u.uid).set({ comp: compId, pin: String(pin), creado: new Date().toISOString() });
     await fs.collection("componentes").doc(compId).update({ uid: u.uid });
   };
+  // PINa kendu: PINa ezabatu, gailu guztiak deskonektatu eta "lotuta" marka kendu.
+  window.sustraiRevoke = async (compId) => {
+    await fs.collection("pinak").doc(compId).delete();
+    await window.sustraiUnlink(compId);
+    await fs.collection("componentes").doc(compId).update({ uid: null });
+  };
   window.sustraiUnlink = async (compId) => {
     const snap = await fs.collection("loturak").where("comp", "==", compId).get();
     await Promise.all(snap.docs.map((d) => d.ref.delete()));
@@ -115,9 +121,20 @@
       if (name === "downloads") return downloads;
       if (name === "user") {
         const admin = isAdminUser(u);
+        if (admin && !window.sustraiPinIds) {
+          window.sustraiPinIds = new Set();
+          fs.collection("pinak").onSnapshot((snap) => { window.sustraiPinIds = new Set(snap.docs.map((d) => d.id)); window.dispatchEvent(new Event("sustrai-pins")); }, () => {});
+        }
         if (!admin && window.sustraiMyComp === undefined) {
           window.sustraiMyComp = null;
-          try { const l = await fs.collection("loturak").doc(u.uid).get(); if (l.exists) window.sustraiMyComp = l.data().comp || null; } catch (e) {}
+          try {
+            const l = await fs.collection("loturak").doc(u.uid).get();
+            if (l.exists) {
+              // PINa kendu edo aldatu bada, arauek irakurtzea ukatzen dute: berriro "Nor zara?" erakutsi.
+              try { await fs.collection("ajustes").doc("general").get(); window.sustraiMyComp = l.data().comp || null; }
+              catch (e) { window.sustraiMyComp = null; }
+            }
+          } catch (e) {}
         }
         return {
           isOwner: async () => admin,

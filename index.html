@@ -348,7 +348,8 @@ main { overflow-x: clip; }
     { id: "componentes", label: "Kideak" },
   ];
   const hashTab = () => { const h = location.hash.replace("#", ""); return TABS.some((t) => t.id === h) ? h : null; };
-  state.tab = hashTab() || "bolos";
+  state.tab = "bolos";
+  try { if (location.hash) history.replaceState(null, "", location.pathname + location.search); } catch (er) {}
 
   // ---------- Cálculos ----------
   const inYear = (d) => state.year === "all" || (d && d.slice(0, 4) === state.year);
@@ -746,6 +747,13 @@ main { overflow-x: clip; }
       </section>` : ""}`;
   }
 
+  function pinInfo(c) {
+    const pins = window.sustraiPinIds;
+    const tienePin = pins ? pins.has(c.id) : null;
+    const lot = c.uid ? `<span class="pago-ok">✓ lotuta</span>` : `<span class="pago-pend">lotu gabe</span>`;
+    const pin = tienePin === null ? "" : tienePin ? ` · PINa ✓ <button type="button" class="linkbtn" data-revoke="${esc(c.id)}">kendu</button>` : ` · <span class="pago-pend">PINik ez</span>`;
+    return lot + pin;
+  }
   function viewComponentes() {
     const cols = "minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,.8fr)";
     const sorted = [...state.componentes].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
@@ -754,8 +762,8 @@ main { overflow-x: clip; }
         <div class="ledger-head"><div>Izena</div><div class="hide-m">Lotura</div><div>Instrumentua</div></div>
         <ul class="ledger">${list.map((c) => `
           <li class="row" tabindex="0" data-edit="componente" data-id="${esc(c.id)}">
-            <div><div class="main">${esc(c.nombre)}</div><div class="meta">${c.admin ? `<span class="pago-ok">★ admin (zu)</span>` : ""}<span class="only-m">${c.admin ? "" : c.uid ? ` <span class="pago-ok">✓ lotuta</span>` : ` <span class="pago-pend">lotu gabe</span>`}${c.instrumento ? " · " + esc(c.instrumento) : ""}</span></div></div>
-            <div class="meta hide-m">${c.admin ? "—" : c.uid ? `<span class="pago-ok">✓ lotuta</span> <button type="button" class="linkbtn" data-unlink="${esc(c.id)}">kendu</button>` : `<span class="pago-pend">lotu gabe</span>`}</div>
+            <div><div class="main">${esc(c.nombre)}</div><div class="meta">${c.admin ? `<span class="pago-ok">★ admin (zu)</span>` : ""}<span class="only-m">${c.admin ? "" : " " + pinInfo(c)}${c.instrumento ? " · " + esc(c.instrumento) : ""}</span></div></div>
+            <div class="meta hide-m">${c.admin ? "—" : pinInfo(c)}</div>
             <div class="meta hide-m">${esc(c.instrumento || "—")}</div>
           </li>`).join("")}
         </ul>
@@ -1554,6 +1562,15 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const fc = t.closest("[data-filtro-cobro]");
     if (fc) { const v = fc.dataset.filtroCobro; state.filtroCobro = v !== "all" && state.filtroCobro === v ? "all" : v; render(); if (state.filtroCobro !== "all") { const el = $("bolos-list"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
     if (t.closest("[data-pdf]")) return exportPdf();
+    const rv = t.closest("[data-revoke]");
+    if (rv) {
+      e.stopPropagation();
+      const c = state.componentes.find((x) => x.id === rv.dataset.revoke);
+      if (!c || !window.sustraiRevoke) return;
+      if (!confirm(c.nombre + "-ren PINa kendu? Ezingo da sartu PIN berri bat jarri arte, eta bere gailu guztiak deskonektatuko dira.")) return;
+      window.sustraiRevoke(c.id).then(() => toast("PINa kenduta · " + c.nombre + " deskonektatuta")).catch(handleWriteError);
+      return;
+    }
     const ul = t.closest("[data-unlink]"); if (ul) { e.stopPropagation(); { const cu = state.componentes.find((x) => x.id === ul.dataset.unlink); if (cu && window.sustraiUnlink) window.sustraiUnlink(cu.id).catch(() => {}); } state.db.collection("componentes").doc(ul.dataset.unlink).update({ uid: null, actualizado: new Date().toISOString() }).then(() => toast("Lotura kenduta")).catch(handleWriteError); return; }
     if (t.closest("[data-claim]")) {
       const id = $("claim-sel") && $("claim-sel").value; if (!id) return toast("Aukeratu zure izena.");
@@ -1617,6 +1634,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   const setStatus = (text) => { $("sync-status").textContent = text; };
   const showBanner = (text) => { const b = $("banner"); b.textContent = text; b.hidden = !text; };
 
+  window.addEventListener("sustrai-pins", () => { if ($("overlay").hidden) render(); });
   async function start() {
     render();
     let db = null, user = null;
@@ -1635,7 +1653,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     }
     try { state.limited = !(user && (await user.isOwner())); } catch (e) { state.limited = true; }
     if (state.limited && user) { try { const me = await user.me(); state.myEmail = me.email ? String(me.email).trim().toLowerCase() : null; state.myId = me.id || null; } catch (e) {} }
-    if (!state.limited) { const t = hashTab(); if (t) state.tab = t; }
+    if (!state.limited) state.tab = "bolos";
     render();
     const timer = setTimeout(() => setStatus("Oraindik ezin dira datuak kargatu"), 10000);
     const cols = Object.keys(state.loaded), ok = new Set();
