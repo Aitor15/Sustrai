@@ -228,6 +228,10 @@ details summary { cursor: pointer; font-weight: 500; }
 .mes-head + .bolo-liq { border-top: 0; }
 .card-pad > .mes-head:first-child { margin-top: 0; }
 .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink); cursor: pointer; }
+main, main section { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+main { overflow-x: clip; }
+.ajustes-card > div > span.num { white-space: normal; text-align: right; }
+.ajustes-card > div > span:first-child { flex: 0 1 auto; min-width: 0; }
 .liq-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .liq-title .main { font-size: 16px; font-weight: 600; }
 .liq-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 8px; }
@@ -750,9 +754,9 @@ details summary { cursor: pointer; font-weight: 500; }
         <div class="ledger-head"><div>Izena</div><div class="hide-m">Lotura</div><div>Instrumentua</div></div>
         <ul class="ledger">${list.map((c) => `
           <li class="row" tabindex="0" data-edit="componente" data-id="${esc(c.id)}">
-            <div><div class="main">${esc(c.nombre)}</div><div class="meta">${c.admin ? `<span class="pago-ok">★ admin (zu)</span>` : ""}</div></div>
-            <div class="meta">${c.admin ? "—" : c.uid ? `<span class="pago-ok">✓ lotuta</span> <button type="button" class="linkbtn" data-unlink="${esc(c.id)}">kendu</button>` : `<span class="pago-pend">lotu gabe</span>`}</div>
-            <div class="meta">${esc(c.instrumento || "—")}</div>
+            <div><div class="main">${esc(c.nombre)}</div><div class="meta">${c.admin ? `<span class="pago-ok">★ admin (zu)</span>` : ""}<span class="only-m">${c.admin ? "" : c.uid ? ` <span class="pago-ok">✓ lotuta</span>` : ` <span class="pago-pend">lotu gabe</span>`}${c.instrumento ? " · " + esc(c.instrumento) : ""}</span></div></div>
+            <div class="meta hide-m">${c.admin ? "—" : c.uid ? `<span class="pago-ok">✓ lotuta</span> <button type="button" class="linkbtn" data-unlink="${esc(c.id)}">kendu</button>` : `<span class="pago-pend">lotu gabe</span>`}</div>
+            <div class="meta hide-m">${esc(c.instrumento || "—")}</div>
           </li>`).join("")}
         </ul>
       </div>`;
@@ -762,7 +766,7 @@ details summary { cursor: pointer; font-weight: 500; }
       <div class="section-head"><div><h2>Ordezkoak</h2><p class="hint">Noizean behin jotzen dutenak. Emanaldi batean jotzen badute, markatu "Nork jo zuen" atalean.</p></div>${addBtn("ordezkoa", "Gehitu ordezkoa")}</div>
       ${loadingOr("componentes", ord.length ? table(ord) : `<div class="card empty"><strong>Ez dago ordezkorik</strong>Gehitu taldean noizean behin jotzen dutenak.</div>`)}
     </section>`;
-    const ajustes = `<div class="card card-pad" style="display:grid;gap:10px">
+    const ajustes = `<div class="card card-pad ajustes-card" style="display:grid;gap:10px">
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between">
         <div><strong>Ezarpenak</strong><div class="hint" style="margin:0">Emanaldi eta bidaia guztiei aplikatzen zaizkie.</div></div>
         ${state.canWrite ? `<button type="button" class="btn small" data-edit-ajustes>Aldatu</button>` : ""}</div>
