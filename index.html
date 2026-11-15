@@ -497,6 +497,49 @@ main { overflow-x: clip; }
     </div>`;
   }
 
+  // ---------- Ordainketa berrien abisua (adminarentzat, gailu bakoitzean) ----------
+  const SEEN_KEY = "sustrai-ordainketak-ikusita";
+  function pagosAhora() {
+    const m = {};
+    state.bolos.forEach((b) => { const l = boloViajes(b); if (!l.total) return; boloPagos(b, l).list.forEach((x) => { m[b.id + "|" + payKey(x)] = { paid: x.paid, x, b }; }); });
+    return m;
+  }
+  function leerVisto() { try { const v = localStorage.getItem(SEEN_KEY); return v ? JSON.parse(v) : null; } catch (er) { return undefined; } }
+  function guardarVisto(seen) { try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (er) {} }
+  function marcarVisto(keys, paid) { const seen = leerVisto(); if (!seen) return; keys.forEach((k) => { if (paid) seen[k] = 1; else delete seen[k]; }); guardarVisto(seen); }
+  function visto(now) { const seen = {}; Object.entries(now).forEach(([k, v]) => { if (v.paid) seen[k] = 1; }); guardarVisto(seen); }
+  function novedadesPago() {
+    if (state.limited || !state.loaded.bolos || !state.loaded.viajes || !state.loaded.componentes) return [];
+    const seen = leerVisto(); if (seen === undefined) return [];
+    const now = pagosAhora();
+    if (seen === null) { visto(now); return []; }
+    return Object.entries(now).filter(([k, v]) => v.paid !== !!seen[k]).map(([, v]) => v)
+      .sort((a, c) => (c.b.fecha || "").localeCompare(a.b.fecha || ""));
+  }
+  function avisoPagos() {
+    const n = novedadesPago(); if (!n.length) return "";
+    const nuevos = n.filter((v) => v.paid).length;
+    return `<div class="banner" style="background:var(--good-soft);display:grid;gap:8px;margin-bottom:14px">
+      <strong>🔔 ${nuevos ? `${nuevos} ordainketa berri` : "Aldaketak ordainketetan"} azken aldiz sartu zinenetik</strong>
+      <ul class="deudas">${n.map((v) => `<li><span>${v.paid ? "✓" : "↩"}</span> <span><strong>${esc(compName(v.x.from))}</strong> → <strong>${esc(compName(v.x.to))}</strong> <span class="meta">· ${esc(v.b.evento || "Emanaldia")} ${fdate(v.b.fecha)}${v.paid ? "" : " · ordaindu gabe gisa markatuta"}</span></span><span class="num">${money(v.x.amount)}</span></li>`).join("")}</ul>
+      <div><button type="button" class="btn small" data-pagos-visto>Ados, ikusita</button></div>
+    </div>`;
+  }
+  // ---------- Emanaldi berrien abisua (kideentzat, gailu bakoitzean) ----------
+  const SEEN_B = "sustrai-emanaldiak-ikusita";
+  function avisoEmanaldiak() {
+    if (!state.limited || !myComp() || !state.loaded.bolos) return "";
+    let seen; try { const v = localStorage.getItem(SEEN_B); seen = v ? JSON.parse(v) : null; } catch (er) { return ""; }
+    const ids = state.bolos.map((b) => b.id);
+    if (!seen) { try { localStorage.setItem(SEEN_B, JSON.stringify(ids)); } catch (er) {} return ""; }
+    const nuevos = state.bolos.filter((b) => !seen.includes(b.id)).sort((a, c) => (a.fecha || "").localeCompare(c.fecha || ""));
+    if (!nuevos.length) return "";
+    return `<div class="banner" style="background:var(--accent-soft);display:grid;gap:8px">
+      <strong>🎵 ${nuevos.length === 1 ? "Emanaldi berria" : nuevos.length + " emanaldi berri"}!</strong>
+      <ul class="deudas">${nuevos.map((b) => `<li><span><strong>${esc(b.evento || "Emanaldia")}</strong> <span class="meta">· ${fdate(b.fecha)}${b.cliente ? " · " + esc(b.cliente) : ""}</span></span></li>`).join("")}</ul>
+      <div><button type="button" class="btn small" data-emanaldi-visto>Ados, ikusita</button></div>
+    </div>`;
+  }
   function viewBolos() {
     if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Emanaldiak</h2>${noComps()}</section>`;
     const t = totals();
@@ -523,7 +566,7 @@ main { overflow-x: clip; }
         <div class="ledger-foot"><div>Guztira (${esc(periodoTxt())}) · kobratuta ${money(sc)}</div><div class="r num">${money(sp)}</div><div class="r num hide-m">${money(sg)}</div><div class="r num" style="color:${sp - sc > 0 ? "var(--warn)" : "inherit"}">${sp - sc > 0 ? "falta: " + money(sp - sc) : ""}</div></div>
       </div>`
       : state.filtroCobro !== "all" ? `<div class="card empty"><strong>${state.filtroCobro === "facpend" ? "Faktura guztiak emanda ✓" : state.filtroCobro === "si" ? "Ez dago emanaldi kobraturik" : state.filtroCobro === "fac" ? "Ez dago fakturarekin egindako emanaldirik" : state.filtroCobro === "sinfac" ? "Ez dago fakturarik gabeko emanaldirik" : "Dena kobratuta ✓"} (${esc(periodoTxt())})</strong></div>` : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Idatzi emanaldi bakoitzaren lekua eta aurrekontua.</div>`;
-    return `${tiles(t)}
+    return `${avisoPagos()}${tiles(t)}
       <section style="display:grid;gap:12px">
         <div class="section-head"><div><h2>Emanaldiak</h2><p class="hint">Sakatu "Bai / Ez" kobratuta dagoen markatzeko. Kudeaketa = BEZik gabeko aurrekontua ken kideei ordaintzen zaiena.</p></div>${addBtn("bolo", "Emanaldi berria")}</div>
         ${state.filtroCobro !== "all" ? `<div class="filters" id="bolos-list"><span class="pill ${state.filtroCobro === "si" ? "ok" : state.filtroCobro === "fac" || state.filtroCobro === "sinfac" ? "info" : "warn"}" style="cursor:default">${state.filtroCobro === "facpend" ? "Faktura egin gabeak bakarrik" : state.filtroCobro === "si" ? "Kobratutakoak bakarrik" : state.filtroCobro === "fac" ? "Fakturarekin bakarrik" : state.filtroCobro === "sinfac" ? "Fakturarik gabe bakarrik" : "Kobratu gabeak bakarrik"} · ${list.length}</span><button type="button" class="linkbtn" data-filtro-cobro="all">Ikusi guztiak</button></div>` : `<div id="bolos-list"></div>`}
@@ -594,6 +637,7 @@ main { overflow-x: clip; }
         <p class="hint">Emanaldi bakoitzeko bidaiak (eta kideek ordaindutako afariak) jo zuten guztien artean ordaintzen dira, zati berdinetan. "Bidaien doikuntza" eta "Bazkari/afari doikuntza" bakoitzak jartzen duena (−) edo berreskuratzen duena (+) da. "Jasotzekoa guztira" = bere ordainketa gehi bi doikuntza horiek. "Behin betiko irabazia" = bidaiak eta bazkari/afariak ordaindu ondoren poltsikoan geratzen zaiona (behin-behineko irabazia ken bidaietan eta otorduetan dagokion zatia).</p>
       </section>
       `}
+      ${avisoEmanaldiak()}
       ${state.limited ? (() => { const mc = myComp(); return mc && !state.canWrite ? `<div class="banner">Kaixo, <strong>${esc(compName(mc))}</strong>! Oraingoz ezin duzu ezer markatu: zure sarbidea irakurtzeko bakarrik da. Eskatu arduradunari <strong>Editore</strong> sarbidea.</div>` : mc ? `<div class="banner" style="background:var(--good-soft)">Kaixo, <strong>${esc(compName(mc))}</strong>! Zure ordainketak bakarrik marka ditzakezu (zuk ordaintzen dituzunak edo zuri ordaintzen dizkizutenak).</div>` : state.myId && state.canWrite ? (() => { const libres = [...state.componentes].filter((c) => !c.admin).sort((x, y) => (x.nombre || "").localeCompare(y.nombre || "", "es")); return `<div class="banner" style="display:grid;gap:8px"><span><strong>Nor zara?</strong> Aukeratu zure izena eta idatzi Aitorrek emandako PINa. Behin bakarrik egin behar da gailu bakoitzean.</span><span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="claim-sel" style="padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"><option value="">Aukeratu…</option>${libres.map((c) => `<option value="${esc(c.id)}">${esc(c.nombre)}</option>`).join("")}</select><input id="claim-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PINa" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"><button type="button" class="btn small primary" data-claim>Ni naiz</button></span></div>`; })() : `<div class="banner">Ezin izan da jakin nor zaren. Ordainketak markatzeko, eskatu aplikazioaren arduradunari editatzeko sarbidea.</div>`; })() : ""}
       <section style="display:grid;gap:10px">
         <div class="section-head"><div><h2>Nork nori zor dio · ${esc(periodoTxt())}</h2><p class="hint">Oraindik egin gabe dauden ordainketak, gutxienera bilduta. "A → B": A-k B-ri ordaindu behar dio. Hilabeteka bilduta daude. Ordaindutakoan, markatu hilabetea, emanaldi bakoitza edo dena batera.</p></div>${porBolo.length || state.viajes.some((v) => inYear(v.fecha)) ? `<button type="button" class="btn" data-pdf>PDF deskargatu</button>` : ""}</div>
@@ -1306,9 +1350,29 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
       text(`${b.evento || "Emanaldia"}  ·  ${fdate(b.fecha)}`, { b: true, s: 11 }); right(pg.done ? "Kitatuta" : "Kitatu gabe", { s: 9, b: true, c: pg.done ? GREEN : RED }); y -= 6; rule(); y -= 14;
       gastos.forEach((g) => { need(14); text(`${compName(g.c)} · ${g.k}`, { x: L + 12, s: 9, c: GREY }); right(money(g.i), { s: 9, c: GREY }); y -= 13; });
       need(16); text(`Guztira ${money(l.total)} ÷ ${l.n} kide = ${money(l.share)} bakoitzak`, { x: L + 12, s: 9 }); y -= 16;
+      { const bc = boloCalc(b), betiko = round2(bc.porIntegrante - l.share);
+        const ids = tocanDe(b).slice().sort((x, z) => compName(x).localeCompare(compName(z), "es"));
+        need(30 + 13 * ids.length);
+        text("IRABAZIAK", { x: L + 12, s: 8, b: true, c: GREY }); text("Behin-behinekoa", { x: 400 - pdfWidth("Behin-behinekoa", 8), s: 8, c: GREY }); right("Behin betikoa", { s: 8, c: GREY }); y -= 12;
+        ids.forEach((id) => { need(13); text(compName(id), { x: L + 12, s: 9 }); const bb = money(bc.porIntegrante); text(bb, { x: 400 - pdfWidth(bb, 9), s: 9 }); right(money(betiko), { s: 9, b: true }); y -= 13; });
+        y -= 4; need(16); text("ORDAINKETAK", { x: L + 12, s: 8, b: true, c: GREY }); y -= 13; }
       if (pg.list.length) trLines(pg.list, true); else { text("Inork ez dio inori ezer zor.", { x: L + 12, s: 9, c: GREY }); y -= 15; }
       y -= 12;
     });
+    { // Hilabeteko banaketa (pantailako grafikoaren datuak, taula gisa)
+      const ms = [...new Set(state.bolos.filter((b) => inYear(b.fecha) && b.fecha).map((b) => b.fecha.slice(0, 7)))].sort();
+      if (ms.length) {
+        y -= 10; need(60); text("Hilabeteko banaketa", { s: 14, b: true }); y -= 18;
+        text("Hilabetea", { x: L + 12, s: 8, b: true, c: GREY }); text("Kideentzat", { x: 420 - pdfWidth("Kideentzat", 8), s: 8, c: GREY }); right("Artistamente", { s: 8, c: GREY }); y -= 6; rule(); y -= 13;
+        let tk = 0, ta = 0;
+        ms.forEach((m) => {
+          const bs = state.bolos.filter((b) => (b.fecha || "").slice(0, 7) === m);
+          const k = round2(bs.reduce((a, b) => a + boloCalc(b).pagos, 0)), g = round2(bs.reduce((a, b) => a + boloCalc(b).gestion, 0)); tk += k; ta += g;
+          need(14); text(mesLargo(m), { x: L + 12, s: 9 }); const kk = money(k); text(kk, { x: 420 - pdfWidth(kk, 9), s: 9 }); right(money(g), { s: 9 }); y -= 13;
+        });
+        need(18); y -= 2; text("Guztira", { x: L + 12, s: 9, b: true }); const tt = money(round2(tk)); text(tt, { x: 420 - pdfWidth(tt, 9) * 1.07, s: 9, b: true }); right(money(round2(ta)), { s: 9, b: true }); y -= 22;
+      }
+    }
     const vias = state.viajes.filter((v) => inYear(v.fecha) && v.componente);
     if (vias.length) {
       y -= 10; need(60); text("Kide bakoitzaren bidaiak", { s: 14, b: true }); y -= 20;
@@ -1562,6 +1626,8 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const fc = t.closest("[data-filtro-cobro]");
     if (fc) { const v = fc.dataset.filtroCobro; state.filtroCobro = v !== "all" && state.filtroCobro === v ? "all" : v; render(); if (state.filtroCobro !== "all") { const el = $("bolos-list"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
     if (t.closest("[data-pdf]")) return exportPdf();
+    if (t.closest("[data-emanaldi-visto]")) { try { localStorage.setItem(SEEN_B, JSON.stringify(state.bolos.map((b) => b.id))); } catch (er) {} render(); return; }
+    if (t.closest("[data-pagos-visto]")) { visto(pagosAhora()); render(); return; }
     const rv = t.closest("[data-revoke]");
     if (rv) {
       e.stopPropagation();
@@ -1592,7 +1658,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const cur = num((b.ordainduak || {})[key]);
     const paid = cur >= amount - 0.009;
     busy.add(boloId);
-    try { await state.db.collection(col).doc(boloId).update({ ordainduak: { [key]: paid ? 0 : amount } }); toast(paid ? "Ordaindu gabe gisa markatuta" : "Ordainduta ✓"); }
+    try { await state.db.collection(col).doc(boloId).update({ ordainduak: { [key]: paid ? 0 : amount } }); if (col === "bolos" && !state.limited) marcarVisto([boloId + "|" + key], !paid); toast(paid ? "Ordaindu gabe gisa markatuta" : "Ordainduta ✓"); }
     catch (er) { handleWriteError(er); }
     finally { busy.delete(boloId); }
   }
@@ -1605,6 +1671,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
         const pg = boloPagos(b, l); if (!pg.pending.length) continue;
         const upd = {}; pg.pending.forEach((x) => (upd[payKey(x)] = x.amount));
         await state.db.collection("bolos").doc(b.id).update({ ordainduak: upd });
+        if (!state.limited) marcarVisto(Object.keys(upd).map((k) => b.id + "|" + k), true);
       }
       toast(mes ? mesLargo(mes) + " kitatuta ✓" : "Dena kitatuta ✓");
     } catch (er) { handleWriteError(er); render(); }
