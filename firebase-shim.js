@@ -171,7 +171,7 @@
   }
   function bar() {
     const b = document.createElement("div"); b.id = "sustrai-bar";
-    b.style.cssText = "position:fixed;left:10px;bottom:10px;z-index:40;font:12px var(--font-body,sans-serif);display:flex;gap:10px;align-items:center;background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:8px;padding:5px 9px;opacity:.85";
+    b.style.cssText = "position:fixed;left:10px;bottom:10px;z-index:15;font:12px var(--font-body,sans-serif);display:flex;gap:10px;align-items:center;background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:8px;padding:5px 9px;opacity:.85";
     const link = (txt, fn) => { const a = document.createElement("button"); a.type = "button"; a.textContent = txt; a.style.cssText = "border:0;background:none;color:var(--accent,#d0191c);cursor:pointer;padding:0;font:inherit;text-decoration:underline"; a.onclick = fn; return a; };
     authReady.then((u) => {
       if (isAdminUser(u)) {

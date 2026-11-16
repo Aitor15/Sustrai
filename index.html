@@ -270,6 +270,17 @@ main { overflow-x: clip; }
 .sl-groups { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .sl-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .sl-add select, .sl-add input { flex: 1; min-width: 160px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.dialog { overflow-x: hidden; }
+.dialog input, .dialog select, .dialog textarea { max-width: 100%; min-width: 0; }
+.dialog input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-height: 38px; }
+@media (max-width: 640px) {
+  /* 16px-tik behera, iPhoneak handitu egiten du idazten hastean eta koadroak ateratzen dira */
+  input, select, textarea { font-size: 16px !important; }
+  .sl-add select, .sl-add input { min-width: 0; flex: 1 1 140px; }
+  .sl-list li { grid-template-columns: 22px minmax(0,1fr) auto; }
+  .sl-list li .sl-btns { grid-column: 2 / -1; justify-self: end; }
+  .dialog { padding: 16px; }
+}
 .dialog.stage-dialog { max-width: 760px; background: #0d0d0d; color: #fff; }
 .stage-dialog .meta { color: #a6a6a6; }
 .stage-title { font-family: var(--font-display); font-size: 34px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 4px solid var(--accent); padding-bottom: 6px; margin-bottom: 4px; }
