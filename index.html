@@ -412,7 +412,7 @@ main { overflow-x: clip; }
     { id: "setlist", label: "Setlist" },
     { id: "componentes", label: "Kideak" },
   ];
-  const TABS_KIDE = [{ id: "integrantes", label: "Kontuak" }, { id: "setlist", label: "Setlist" }];
+  const TABS_KIDE = [{ id: "bolos", label: "Emanaldiak" }, { id: "integrantes", label: "Kontuak" }, { id: "setlist", label: "Setlist" }];
   const hashTab = () => { const h = location.hash.replace("#", ""); return TABS.some((t) => t.id === h) ? h : null; };
   state.tab = "bolos";
   try { if (location.hash) history.replaceState(null, "", location.pathname + location.search); } catch (er) {}
@@ -539,7 +539,9 @@ main { overflow-x: clip; }
 
   // ---------- Vistas ----------
   function render() {
-    if (state.limited && !TABS_KIDE.some((t) => t.id === state.tab)) state.tab = "integrantes";
+    if (state.limited && !TABS_KIDE.some((t) => t.id === state.tab)) state.tab = "bolos";
+    // Oraindik lotu gabe dagoen kideak "Nor zara?" ikusi behar du (Kontuak-en dago).
+    if (state.limited && state.loaded.componentes && !myComp()) state.tab = "integrantes";
     $("btn-ajustes").style.display = state.limited ? "none" : "";
     renderYears();
     renderTabs();
@@ -607,7 +609,18 @@ main { overflow-x: clip; }
       <div><button type="button" class="btn small" data-emanaldi-visto>Ados, ikusita</button></div>
     </div>`;
   }
+  // Kideentzat: emanaldien zerrenda soila (herria eta data), ikusteko bakarrik.
+  function viewBolosKide() {
+    const list = state.bolos.filter((b) => inYear(b.fecha)).sort((a, b) => (a.fecha || "9999").localeCompare(b.fecha || "9999"));
+    const body = list.length ? `<div class="card" style="--cols:minmax(0,1fr) auto"><ul class="ledger">${list.map((b) => `<li class="row" style="cursor:default"><div class="main">${esc(b.evento || "Emanaldia")}</div><div class="r num">${fdate(b.fecha)}</div></li>`).join("")}</ul></div>`
+      : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Aukeratu beste urte bat goian.</div>`;
+    return `${avisoEmanaldiak()}<section style="display:grid;gap:12px">
+      <div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.length} emanaldi. Urtea goian, "Epea"-n aukeratzen da.</p></div>
+      ${loadingOr("bolos", body)}
+    </section>`;
+  }
   function viewBolos() {
+    if (state.limited) return viewBolosKide();
     if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Emanaldiak</h2>${noComps()}</section>`;
     const t = totals();
     const list = [...t.bolos].filter((b) => state.filtroCobro === "all" || (state.filtroCobro === "facpend" ? boloCalc(b).facturado && !b.facturaEmitida : state.filtroCobro === "fac" ? boloCalc(b).facturado : state.filtroCobro === "sinfac" ? !boloCalc(b).facturado : state.filtroCobro === "si" ? !!b.cobrado : !b.cobrado)).sort((a, b) => (a.fecha || "9999").localeCompare(b.fecha || "9999"));
@@ -704,7 +717,6 @@ main { overflow-x: clip; }
         <p class="hint">Emanaldi bakoitzeko bidaiak (eta kideek ordaindutako afariak) jo zuten guztien artean ordaintzen dira, zati berdinetan. "Bidaien doikuntza" eta "Bazkari/afari doikuntza" bakoitzak jartzen duena (−) edo berreskuratzen duena (+) da. "Jasotzekoa guztira" = bere ordainketa gehi bi doikuntza horiek. "Behin betiko irabazia" = bidaiak eta bazkari/afariak ordaindu ondoren poltsikoan geratzen zaiona (behin-behineko irabazia ken bidaietan eta otorduetan dagokion zatia).</p>
       </section>
       `}
-      ${avisoEmanaldiak()}
       ${state.limited ? (() => { const mc = myComp(); return mc && !state.canWrite ? `<div class="banner">Kaixo, <strong>${esc(compName(mc))}</strong>! Oraingoz ezin duzu ezer markatu: zure sarbidea irakurtzeko bakarrik da. Eskatu arduradunari <strong>Editore</strong> sarbidea.</div>` : mc ? `<div class="banner" style="background:var(--good-soft)">Kaixo, <strong>${esc(compName(mc))}</strong>! Zure ordainketak bakarrik marka ditzakezu (zuk ordaintzen dituzunak edo zuri ordaintzen dizkizutenak).</div>` : state.myId && state.canWrite ? (() => { const libres = [...state.componentes].filter((c) => !c.admin).sort((x, y) => (x.nombre || "").localeCompare(y.nombre || "", "es")); return `<div class="banner" style="display:grid;gap:8px"><span><strong>Nor zara?</strong> Aukeratu zure izena eta idatzi Aitorrek emandako PINa. Behin bakarrik egin behar da gailu bakoitzean.</span><span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="claim-sel" style="padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"><option value="">Aukeratu…</option>${libres.map((c) => `<option value="${esc(c.id)}">${esc(c.nombre)}</option>`).join("")}</select><input id="claim-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PINa" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"><button type="button" class="btn small primary" data-claim>Ni naiz</button></span></div>`; })() : `<div class="banner">Ezin izan da jakin nor zaren. Ordainketak markatzeko, eskatu aplikazioaren arduradunari editatzeko sarbidea.</div>`; })() : ""}
       <section style="display:grid;gap:10px">
         <div class="section-head"><div><h2>Nork nori zor dio · ${esc(periodoTxt())}</h2><p class="hint">Oraindik egin gabe dauden ordainketak, gutxienera bilduta. "A → B": A-k B-ri ordaindu behar dio. Hilabeteka bilduta daude. Ordaindutakoan, markatu hilabetea, emanaldi bakoitza edo dena batera.</p></div>${porBolo.length || state.viajes.some((v) => inYear(v.fecha)) ? `<button type="button" class="btn" data-pdf>PDF deskargatu</button>` : ""}</div>
@@ -2017,7 +2029,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     }
     try { state.limited = !(user && (await user.isOwner())); } catch (e) { state.limited = true; }
     if (state.limited && user) { try { const me = await user.me(); state.myEmail = me.email ? String(me.email).trim().toLowerCase() : null; state.myId = me.id || null; } catch (e) {} }
-    if (!state.limited) state.tab = "bolos";
+    state.tab = "bolos";
     render();
     const timer = setTimeout(() => setStatus("Oraindik ezin dira datuak kargatu"), 10000);
     const SL_COLS = ["abestiak", "setlistak"];
