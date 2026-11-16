@@ -880,12 +880,11 @@ main { overflow-x: clip; }
   const slFecha = (sl) => (state.bolos.find((x) => x.id === sl.boloId) || {}).fecha || sl.fecha || String(sl.creado || "").slice(0, 10);
   function viewSetlist() {
     const sls = [...state.setlistak].filter((sl) => inYear(slFecha(sl))).sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
-    const slHtml = sls.length ? `<div class="card" style="--cols:minmax(0,1.6fr) minmax(0,1fr) 120px">
-        <div class="ledger-head"><div>Setlista</div><div class="hide-m">Emanaldia</div><div class="r">Agertokia</div></div>
+    const slHtml = sls.length ? `<div class="card" style="--cols:minmax(0,1fr) 120px">
+        <div class="ledger-head"><div>Setlista</div><div class="r">Agertokia</div></div>
         <ul class="ledger">${sls.map((sl) => { const inf = setlistInfo(sl); return `
           <li class="row" tabindex="0" ${state.limited ? `data-stage="${esc(sl.id)}"` : `data-edit-setlist="${esc(sl.id)}"`}>
-            <div><div class="main">${esc(sl.izena || "Setlista")}</div>${(() => { const gs = slGroups(sl.items); return gs.length ? `<div class="sl-groups">${gs.map((g) => `<span>${esc(g.name || "Taldea")}: ${esc(grpTxt(g))}</span>`).join("")}</div>` : ""; })()}<div class="meta">${esc(durTxt(inf))}<span class="only-m">${sl.boloId ? " · " + esc(boloName(sl.boloId)) : ""}</span></div></div>
-            <div class="meta hide-m">${sl.boloId ? esc(boloName(sl.boloId)) : "—"}</div>
+            <div><div class="main">${esc(sl.izena || "Setlista")}</div></div>
             <div class="r"><button type="button" class="btn small" data-stage="${esc(sl.id)}">▶ Ikusi</button></div>
           </li>`; }).join("")}</ul></div>`
       : `<div class="card empty"><strong>Ez dago setlistik (${esc(periodoTxt())})</strong>${state.limited ? "Aukeratu beste urte bat goian." : "Sortu bat emanaldi baterako, errepertorioko abestiak ordenatuz."}</div>`;
