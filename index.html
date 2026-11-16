@@ -525,7 +525,7 @@ main { overflow-x: clip; }
   function renderYears() {
     const ys = new Set();
     [...state.viajes, ...state.bolos, ...state.materiala].forEach((x) => { if (x.fecha && /^\d{4}/.test(x.fecha)) ys.add(x.fecha.slice(0, 4)); });
-    state.setlistak.forEach((sl) => { const f = slFecha(sl); if (/^\d{4}/.test(f)) ys.add(f.slice(0, 4)); });
+    state.setlistak.forEach((sl) => { const f = slYear(sl); if (/^\d{4}$/.test(f)) ys.add(f); });
     const list = [...ys].sort().reverse();
     if (state.year !== "all" && !list.includes(state.year)) { if (state.loaded.bolos) { state.year = "all"; try { localStorage.setItem("sustrai-year", "all"); } catch (er) {} } else list.unshift(state.year); }
     $("year-select").innerHTML = `<option value="all">Guztia</option>` + list.map((y) => `<option value="${y}">${y}</option>`).join("");
@@ -877,9 +877,11 @@ main { overflow-x: clip; }
   const itemName = (it) => it.a ? ((abestia(it.a) || {}).izena || "(ezabatutako abestia)") : it.g !== undefined ? (it.g || "Taldea") : (it.t || "");
   const durTxt = (inf) => `${inf.n} abesti${inf.sec ? " · " + fmtDur(inf.sec) : ""}${inf.sinDur && inf.sec ? ` (+${inf.sinDur} iraupenik gabe)` : ""}`;
 
+  const slYear = (sl) => /^\d{4}$/.test(String(sl.urtea || "")) ? String(sl.urtea) : String(slFecha(sl)).slice(0, 4);
+  const slInYear = (sl) => state.year === "all" || slYear(sl) === state.year;
   const slFecha = (sl) => (state.bolos.find((x) => x.id === sl.boloId) || {}).fecha || sl.fecha || String(sl.creado || "").slice(0, 10);
   function viewSetlist() {
-    const sls = [...state.setlistak].filter((sl) => inYear(slFecha(sl))).sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
+    const sls = [...state.setlistak].filter((sl) => slInYear(sl)).sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
     const slHtml = sls.length ? `<div class="card" style="--cols:minmax(0,1fr) 120px">
         <div class="ledger-head"><div>Setlista</div><div class="r">Agertokia</div></div>
         <ul class="ledger">${sls.map((sl) => { const inf = setlistInfo(sl); return `
@@ -934,6 +936,7 @@ main { overflow-x: clip; }
       <div class="form-grid">
         <div class="field full"><label for="sl-izena">Izena *</label><input id="sl-izena" type="text" value="${esc(sl ? sl.izena || "" : "")}" placeholder="Oiartzungo jaiak" ${ro ? "readonly" : ""}></div>
         <div class="field full"><label for="sl-bolo">Emanaldia</label><select id="sl-bolo" ${ro ? "disabled" : ""}><option value="">Emanaldirik gabe</option>${bolos.map((b) => `<option value="${esc(b.id)}" ${sl && sl.boloId === b.id ? "selected" : ""}>${esc(boloName(b.id))}</option>`).join("")}</select></div>
+        <div class="field full"><label for="sl-urtea">Epea (urtea)</label><select id="sl-urtea" ${ro ? "disabled" : ""}>${(() => { const now = new Date().getFullYear(), ys = new Set(); for (let y = now - 2; y <= now + 4; y++) ys.add(String(y)); [...state.bolos.map((b) => (b.fecha || "").slice(0, 4)), ...state.setlistak.map((x) => slYear(x))].forEach((y) => { if (/^\d{4}$/.test(y)) ys.add(y); }); if (sl && sl.urtea) ys.add(String(sl.urtea)); const cur = sl && sl.urtea ? String(sl.urtea) : ""; return `<option value="">Automatikoa (emanaldiaren urtea)</option>` + [...ys].sort().map((y) => `<option value="${y}" ${cur === y ? "selected" : ""}>${y}</option>`).join(""); })()}</select><span class="hint" style="margin:0">Setlista zein urtetan agertuko den. "Automatikoa": emanaldiaren urtea (edo sortu zen urtea).</span></div>
       </div>
       <div class="field"><label>Abestiak, ordenan</label><ol class="sl-list" id="sl-list"></ol><div class="sl-total" id="sl-total"></div></div>
       ${ro ? "" : `<div class="sl-add">
@@ -947,7 +950,7 @@ main { overflow-x: clip; }
       <div class="field full"><label for="sl-notas">Oharrak</label><textarea id="sl-notas" ${ro ? "readonly" : ""}>${esc(sl ? sl.notas || "" : "")}</textarea></div>
       <div class="err" id="form-err" role="alert"></div>
       <div class="actions">
-        ${id && !ro ? `<button type="button" class="btn danger" id="btn-del">Ezabatu</button>` : ""}
+        ${id && !ro ? `<button type="button" class="btn danger" id="btn-del">Ezabatu</button><button type="button" class="btn" id="btn-sl-copy" title="Setlist honen kopia bat sortu (beste urte baterako, adibidez)">Kopiatu</button>` : ""}
         <span class="spacer"></span>
         <button type="button" class="btn" id="btn-cancel">${ro ? "Itxi" : "Utzi"}</button>
         ${ro ? "" : `<button type="submit" class="btn primary" id="btn-save">Gorde</button>`}
@@ -960,6 +963,20 @@ main { overflow-x: clip; }
     const gi = $("sl-group"); if (gi) gi.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("sl-group-btn").click(); } });
     $("sl-list").addEventListener("change", (e) => { const gs = e.target.closest("[data-sl-gsel]"); if (!gs || !gs.value) return; current.items.splice(+gs.dataset.slGsel, 0, { a: gs.value }); renderSlList(); });
     if (!id && $("sl-izena")) $("sl-izena").focus();
+  }
+  // Setlist baten kopia: editorea irekitzen du setlist berri gisa, edukiarekin eta hurrengo urtearekin.
+  function copySetlist(id) {
+    const src = state.setlistak.find((x) => x.id === id); if (!src) return;
+    openSetlist(null);
+    current.items = (src.items || []).map((x) => ({ ...x }));
+    $("dialog").querySelector("h3").textContent = "Setlistaren kopia";
+    $("sl-izena").value = (src.izena || "Setlista") + " (kopia)";
+    $("sl-notas").value = src.notas || "";
+    const y = String((parseInt(slYear(src), 10) || new Date().getFullYear()) + 1), us = $("sl-urtea");
+    if (us) { if (![...us.options].some((o) => o.value === y)) us.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`); us.value = y; }
+    renderSlList();
+    $("sl-izena").focus(); $("sl-izena").select();
+    toast("Kopia prest: aldatu izena eta urtea, eta sakatu Gorde.");
   }
   function renderSlList() {
     const it = current.items, ro = !state.canWrite;
@@ -982,7 +999,7 @@ main { overflow-x: clip; }
     if (!izena) { $("form-err").textContent = "Jarri izen bat setlistari."; return; }
     const prev = current.id ? state.setlistak.find((x) => x.id === current.id) : null;
     const now = new Date().toISOString();
-    const data = { izena, boloId: $("sl-bolo").value || "", items: current.items.map((x) => (x.a ? { a: x.a } : x.g !== undefined ? { g: x.g } : { t: x.t })), notas: ($("sl-notas").value || "").trim(), actualizado: now, creado: prev && prev.creado ? prev.creado : now };
+    const data = { izena, boloId: $("sl-bolo").value || "", urtea: ($("sl-urtea") && $("sl-urtea").value) || "", items: current.items.map((x) => (x.a ? { a: x.a } : x.g !== undefined ? { g: x.g } : { t: x.t })), notas: ($("sl-notas").value || "").trim(), actualizado: now, creado: prev && prev.creado ? prev.creado : now };
     const btn = $("btn-save"); btn.disabled = true; btn.textContent = "Gordetzen…";
     try {
       const col = state.db.collection("setlistak");
@@ -1338,6 +1355,7 @@ main { overflow-x: clip; }
       if (rm) { it.splice(+rm.dataset.slDel, 1); return renderSlList(); }
       if (id === "sl-add-btn") { const v = $("sl-add-sel").value; if (!v) return; it.push({ a: v }); $("sl-add-sel").value = ""; return renderSlList(); }
       if (id === "sl-add-all") { const have = new Set(it.map((x) => x.a).filter(Boolean)); repSorted().forEach((a) => { if (!have.has(a.id)) it.push({ a: a.id }); }); return renderSlList(); }
+      if (id === "btn-sl-copy" && current.id) return copySetlist(current.id);
       if (id === "sl-group-btn") { const v = $("sl-group").value.trim(); if (!v) return; it.push({ g: v }); $("sl-group").value = ""; return renderSlList(); }
       if (id === "sl-text-btn") { const v = $("sl-text").value.trim(); if (!v) return; it.push({ t: v }); $("sl-text").value = ""; return renderSlList(); }
     }
@@ -1883,7 +1901,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const t = e.target;
     const add = t.closest("[data-add]"); if (add) return add.dataset.add === "setlist" ? openSetlist(null) : openForm(add.dataset.add);
     const stg = t.closest("[data-stage]"); if (stg) { e.stopPropagation(); return openStage(stg.dataset.stage); }
-    if (t.closest("[data-sl-pdf]")) return exportSetlistPdf([...state.setlistak].filter((sl) => inYear(slFecha(sl))).sort((a, b) => slFecha(a).localeCompare(slFecha(b))));
+    if (t.closest("[data-sl-pdf]")) return exportSetlistPdf([...state.setlistak].filter((sl) => slInYear(sl)).sort((a, b) => slFecha(a).localeCompare(slFecha(b))));
     const esl = t.closest("[data-edit-setlist]"); if (esl && !state.limited) return openSetlist(esl.dataset.editSetlist);
     if (t.closest("[data-edit-ajustes]")) return openAjustes();
     const dr = t.closest("[data-del-ruta]");
