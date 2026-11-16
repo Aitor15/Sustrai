@@ -412,6 +412,7 @@ main { overflow-x: clip; }
     { id: "setlist", label: "Setlist" },
     { id: "componentes", label: "Kideak" },
   ];
+  const TABS_KIDE = [{ id: "integrantes", label: "Kontuak" }, { id: "setlist", label: "Setlist" }];
   const hashTab = () => { const h = location.hash.replace("#", ""); return TABS.some((t) => t.id === h) ? h : null; };
   state.tab = "bolos";
   try { if (location.hash) history.replaceState(null, "", location.pathname + location.search); } catch (er) {}
@@ -517,13 +518,14 @@ main { overflow-x: clip; }
 
   // ---------- Pestañas y periodo ----------
   function renderTabs() {
-    if (state.limited) { $("tabs").innerHTML = ""; return; }
+    if (state.limited) { $("tabs").innerHTML = TABS_KIDE.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}</button>`).join(""); return; }
     const counts = { setlist: state.setlistak.length, materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: state.bolos.filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
     $("tabs").innerHTML = TABS.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}${counts[t.id] != null ? `<span class="count">${counts[t.id]}</span>` : ""}</button>`).join("");
   }
   function renderYears() {
     const ys = new Set();
     [...state.viajes, ...state.bolos, ...state.materiala].forEach((x) => { if (x.fecha && /^\d{4}/.test(x.fecha)) ys.add(x.fecha.slice(0, 4)); });
+    state.setlistak.forEach((sl) => { const f = slFecha(sl); if (/^\d{4}/.test(f)) ys.add(f.slice(0, 4)); });
     const list = [...ys].sort().reverse();
     if (state.year !== "all" && !list.includes(state.year)) { if (state.loaded.bolos) { state.year = "all"; try { localStorage.setItem("sustrai-year", "all"); } catch (er) {} } else list.unshift(state.year); }
     $("year-select").innerHTML = `<option value="all">Guztia</option>` + list.map((y) => `<option value="${y}">${y}</option>`).join("");
@@ -537,7 +539,7 @@ main { overflow-x: clip; }
 
   // ---------- Vistas ----------
   function render() {
-    if (state.limited) state.tab = "integrantes";
+    if (state.limited && !TABS_KIDE.some((t) => t.id === state.tab)) state.tab = "integrantes";
     $("btn-ajustes").style.display = state.limited ? "none" : "";
     renderYears();
     renderTabs();
@@ -875,17 +877,18 @@ main { overflow-x: clip; }
   const itemName = (it) => it.a ? ((abestia(it.a) || {}).izena || "(ezabatutako abestia)") : it.g !== undefined ? (it.g || "Taldea") : (it.t || "");
   const durTxt = (inf) => `${inf.n} abesti${inf.sec ? " · " + fmtDur(inf.sec) : ""}${inf.sinDur && inf.sec ? ` (+${inf.sinDur} iraupenik gabe)` : ""}`;
 
+  const slFecha = (sl) => (state.bolos.find((x) => x.id === sl.boloId) || {}).fecha || sl.fecha || String(sl.creado || "").slice(0, 10);
   function viewSetlist() {
-    const sls = [...state.setlistak].sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
+    const sls = [...state.setlistak].filter((sl) => inYear(slFecha(sl))).sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
     const slHtml = sls.length ? `<div class="card" style="--cols:minmax(0,1.6fr) minmax(0,1fr) 120px">
         <div class="ledger-head"><div>Setlista</div><div class="hide-m">Emanaldia</div><div class="r">Agertokia</div></div>
         <ul class="ledger">${sls.map((sl) => { const inf = setlistInfo(sl); return `
-          <li class="row" tabindex="0" data-edit-setlist="${esc(sl.id)}">
+          <li class="row" tabindex="0" ${state.limited ? `data-stage="${esc(sl.id)}"` : `data-edit-setlist="${esc(sl.id)}"`}>
             <div><div class="main">${esc(sl.izena || "Setlista")}</div>${(() => { const gs = slGroups(sl.items); return gs.length ? `<div class="sl-groups">${gs.map((g) => `<span>${esc(g.name || "Taldea")}: ${esc(grpTxt(g))}</span>`).join("")}</div>` : ""; })()}<div class="meta">${esc(durTxt(inf))}<span class="only-m">${sl.boloId ? " · " + esc(boloName(sl.boloId)) : ""}</span></div></div>
             <div class="meta hide-m">${sl.boloId ? esc(boloName(sl.boloId)) : "—"}</div>
             <div class="r"><button type="button" class="btn small" data-stage="${esc(sl.id)}">▶ Ikusi</button></div>
           </li>`; }).join("")}</ul></div>`
-      : `<div class="card empty"><strong>Oraindik ez dago setlistik</strong>Sortu bat emanaldi baterako, errepertorioko abestiak ordenatuz.</div>`;
+      : `<div class="card empty"><strong>Ez dago setlistik (${esc(periodoTxt())})</strong>${state.limited ? "Aukeratu beste urte bat goian." : "Sortu bat emanaldi baterako, errepertorioko abestiak ordenatuz."}</div>`;
     const reps = repSorted();
     const repHtml = reps.length ? `<div class="card" style="--cols:minmax(0,1.5fr) 80px 100px 80px">
         <div class="ledger-head"><div>Abestia</div><div class="hide-m">Tonua</div><div class="hide-m">Triki</div><div class="r">Iraupena</div></div>
@@ -906,8 +909,13 @@ main { overflow-x: clip; }
         })()}</ul>
         <div class="ledger-foot"><div>${reps.length} abesti</div><div class="hide-m"></div><div class="hide-m"></div><div class="r num">${fmtDur(reps.reduce((s2, a) => s2 + durSec(a.iraupena), 0))}</div></div></div>`
       : `<div class="card empty"><strong>Errepertorioa hutsik dago</strong>Gehitu taldearen abestiak, iraupenarekin, setlistak egiteko.</div>`;
+    const pdfBtn = sls.length ? `<button type="button" class="btn" data-sl-pdf>PDF deskargatu</button>` : "";
+    if (state.limited) return `<section style="display:grid;gap:12px">
+        <div class="section-head"><div><h2>Setlistak · ${esc(periodoTxt())}</h2><p class="hint">Emanaldi bakoitzeko abestien ordena. Sakatu setlist bat letra handiz ikusteko. Urtea goian, "Epea"-n aukeratzen da.</p></div>${pdfBtn}</div>
+        ${loadingOr("setlistak", slHtml)}
+      </section>`;
     return `<section style="display:grid;gap:12px">
-        <div class="section-head"><div><h2>Setlistak</h2><p class="hint">Emanaldi bakoitzeko abestien ordena. "▶ Ikusi" sakatuz, letra handiz agertokirako.</p></div>${addBtn("setlist", "Setlist berria")}</div>
+        <div class="section-head"><div><h2>Setlistak · ${esc(periodoTxt())}</h2><p class="hint">Emanaldi bakoitzeko abestien ordena. "▶ Ikusi" sakatuz, letra handiz agertokirako.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${pdfBtn}${addBtn("setlist", "Setlist berria")}</div></div>
         ${loadingOr("setlistak", slHtml)}
       </section>
       <section style="display:grid;gap:12px;margin-top:10px">
@@ -993,7 +1001,7 @@ main { overflow-x: clip; }
       <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
       <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-name">${esc(itemName(x))}</span><span class="st-meta">${a ? esc([a.tonua, a.triki].filter(Boolean).join(" · ")) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-name">— ${esc(x.t)} —</span><span class="st-meta"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
-      <div class="actions stage-actions">${state.canWrite ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
+      <div class="actions stage-actions">${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
   }
 
@@ -1334,7 +1342,7 @@ main { overflow-x: clip; }
       if (id === "sl-group-btn") { const v = $("sl-group").value.trim(); if (!v) return; it.push({ g: v }); $("sl-group").value = ""; return renderSlList(); }
       if (id === "sl-text-btn") { const v = $("sl-text").value.trim(); if (!v) return; it.push({ t: v }); $("sl-text").value = ""; return renderSlList(); }
     }
-    if (current && current.kind === "stage") { if (id === "btn-print") { document.body.classList.add("printing-stage"); try { window.print(); } finally { setTimeout(() => document.body.classList.remove("printing-stage"), 500); } return; } if (id === "btn-stage-edit") return openSetlist(current.id); }
+    if (current && current.kind === "stage") { if (id === "btn-print") { document.body.classList.add("printing-stage"); try { window.print(); } finally { setTimeout(() => document.body.classList.remove("printing-stage"), 500); } return; } if (id === "btn-stage-edit" && !state.limited) return openSetlist(current.id); if (id === "btn-stage-pdf") { const sl = state.setlistak.find((x) => x.id === current.id); if (sl) exportSetlistPdf([sl]); return; } }
     const cb = e.target.closest(".coche-calc"); if (cb) return calcRuta(cb.closest(".coche-row"), cb);
   });
 
@@ -1538,6 +1546,52 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     });
     meses.forEach((e) => (e.tr = liquidar(e.bal)));
     return { porBolo, meses, deudas: liquidar(pendG) };
+  }
+  async function exportSetlistPdf(list) {
+    if (!list.length) return toast("Ez dago setlistik.");
+    const pages = []; let ops = [], y = 800;
+    const L = 40, RX = 555, RED = "0.82 0.10 0.11", GREY = "0.40 0.40 0.40";
+    const newPage = () => { pages.push(ops); ops = []; y = 800; };
+    const need = (h) => { if (y - h < 50) newPage(); };
+    const text = (t, o = {}) => ops.push({ t, x: o.x ?? L, y, s: o.s || 10, b: !!o.b, c: o.c });
+    const right = (t, o = {}) => text(t, { ...o, x: RX - pdfWidth(t, o.s || 10) * (o.b ? 1.07 : 1) });
+    const rule = (w = 0.5, c = "0.80 0.80 0.80") => ops.push({ raw: `${c} RG ${w} w ${L} ${y.toFixed(2)} m ${RX} ${y.toFixed(2)} l S` });
+    const fit = (t, max, size) => { t = String(t); if (pdfWidth(t, size) <= max) return t; while (t.length > 3 && pdfWidth(t + "…", size) > max) t = t.slice(0, -1); return t.trim() + "…"; };
+    list.forEach((sl, k) => {
+      if (k > 0) newPage();
+      const inf = setlistInfo(sl), gs = slGroups(sl.items);
+      text("SUSTRAI", { s: 12, b: true, c: GREY }); right(fdate(today()) + "an sortua", { s: 8, c: GREY }); y -= 26;
+      text(fit(String(sl.izena || "Setlista").toUpperCase(), 515, 22), { s: 22, b: true }); y -= 16;
+      text([sl.boloId ? boloName(sl.boloId) : "", durTxt(inf)].filter(Boolean).join("  ·  "), { s: 10, c: GREY }); y -= 10;
+      rule(2, RED); y -= 22;
+      let pos = 0;
+      (sl.items || []).forEach((x, i) => {
+        if (x.g !== undefined) {
+          pos = 0; const g = gs.find((z) => z.i === i);
+          need(40); y -= 6; text(fit(String(x.g || "Taldea").toUpperCase(), 380, 13), { s: 13, b: true, c: RED }); if (g) right(grpTxt(g), { s: 9, c: GREY }); y -= 6; rule(1, RED); y -= 18; return;
+        }
+        if (x.a) {
+          const a = abestia(x.a) || {}; pos++;
+          need(20);
+          const n = String(pos); text(n, { x: L + 22 - pdfWidth(n, 13) * 1.07, s: 13, b: true, c: RED });
+          const meta = [a.tonua, a.triki ? "triki " + a.triki : ""].filter(Boolean).join(" · ");
+          text(fit(itemName(x), meta ? 290 : 420, 13), { x: L + 32, s: 13, b: true });
+          if (meta) text(fit(meta, 110, 9), { x: 410, s: 9, c: GREY });
+          if (a.iraupena) right(fmtDur(durSec(a.iraupena)), { s: 10, c: GREY });
+          y -= 19; return;
+        }
+        need(18); text("— " + fit(x.t || "", 440, 11) + " —", { x: L + 32, s: 11, c: GREY }); y -= 17;
+      });
+      if (!(sl.items || []).length) { text("Setlista hutsik dago.", { c: GREY }); y -= 16; }
+      if (sl.notas) { y -= 8; need(30); text("Oharrak:", { s: 9, b: true, c: GREY }); y -= 13; String(sl.notas).split(/\n/).forEach((ln) => { need(13); text(fit(ln, 515, 9), { s: 9, c: GREY }); y -= 12; }); }
+    });
+    pages.push(ops);
+    const bytes = pdfBytes(pages);
+    const fname = list.length === 1 ? `Setlista-${String(list[0].izena || "setlista").replace(/[^\w\-]+/g, "_")}.pdf` : `Sustrai-setlistak-${state.year === "all" ? "guztia" : state.year}.pdf`;
+    let dl = null; try { dl = await window.claude.use("downloads"); } catch (er) {}
+    if (!dl) { toast("Ikuspegi honetan ezin da PDFa deskargatu."); return; }
+    try { await dl.save({ filename: fname, data: new Blob([bytes], { type: "application/pdf" }) }); toast("PDFa deskargatuta ✓"); }
+    catch (er) { if (er && er.code === "declined") return; toast("Ezin izan da PDFa deskargatu."); }
   }
   async function exportPdf() {
     const R = deudasReport();
@@ -1830,7 +1884,8 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const t = e.target;
     const add = t.closest("[data-add]"); if (add) return add.dataset.add === "setlist" ? openSetlist(null) : openForm(add.dataset.add);
     const stg = t.closest("[data-stage]"); if (stg) { e.stopPropagation(); return openStage(stg.dataset.stage); }
-    const esl = t.closest("[data-edit-setlist]"); if (esl) return openSetlist(esl.dataset.editSetlist);
+    if (t.closest("[data-sl-pdf]")) return exportSetlistPdf([...state.setlistak].filter((sl) => inYear(slFecha(sl))).sort((a, b) => slFecha(a).localeCompare(slFecha(b))));
+    const esl = t.closest("[data-edit-setlist]"); if (esl && !state.limited) return openSetlist(esl.dataset.editSetlist);
     if (t.closest("[data-edit-ajustes]")) return openAjustes();
     const dr = t.closest("[data-del-ruta]");
     if (dr) { const box = dr.parentElement; box.innerHTML = `<span class="del-confirm"><button type="button" class="btn small" data-del-no>Ez</button><button type="button" class="btn small primary" data-del-yes="${esc(dr.dataset.delRuta)}" style="background:var(--bad);border-color:var(--bad)">Bai</button></span>`; return; }
@@ -1949,8 +2004,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     render();
     const timer = setTimeout(() => setStatus("Oraindik ezin dira datuak kargatu"), 10000);
     const SL_COLS = ["abestiak", "setlistak"];
-    if (state.limited) SL_COLS.forEach((k) => (state.loaded[k] = true));
-    const cols = Object.keys(state.loaded).filter((k) => !state.limited || !SL_COLS.includes(k)), ok = new Set();
+    const cols = Object.keys(state.loaded), ok = new Set();
     cols.forEach((c) => {
       db.collection(c).onSnapshot((snap) => {
         state[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
