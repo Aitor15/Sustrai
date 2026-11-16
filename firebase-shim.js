@@ -148,7 +148,7 @@
   };
 
   // ---- Admin barra txikia (saioa, babeskopia, inportazioa) ----
-  const COLS = ["componentes", "bolos", "viajes", "rutas", "materiala", "ajustes"];
+  const COLS = ["componentes", "bolos", "viajes", "rutas", "materiala", "abestiak", "setlistak", "ajustes"];
   async function backup() {
     const out = {};
     for (const c of COLS) { const snap = await fs.collection(c).get(); out[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); }

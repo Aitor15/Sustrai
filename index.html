@@ -243,6 +243,41 @@ main { overflow-x: clip; }
 .liq-grid { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 3px 16px; padding-left: 4px; font-size: 14px; align-items: baseline; }
 .liq-grid .meta { font-size: 12px; }
 .kid-table .r { text-align: center; }
+
+/* Setlist */
+.sl-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); max-height: 46vh; overflow-y: auto; }
+.sl-list li { display: grid; grid-template-columns: 26px minmax(0,1fr) auto auto; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.sl-list li:last-child { border-bottom: 0; }
+.sl-list li.sl-text .sl-name { font-style: italic; color: var(--muted); }
+.sl-list li.sl-empty { display: block; padding: 12px; }
+.sl-n { font-family: var(--font-display); font-weight: 700; color: var(--accent); text-align: right; }
+.sl-name { overflow-wrap: anywhere; }
+.sl-btns { display: inline-flex; gap: 3px; }
+.sl-b { width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; padding: 0; font-size: 14px; line-height: 1; }
+.sl-b:disabled { opacity: .35; cursor: default; }
+.sl-b.sl-x:hover { background: var(--bad); color: #fff; border-color: var(--bad); }
+.sl-total { font-size: 13px; color: var(--muted); text-align: right; margin-top: 4px; }
+.sl-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sl-add select, .sl-add input { flex: 1; min-width: 160px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.dialog.stage-dialog { max-width: 760px; background: #0d0d0d; color: #fff; }
+.stage-dialog .meta { color: #a6a6a6; }
+.stage-title { font-family: var(--font-display); font-size: 34px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 4px solid var(--accent); padding-bottom: 6px; margin-bottom: 4px; }
+.stage-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.stage-list li { display: grid; grid-template-columns: 52px minmax(0,1fr) auto; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #2b2b2b; font-family: var(--font-display); font-size: 30px; font-weight: 700; text-transform: uppercase; line-height: 1.15; }
+.stage-list .st-n { color: var(--accent); text-align: right; }
+.stage-list .st-meta { font-size: 18px; color: #a6a6a6; font-weight: 500; text-transform: none; }
+.stage-list li.st-text { font-size: 20px; color: #a6a6a6; font-weight: 500; }
+.stage-dialog .btn { background: transparent; color: #fff; border-color: #4a4a4a; }
+.stage-dialog .btn.primary { background: var(--accent); border-color: var(--accent); }
+@media (max-width: 640px) { .stage-list li { font-size: 24px; grid-template-columns: 36px minmax(0,1fr) auto; } .stage-title { font-size: 26px; } }
+@media print {
+  body.printing-stage > *:not(.overlay) { display: none !important; }
+  body.printing-stage .overlay { position: static; background: none; padding: 0; }
+  body.printing-stage .dialog.stage-dialog { box-shadow: none; max-width: none; background: #fff; color: #000; }
+  body.printing-stage .stage-list li { border-color: #ccc; color: #000; }
+  body.printing-stage .stage-list .st-n { color: #000; }
+  body.printing-stage .stage-actions { display: none; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -333,9 +368,9 @@ main { overflow-x: clip; }
 
   // ---------- Estado ----------
   const state = {
-    componentes: [], bolos: [], viajes: [], rutas: [], materiala: [],
+    componentes: [], bolos: [], viajes: [], rutas: [], materiala: [], abestiak: [], setlistak: [],
     ajustes: { eurKm: EURKM_DEF },
-    loaded: { componentes: false, bolos: false, viajes: false, rutas: false, materiala: false },
+    loaded: { componentes: false, bolos: false, viajes: false, rutas: false, materiala: false, abestiak: false, setlistak: false },
     year: "all", tab: "bolos", filtroComp: "all", canWrite: true, db: null, limited: true, filtroCobro: "all", myEmail: null, myId: null,
   };
   try { const y = localStorage.getItem("sustrai-year"); if (y) state.year = y; } catch (e) {}
@@ -345,6 +380,7 @@ main { overflow-x: clip; }
     { id: "integrantes", label: "Kideen irabaziak" },
     { id: "viajes", label: "Bidaiak" },
     { id: "materiala", label: "Materiala" },
+    { id: "setlist", label: "Setlist" },
     { id: "componentes", label: "Kideak" },
   ];
   const hashTab = () => { const h = location.hash.replace("#", ""); return TABS.some((t) => t.id === h) ? h : null; };
@@ -453,7 +489,7 @@ main { overflow-x: clip; }
   // ---------- Pestañas y periodo ----------
   function renderTabs() {
     if (state.limited) { $("tabs").innerHTML = ""; return; }
-    const counts = { materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: state.bolos.filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
+    const counts = { setlist: state.setlistak.length, materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: state.bolos.filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
     $("tabs").innerHTML = TABS.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}${counts[t.id] != null ? `<span class="count">${counts[t.id]}</span>` : ""}</button>`).join("");
   }
   function renderYears() {
@@ -476,7 +512,7 @@ main { overflow-x: clip; }
     $("btn-ajustes").style.display = state.limited ? "none" : "";
     renderYears();
     renderTabs();
-    const v = { bolos: viewBolos, integrantes: viewIntegrantes, viajes: viewViajes, materiala: viewMateriala, componentes: viewComponentes }[state.tab];
+    const v = { bolos: viewBolos, integrantes: viewIntegrantes, viajes: viewViajes, materiala: viewMateriala, setlist: viewSetlist, componentes: viewComponentes }[state.tab];
     $("view").innerHTML = v();
   }
   const periodoTxt = () => state.year === "all" ? "epe osoa" : state.year;
@@ -798,6 +834,118 @@ main { overflow-x: clip; }
     const pin = tienePin === null ? "" : tienePin ? ` · PINa ✓ <button type="button" class="linkbtn" data-revoke="${esc(c.id)}">kendu</button>` : ` · <span class="pago-pend">PINik ez</span>`;
     return lot + pin;
   }
+  // ---------- Setlist ----------
+  const durSec = (t) => { const s = String(t || "").trim().replace(",", ".").replace(".", ":"); if (!s) return 0; const p = s.split(":").map((x) => parseInt(x, 10) || 0); return p.length === 1 ? p[0] * 60 : p.length === 2 ? p[0] * 60 + p[1] : p[0] * 3600 + p[1] * 60 + p[2]; };
+  const fmtDur = (sec) => { sec = Math.round(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
+  const repSorted = () => [...state.abestiak].sort((a, b) => (a.izena || "").localeCompare(b.izena || "", "es"));
+  const abestia = (id) => state.abestiak.find((x) => x.id === id);
+  const itemName = (it) => it.a ? ((abestia(it.a) || {}).izena || "(ezabatutako abestia)") : (it.t || "");
+  const setlistInfo = (sl) => { const items = Array.isArray(sl.items) ? sl.items : []; const songs = items.filter((x) => x.a); const sec = songs.reduce((s2, x) => s2 + durSec((abestia(x.a) || {}).iraupena), 0); const sinDur = songs.filter((x) => !durSec((abestia(x.a) || {}).iraupena)).length; return { items, n: songs.length, sec, sinDur }; };
+  const durTxt = (inf) => `${inf.n} abesti${inf.sec ? " · " + fmtDur(inf.sec) : ""}${inf.sinDur && inf.sec ? ` (+${inf.sinDur} iraupenik gabe)` : ""}`;
+
+  function viewSetlist() {
+    const sls = [...state.setlistak].sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
+    const slHtml = sls.length ? `<div class="card" style="--cols:minmax(0,1.6fr) minmax(0,1fr) 120px">
+        <div class="ledger-head"><div>Setlista</div><div class="hide-m">Emanaldia</div><div class="r">Agertokia</div></div>
+        <ul class="ledger">${sls.map((sl) => { const inf = setlistInfo(sl); return `
+          <li class="row" tabindex="0" data-edit-setlist="${esc(sl.id)}">
+            <div><div class="main">${esc(sl.izena || "Setlista")}</div><div class="meta">${esc(durTxt(inf))}<span class="only-m">${sl.boloId ? " · " + esc(boloName(sl.boloId)) : ""}</span></div></div>
+            <div class="meta hide-m">${sl.boloId ? esc(boloName(sl.boloId)) : "—"}</div>
+            <div class="r"><button type="button" class="btn small" data-stage="${esc(sl.id)}">▶ Ikusi</button></div>
+          </li>`; }).join("")}</ul></div>`
+      : `<div class="card empty"><strong>Oraindik ez dago setlistik</strong>Sortu bat emanaldi baterako, errepertorioko abestiak ordenatuz.</div>`;
+    const reps = repSorted();
+    const repHtml = reps.length ? `<div class="card" style="--cols:minmax(0,1.6fr) 90px 80px 72px">
+        <div class="ledger-head"><div>Abestia</div><div class="hide-m">Tonua</div><div class="r">Iraupena</div><div></div></div>
+        <ul class="ledger">${reps.map((a) => { const uses = state.setlistak.filter((sl) => (sl.items || []).some((x) => x.a === a.id)).length; return `
+          <li class="row" tabindex="0" data-edit="abestia" data-id="${esc(a.id)}">
+            <div><div class="main">${esc(a.izena)}</div><div class="meta">${uses ? uses + " setlistatan" : "setlistarik gabe"}${a.notas ? " · " + esc(String(a.notas).slice(0, 60)) : ""}<span class="only-m">${a.tonua ? " · " + esc(a.tonua) : ""}</span></div></div>
+            <div class="meta hide-m">${esc(a.tonua || "—")}</div>
+            <div class="r num">${a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : "—"}</div>
+            <div></div>
+          </li>`; }).join("")}</ul>
+        <div class="ledger-foot"><div>${reps.length} abesti</div><div class="hide-m"></div><div class="r num">${fmtDur(reps.reduce((s2, a) => s2 + durSec(a.iraupena), 0))}</div><div></div></div></div>`
+      : `<div class="card empty"><strong>Errepertorioa hutsik dago</strong>Gehitu taldearen abestiak, iraupenarekin, setlistak egiteko.</div>`;
+    return `<section style="display:grid;gap:12px">
+        <div class="section-head"><div><h2>Setlistak</h2><p class="hint">Emanaldi bakoitzeko abestien ordena. "▶ Ikusi" sakatuz, letra handiz agertokirako.</p></div>${addBtn("setlist", "Setlist berria")}</div>
+        ${loadingOr("setlistak", slHtml)}
+      </section>
+      <section style="display:grid;gap:12px;margin-top:10px">
+        <div class="section-head"><div><h2>Errepertorioa</h2><p class="hint">Taldearen abesti guztiak. Hemendik aukeratzen dira setlistetarako.</p></div>${addBtn("abestia", "Abesti berria")}</div>
+        ${loadingOr("abestiak", repHtml)}
+      </section>`;
+  }
+
+  function openSetlist(id) {
+    const sl = id ? state.setlistak.find((x) => x.id === id) : null;
+    current = { kind: "setlist", id: id || null, items: sl && Array.isArray(sl.items) ? sl.items.map((x) => ({ ...x })) : [] };
+    const ro = !state.canWrite;
+    const bolos = [...state.bolos].sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+    $("dialog").classList.remove("stage-dialog");
+    $("dialog").innerHTML = `
+      <h3>${id ? "Editatu setlista" : "Setlist berria"}</h3>
+      <div class="form-grid">
+        <div class="field full"><label for="sl-izena">Izena *</label><input id="sl-izena" type="text" value="${esc(sl ? sl.izena || "" : "")}" placeholder="Oiartzungo jaiak" ${ro ? "readonly" : ""}></div>
+        <div class="field full"><label for="sl-bolo">Emanaldia</label><select id="sl-bolo" ${ro ? "disabled" : ""}><option value="">Emanaldirik gabe</option>${bolos.map((b) => `<option value="${esc(b.id)}" ${sl && sl.boloId === b.id ? "selected" : ""}>${esc(boloName(b.id))}</option>`).join("")}</select></div>
+      </div>
+      <div class="field"><label>Abestiak, ordenan</label><ol class="sl-list" id="sl-list"></ol><div class="sl-total" id="sl-total"></div></div>
+      ${ro ? "" : `<div class="sl-add">
+        <select id="sl-add-sel" aria-label="Errepertorioko abestia"><option value="">Aukeratu abestia…</option></select>
+        <button type="button" class="btn small" id="sl-add-btn">+ Gehitu</button>
+        <button type="button" class="linkbtn" id="sl-add-all">Falta diren guztiak gehitu</button>
+      </div>
+      <div class="sl-add"><input id="sl-text" type="text" placeholder="Atsedenaldia, aurkezpena, oharra…" aria-label="Testua"><button type="button" class="btn small" id="sl-text-btn">+ Testua</button></div>`}
+      <div class="field full"><label for="sl-notas">Oharrak</label><textarea id="sl-notas" ${ro ? "readonly" : ""}>${esc(sl ? sl.notas || "" : "")}</textarea></div>
+      <div class="err" id="form-err" role="alert"></div>
+      <div class="actions">
+        ${id && !ro ? `<button type="button" class="btn danger" id="btn-del">Ezabatu</button>` : ""}
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="btn-cancel">${ro ? "Itxi" : "Utzi"}</button>
+        ${ro ? "" : `<button type="submit" class="btn primary" id="btn-save">Gorde</button>`}
+      </div>`;
+    $("overlay").hidden = false;
+    renderSlList();
+    const sel = $("sl-bolo");
+    if (sel) sel.addEventListener("change", () => { const n = $("sl-izena"); if (n && !n.value.trim() && sel.value) { const b = state.bolos.find((x) => x.id === sel.value); if (b) n.value = b.evento || ""; } });
+    const ti = $("sl-text"); if (ti) ti.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("sl-text-btn").click(); } });
+    if (!id && $("sl-izena")) $("sl-izena").focus();
+  }
+  function renderSlList() {
+    const it = current.items, ro = !state.canWrite;
+    let pos = 0;
+    $("sl-list").innerHTML = it.length ? it.map((x, i) => { const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${a && a.tonua ? ` <span class="meta">${esc(a.tonua)}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; }).join("") : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
+    const inf = setlistInfo({ items: it });
+    $("sl-total").textContent = inf.n ? `Guztira: ${durTxt(inf)}` : "";
+    const sel = $("sl-add-sel");
+    if (sel) { const have = new Set(it.map((x) => x.a).filter(Boolean)); sel.innerHTML = `<option value="">${state.abestiak.length ? "Aukeratu abestia…" : "Errepertorioa hutsik dago"}</option>` + repSorted().map((a) => `<option value="${esc(a.id)}">${have.has(a.id) ? "✓ " : ""}${esc(a.izena)}${a.iraupena ? " (" + esc(fmtDur(durSec(a.iraupena))) + ")" : ""}</option>`).join(""); }
+  }
+  async function saveSetlist() {
+    const izena = ($("sl-izena").value || "").trim();
+    if (!izena) { $("form-err").textContent = "Jarri izen bat setlistari."; return; }
+    const prev = current.id ? state.setlistak.find((x) => x.id === current.id) : null;
+    const now = new Date().toISOString();
+    const data = { izena, boloId: $("sl-bolo").value || "", items: current.items.map((x) => (x.a ? { a: x.a } : { t: x.t })), notas: ($("sl-notas").value || "").trim(), actualizado: now, creado: prev && prev.creado ? prev.creado : now };
+    const btn = $("btn-save"); btn.disabled = true; btn.textContent = "Gordetzen…";
+    try {
+      const col = state.db.collection("setlistak");
+      await (current.id ? col.doc(current.id) : col.doc()).set(data);
+      closeForm(); toast("Setlista gordeta");
+    } catch (er) { btn.disabled = false; btn.textContent = "Gorde"; handleWriteError(er, true); }
+  }
+  function openStage(id) {
+    const sl = state.setlistak.find((x) => x.id === id); if (!sl) return;
+    current = { kind: "stage", id };
+    const inf = setlistInfo(sl);
+    let pos = 0;
+    $("dialog").classList.add("stage-dialog");
+    $("dialog").innerHTML = `
+      <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
+      <ol class="stage-list">${(sl.items || []).map((x) => { const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-name">${esc(itemName(x))}</span><span class="st-meta">${a && a.tonua ? esc(a.tonua) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-name">— ${esc(x.t)} —</span><span class="st-meta"></span></li>`; }).join("") || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
+      <div class="actions stage-actions">${state.canWrite ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
+    $("overlay").hidden = false;
+  }
+
   function viewComponentes() {
     const cols = "minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,.8fr)";
     const sorted = [...state.componentes].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
@@ -885,6 +1033,15 @@ main { overflow-x: clip; }
         { id: "idaVuelta", label: "Joan-etorria?", type: "yesno", def: true, hint: "Kalkulatzean, km-ak eta bidesariak bikoizten dira" },
         { id: "eurKm", label: "Km-ko prezioa (€)", type: "number", step: "0.01", min: "0", def: num(state.ajustes.eurKm) || EURKM_DEF },
         { id: "notas", label: "Oharrak", type: "textarea", full: true },
+      ],
+    },
+    abestia: {
+      col: "abestiak", title: ["Abesti berria", "Editatu abestia"],
+      fields: () => [
+        { id: "izena", label: "Abestiaren izena", type: "text", required: true, full: true },
+        { id: "iraupena", label: "Iraupena (mm:ss)", type: "text", placeholder: "3:45" },
+        { id: "tonua", label: "Tonua", type: "text", placeholder: "La m" },
+        { id: "notas", label: "Oharrak", type: "textarea", full: true, placeholder: "Hasiera, aldaketak, nork abesten duen…" },
       ],
     },
     materiala: {
@@ -1101,7 +1258,7 @@ main { overflow-x: clip; }
     if (current.kind === "viaje" && e.target.id === "fld-tipo") updateKm(true);
   });
 
-  function closeForm() { $("overlay").hidden = true; current = null; $("dialog").innerHTML = ""; render(); }
+  function closeForm() { $("overlay").hidden = true; current = null; $("dialog").innerHTML = ""; $("dialog").classList.remove("stage-dialog"); document.body.classList.remove("printing-stage"); render(); }
   $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeForm(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("overlay").hidden) closeForm(); });
 
@@ -1110,9 +1267,20 @@ main { overflow-x: clip; }
     if (id === "btn-cancel") return closeForm();
     if (id === "btn-del") return confirmDelete();
     if (id === "btn-del-yes") return doDelete();
-    if (id === "btn-del-no") return openForm(current.kind, current.id);
+    if (id === "btn-del-no") return current.kind === "setlist" ? openSetlist(current.id) : openForm(current.kind, current.id);
     if (id === "btn-sug") { e.preventDefault(); $("fld-facturaNum").value = nextFactura(); return; }
     if (id === "btn-save-aj") return saveAjustes();
+    if (current && current.kind === "setlist") {
+      const up = e.target.closest("[data-sl-up]"), dn = e.target.closest("[data-sl-down]"), rm = e.target.closest("[data-sl-del]");
+      const it = current.items;
+      if (up) { const i = +up.dataset.slUp; if (i > 0) [it[i - 1], it[i]] = [it[i], it[i - 1]]; return renderSlList(); }
+      if (dn) { const i = +dn.dataset.slDown; if (i < it.length - 1) [it[i + 1], it[i]] = [it[i], it[i + 1]]; return renderSlList(); }
+      if (rm) { it.splice(+rm.dataset.slDel, 1); return renderSlList(); }
+      if (id === "sl-add-btn") { const v = $("sl-add-sel").value; if (!v) return; it.push({ a: v }); $("sl-add-sel").value = ""; return renderSlList(); }
+      if (id === "sl-add-all") { const have = new Set(it.map((x) => x.a).filter(Boolean)); repSorted().forEach((a) => { if (!have.has(a.id)) it.push({ a: a.id }); }); return renderSlList(); }
+      if (id === "sl-text-btn") { const v = $("sl-text").value.trim(); if (!v) return; it.push({ t: v }); $("sl-text").value = ""; return renderSlList(); }
+    }
+    if (current && current.kind === "stage") { if (id === "btn-print") { document.body.classList.add("printing-stage"); try { window.print(); } finally { setTimeout(() => document.body.classList.remove("printing-stage"), 500); } return; } if (id === "btn-stage-edit") return openSetlist(current.id); }
     const cb = e.target.closest(".coche-calc"); if (cb) return calcRuta(cb.closest(".coche-row"), cb);
   });
 
@@ -1121,14 +1289,14 @@ main { overflow-x: clip; }
     let extra = "";
     if (kind === "componente") { const n = state.viajes.filter((v) => v.componente === id).length; if (n) extra = ` Bere ${n} bidaiak kiderik gabe geratuko dira.`; }
     if (kind === "bolo") { const na = state.viajes.filter((v) => v.boloId === id && v.auto).length, nm = state.viajes.filter((v) => v.boloId === id && !v.auto).length; if (na) extra += ` Bere ${na} auto-bidaiak ere ezabatuko dira.`; if (nm) extra += ` Beste ${nm} bidaia emanaldirik gabe geratuko dira.`; }
-    const nombre = { componente: "kide", bolo: "emanaldi", viaje: "bidaia", ruta: "ibilbide", materiala: "erosketa" }[kind];
+    const nombre = { componente: "kide", bolo: "emanaldi", viaje: "bidaia", ruta: "ibilbide", materiala: "erosketa", abestia: "abesti", setlist: "setlist" }[kind] || "elementu";
     $("dialog").innerHTML = `<h3>${nombre.charAt(0).toUpperCase() + nombre.slice(1)} hau ezabatu?</h3><p style="margin:0">Ezin da desegin.${esc(extra)}</p>
       <div class="actions"><button type="button" class="btn" id="btn-del-no">Itzuli</button><button type="button" class="btn primary" id="btn-del-yes" style="background:var(--bad);border-color:var(--bad)">Bai, ezabatu</button></div>`;
   }
   async function doDelete() {
     const { kind, id } = current;
     try {
-      await state.db.collection(FORMS[kind].col).doc(id).delete();
+      await state.db.collection(kind === "setlist" ? "setlistak" : FORMS[kind].col).doc(id).delete();
       if (kind === "bolo") { for (const v of state.viajes.filter((x) => x.auto && x.boloId === id)) await state.db.collection("viajes").doc(v.id).delete(); }
       closeForm(); toast("Ezabatuta");
     }
@@ -1137,7 +1305,8 @@ main { overflow-x: clip; }
 
   $("dialog").addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!current || !state.db || current.kind === "ajustes") return;
+    if (!current || !state.db || current.kind === "ajustes" || current.kind === "stage") return;
+    if (current.kind === "setlist") return saveSetlist();
     const def = FORMS[current.kind];
     const { data, missing } = readForm();
     if (missing) { $("form-err").textContent = `Falta da: ${missing}.`; return; }
@@ -1605,7 +1774,9 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   // ---------- Clicks en la vista ----------
   $("view").addEventListener("click", (e) => {
     const t = e.target;
-    const add = t.closest("[data-add]"); if (add) return openForm(add.dataset.add);
+    const add = t.closest("[data-add]"); if (add) return add.dataset.add === "setlist" ? openSetlist(null) : openForm(add.dataset.add);
+    const stg = t.closest("[data-stage]"); if (stg) { e.stopPropagation(); return openStage(stg.dataset.stage); }
+    const esl = t.closest("[data-edit-setlist]"); if (esl) return openSetlist(esl.dataset.editSetlist);
     if (t.closest("[data-edit-ajustes]")) return openAjustes();
     const dr = t.closest("[data-del-ruta]");
     if (dr) { const box = dr.parentElement; box.innerHTML = `<span class="del-confirm"><button type="button" class="btn small" data-del-no>Ez</button><button type="button" class="btn small primary" data-del-yes="${esc(dr.dataset.delRuta)}" style="background:var(--bad);border-color:var(--bad)">Bai</button></span>`; return; }
@@ -1723,7 +1894,9 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     if (!state.limited) state.tab = "bolos";
     render();
     const timer = setTimeout(() => setStatus("Oraindik ezin dira datuak kargatu"), 10000);
-    const cols = Object.keys(state.loaded), ok = new Set();
+    const SL_COLS = ["abestiak", "setlistak"];
+    if (state.limited) SL_COLS.forEach((k) => (state.loaded[k] = true));
+    const cols = Object.keys(state.loaded).filter((k) => !state.limited || !SL_COLS.includes(k)), ok = new Set();
     cols.forEach((c) => {
       db.collection(c).onSnapshot((snap) => {
         state[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
