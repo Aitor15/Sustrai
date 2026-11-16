@@ -270,7 +270,7 @@ main { overflow-x: clip; }
 .sl-groups { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .sl-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .sl-add select, .sl-add input { flex: 1; min-width: 160px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
-.dialog { overflow-x: hidden; }
+.dialog { overflow-x: hidden; grid-template-columns: minmax(0, 1fr); }
 /* Safari: grid eta flex barruko kutxak ez zabaltzeko testu luzeekin */
 .form-grid > *, .field, .dialog .actions, .sl-add > *, .sl-list li > * { min-width: 0; }
 .dialog .field select, .dialog .field input, .dialog .field textarea { width: 100%; }
