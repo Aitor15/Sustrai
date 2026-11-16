@@ -855,16 +855,16 @@ main { overflow-x: clip; }
           </li>`; }).join("")}</ul></div>`
       : `<div class="card empty"><strong>Oraindik ez dago setlistik</strong>Sortu bat emanaldi baterako, errepertorioko abestiak ordenatuz.</div>`;
     const reps = repSorted();
-    const repHtml = reps.length ? `<div class="card" style="--cols:minmax(0,1.6fr) 90px 80px 72px">
-        <div class="ledger-head"><div>Abestia</div><div class="hide-m">Tonua</div><div class="r">Iraupena</div><div></div></div>
+    const repHtml = reps.length ? `<div class="card" style="--cols:minmax(0,1.5fr) 80px 100px 80px">
+        <div class="ledger-head"><div>Abestia</div><div class="hide-m">Tonua</div><div class="hide-m">Triki</div><div class="r">Iraupena</div></div>
         <ul class="ledger">${reps.map((a) => { const uses = state.setlistak.filter((sl) => (sl.items || []).some((x) => x.a === a.id)).length; return `
           <li class="row" tabindex="0" data-edit="abestia" data-id="${esc(a.id)}">
-            <div><div class="main">${esc(a.izena)}</div><div class="meta">${uses ? uses + " setlistatan" : "setlistarik gabe"}${a.notas ? " · " + esc(String(a.notas).slice(0, 60)) : ""}<span class="only-m">${a.tonua ? " · " + esc(a.tonua) : ""}</span></div></div>
+            <div><div class="main">${esc(a.izena)}</div><div class="meta">${uses ? uses + " setlistatan" : "setlistarik gabe"}${a.notas ? " · " + esc(String(a.notas).slice(0, 60)) : ""}<span class="only-m">${a.tonua ? " · " + esc(a.tonua) : ""}${a.triki ? " · triki: " + esc(a.triki) : ""}</span></div></div>
             <div class="meta hide-m">${esc(a.tonua || "—")}</div>
+            <div class="meta hide-m">${esc(a.triki || "—")}</div>
             <div class="r num">${a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : "—"}</div>
-            <div></div>
           </li>`; }).join("")}</ul>
-        <div class="ledger-foot"><div>${reps.length} abesti</div><div class="hide-m"></div><div class="r num">${fmtDur(reps.reduce((s2, a) => s2 + durSec(a.iraupena), 0))}</div><div></div></div></div>`
+        <div class="ledger-foot"><div>${reps.length} abesti</div><div class="hide-m"></div><div class="hide-m"></div><div class="r num">${fmtDur(reps.reduce((s2, a) => s2 + durSec(a.iraupena), 0))}</div></div></div>`
       : `<div class="card empty"><strong>Errepertorioa hutsik dago</strong>Gehitu taldearen abestiak, iraupenarekin, setlistak egiteko.</div>`;
     return `<section style="display:grid;gap:12px">
         <div class="section-head"><div><h2>Setlistak</h2><p class="hint">Emanaldi bakoitzeko abestien ordena. "▶ Ikusi" sakatuz, letra handiz agertokirako.</p></div>${addBtn("setlist", "Setlist berria")}</div>
@@ -913,7 +913,7 @@ main { overflow-x: clip; }
   function renderSlList() {
     const it = current.items, ro = !state.canWrite;
     let pos = 0;
-    $("sl-list").innerHTML = it.length ? it.map((x, i) => { const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${a && a.tonua ? ` <span class="meta">${esc(a.tonua)}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; }).join("") : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
+    $("sl-list").innerHTML = it.length ? it.map((x, i) => { const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${a && (a.tonua || a.triki) ? ` <span class="meta">${esc([a.tonua, a.triki ? "triki " + a.triki : ""].filter(Boolean).join(" · "))}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; }).join("") : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
     const inf = setlistInfo({ items: it });
     $("sl-total").textContent = inf.n ? `Guztira: ${durTxt(inf)}` : "";
     const sel = $("sl-add-sel");
@@ -940,7 +940,7 @@ main { overflow-x: clip; }
     $("dialog").classList.add("stage-dialog");
     $("dialog").innerHTML = `
       <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
-      <ol class="stage-list">${(sl.items || []).map((x) => { const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-name">${esc(itemName(x))}</span><span class="st-meta">${a && a.tonua ? esc(a.tonua) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-name">— ${esc(x.t)} —</span><span class="st-meta"></span></li>`; }).join("") || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      <ol class="stage-list">${(sl.items || []).map((x) => { const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-name">${esc(itemName(x))}</span><span class="st-meta">${a ? esc([a.tonua, a.triki].filter(Boolean).join(" · ")) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-name">— ${esc(x.t)} —</span><span class="st-meta"></span></li>`; }).join("") || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
       <div class="actions stage-actions">${state.canWrite ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
@@ -1041,6 +1041,7 @@ main { overflow-x: clip; }
         { id: "izena", label: "Abestiaren izena", type: "text", required: true, full: true },
         { id: "iraupena", label: "Iraupena (mm:ss)", type: "text", placeholder: "3:45" },
         { id: "tonua", label: "Tonua", type: "text", placeholder: "La m" },
+        { id: "triki", label: "Ze triki?", type: "text", full: true, list: "dl-triki", placeholder: "Fa-Sib, Sol-Do…" },
         { id: "notas", label: "Oharrak", type: "textarea", full: true, placeholder: "Hasiera, aldaketak, nork abesten duen…" },
       ],
     },
@@ -1159,6 +1160,7 @@ main { overflow-x: clip; }
         ${ro ? "" : `<button type="submit" class="btn primary" id="btn-save">Gorde</button>`}
       </div>
       <datalist id="dl-clientes">${clientes.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>
+      <datalist id="dl-triki">${[...new Set(state.abestiak.map((a) => a.triki).filter(Boolean))].sort().map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
       <datalist id="dl-rutas">${state.rutas.map((r) => `<option value="${esc(r.trayecto)}">`).join("")}</datalist>`;
     $("overlay").hidden = false;
     const first = $("dialog").querySelector("input:not([type=checkbox]):not([type=radio]), select");
