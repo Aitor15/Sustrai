@@ -271,6 +271,10 @@ main { overflow-x: clip; }
 .sl-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .sl-add select, .sl-add input { flex: 1; min-width: 160px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .dialog { overflow-x: hidden; }
+/* Safari: grid eta flex barruko kutxak ez zabaltzeko testu luzeekin */
+.form-grid > *, .field, .dialog .actions, .sl-add > *, .sl-list li > * { min-width: 0; }
+.dialog .field select, .dialog .field input, .dialog .field textarea { width: 100%; }
+.sl-add select { width: auto; max-width: 100%; text-overflow: ellipsis; }
 .dialog input, .dialog select, .dialog textarea { max-width: 100%; min-width: 0; }
 .dialog input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-height: 38px; }
 @media (max-width: 640px) {
