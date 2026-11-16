@@ -268,6 +268,8 @@ main { overflow-x: clip; }
 .ledger .rep-group:first-child { border-top: 0; }
 .rep-group .meta { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
 .sl-groups { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.sl-list li.sl-addrow { display: block; padding: 5px 8px 7px 38px; background: var(--bg); }
+.sl-list li.sl-addrow select { width: 100%; max-width: 100%; min-width: 0; padding: 5px 8px; border: 1px dashed var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); font-size: 13px; }
 .sl-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .sl-add select, .sl-add input { flex: 1; min-width: 160px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .dialog { overflow-x: hidden; grid-template-columns: minmax(0, 1fr); }
@@ -949,6 +951,7 @@ main { overflow-x: clip; }
     if (sel) sel.addEventListener("change", () => { const n = $("sl-izena"); if (n && !n.value.trim() && sel.value) { const b = state.bolos.find((x) => x.id === sel.value); if (b) n.value = b.evento || ""; } });
     const ti = $("sl-text"); if (ti) ti.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("sl-text-btn").click(); } });
     const gi = $("sl-group"); if (gi) gi.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("sl-group-btn").click(); } });
+    $("sl-list").addEventListener("change", (e) => { const gs = e.target.closest("[data-sl-gsel]"); if (!gs || !gs.value) return; current.items.splice(+gs.dataset.slGsel, 0, { a: gs.value }); renderSlList(); });
     if (!id && $("sl-izena")) $("sl-izena").focus();
   }
   function renderSlList() {
@@ -956,7 +959,12 @@ main { overflow-x: clip; }
     let pos = 0;
     const gs = slGroups(it);
     const btns = (i) => ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`;
-    $("sl-list").innerHTML = it.length ? it.map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="sl-group"><span class="sl-n">▣</span><span class="sl-name">${esc(x.g || "Taldea")}</span><span class="num meta">${g ? esc(grpTxt(g)) : ""}</span>${btns(i)}</li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${a && (a.tonua || a.triki) ? ` <span class="meta">${esc([a.tonua, a.triki ? "triki " + a.triki : ""].filter(Boolean).join(" · "))}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; }).join("") : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
+    const have = new Set(it.map((x) => x.a).filter(Boolean));
+    const songOpts = () => `<option value="">+ Abestia talde honetara…</option>` + repSorted().map((a) => `<option value="${esc(a.id)}">${have.has(a.id) ? "✓ " : ""}${esc(a.izena)}${a.iraupena ? " (" + esc(fmtDur(durSec(a.iraupena))) + ")" : ""}</option>`).join("");
+    // Talde bakoitzaren amaieran (hurrengo taldearen aurretik) abestia zuzenean gehitzeko lerroa.
+    const addRow = (at) => ro || !gs.length ? "" : `<li class="sl-addrow"><select data-sl-gsel="${at}" aria-label="Gehitu abestia talde honetara">${songOpts()}</select></li>`;
+    $("sl-list").innerHTML = it.length ? it.map((x, i) => { const pre = x.g !== undefined && i > 0 && gs.some((z) => z.i < i) ? addRow(i) : "";
+      return pre + (() => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="sl-group"><span class="sl-n">▣</span><span class="sl-name">${esc(x.g || "Taldea")}</span><span class="num meta">${g ? esc(grpTxt(g)) : ""}</span>${btns(i)}</li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${a && (a.tonua || a.triki) ? ` <span class="meta">${esc([a.tonua, a.triki ? "triki " + a.triki : ""].filter(Boolean).join(" · "))}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; })(); }).join("") + addRow(it.length) : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
     const inf = setlistInfo({ items: it });
     $("sl-total").textContent = inf.n ? `Guztira: ${durTxt(inf)}` : "";
     const sel = $("sl-add-sel");
