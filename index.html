@@ -401,8 +401,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117l"></script>
-<script src="firebase-shim.js?v=20261117l"></script>
+<script src="config.js?v=20261117m"></script>
+<script src="firebase-shim.js?v=20261117m"></script>
 </head>
 <body>
 <header class="top">
@@ -1245,7 +1245,7 @@ main { overflow-x: clip; }
         { id: "izena", label: "Abestiaren izena", type: "text", required: true, full: true },
         { id: "iraupena", label: "Iraupena (mm:ss)", type: "text", placeholder: "3:45" },
         { id: "bpm", label: "Tempoa (BPM)", type: "number", placeholder: "120", min: 20, step: 1 },
-        { id: "konpasa", label: "Erritmoa (konpasa)", type: "select", def: "4/4", options: KONPAS_OPTS },
+        { id: "konpasa", label: "Erritmoa (konpasa)", type: "select", def: "", options: [["", "—"], ...KONPAS_OPTS] },
         { id: "tonua", label: "Tonua", type: "text", placeholder: "La m" },
         { id: "triki", label: "Ze triki?", type: "text", full: true, list: "dl-triki", placeholder: "Fa-Sib, Sol-Do…" },
         { id: "notas", label: "Oharrak", type: "textarea", full: true, placeholder: "Hasiera, aldaketak, nork abesten duen…" },
@@ -1518,13 +1518,13 @@ main { overflow-x: clip; }
     stop() { clearInterval(this.timer); this.timer = null; this.key = null; this.mark(false); },
   };
   // ---- Agertokian: erritmoa zuzenean aldatu (adminak bakarrik), desplegable batetik ----
-  const konpSelect = (a, i) => `<select class="konp-sel${KONPAS[a.konpasa] ? "" : " empty"}" data-konp-sel="${esc(a.id)}" data-st-i="${i}" aria-label="Erritmoa: ${esc(a.izena || "")}" title="Erritmoa aldatu">${KONPAS[a.konpasa] ? "" : `<option value="" selected>—</option>`}${Object.keys(KONPAS).map((k) => `<option value="${k}" ${a.konpasa === k ? "selected" : ""}>${k}</option>`).join("")}</select>`;
+  const konpSelect = (a, i) => `<select class="konp-sel${KONPAS[a.konpasa] ? "" : " empty"}" data-konp-sel="${esc(a.id)}" data-st-i="${i}" aria-label="Erritmoa: ${esc(a.izena || "")}" title="Erritmoa aldatu"><option value="" ${KONPAS[a.konpasa] ? "" : "selected"}>—</option>${Object.keys(KONPAS).map((k) => `<option value="${k}" ${a.konpasa === k ? "selected" : ""}>${k}</option>`).join("")}</select>`;
   document.addEventListener("change", async (e) => {
-    const sel = e.target.closest && e.target.closest("[data-konp-sel]"); if (!sel || !sel.value) return;
-    const id = sel.dataset.konpSel, k = konpOk(sel.value), a = abestia(id);
-    sel.classList.remove("empty"); const ph = sel.querySelector('option[value=""]'); if (ph) ph.remove();
+    const sel = e.target.closest && e.target.closest("[data-konp-sel]"); if (!sel) return;
+    const id = sel.dataset.konpSel, none = !sel.value, k = none ? "4/4" : konpOk(sel.value), a = abestia(id);
+    sel.classList.toggle("empty", none);
     const mb = (sel.closest(".st-side") || sel.parentElement).querySelector("[data-metro]"); if (mb) { mb.dataset.metroK = k; if (Metro.key === mb.dataset.metroKey) Metro.start(mb.dataset.metro, mb.dataset.metroKey, k); }
-    try { await state.db.collection("abestiak").doc(id).update({ konpasa: k, actualizado: new Date().toISOString() }); if (a) a.konpasa = k; toast("Erritmoa gordeta: " + k); }
+    try { await state.db.collection("abestiak").doc(id).update({ konpasa: none ? null : k, actualizado: new Date().toISOString() }); if (a) a.konpasa = none ? null : k; toast(none ? "Erritmoa kenduta" : "Erritmoa gordeta: " + k); }
     catch (er) { handleWriteError(er); }
   });
   document.addEventListener("click", (e) => {
