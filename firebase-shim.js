@@ -99,8 +99,8 @@
     Elgoibar: [7.56, 7.56, 3.87, 3.34, 2.12, 1.17, 2.58, 3.36, 4.01, 5.66, 9.49, 10.74, null, 1.63, 2.35, 3.92, 6.41],
     Itziar: [8.84, 8.84, 5.15, 4.62, 3.4, 2.47, 3.85, 4.63, 5.28, 6.93, 10.76, 12.01, 1.63, null, 1.17, 2.47, 5.17],
     Zestoa: [9.74, 9.74, 6.05, 5.52, 4.3, 3.27, 4.57, 5.35, 6.0, 7.65, 11.48, 12.73, 2.35, 1.17, null, 1.74, 4.41],
-    // Zarautz – Donostia: taulan ez dago zuzenean; besteen arteko diferentziatik (Zarautz nagusiko barrera).
-    Zarautz: [11.12, 11.12, 7.43, 6.9, 5.68, 4.75, 6.13, 6.91, 7.56, 9.21, 13.04, 14.29, 3.92, 2.47, 1.74, null, 2.69],
+    // Zarautz – Donostia: taulan ez dago zuzenean; Zarautzeko sarrerako barrera 2,80 € (taldeak egiaztatua).
+    Zarautz: [11.12, 11.12, 7.43, 6.9, 5.68, 4.75, 6.13, 6.91, 7.56, 9.21, 13.04, 14.29, 3.92, 2.47, 1.74, null, 2.8],
   };
   const W = {};
   WN.forEach((n) => { W[n] = {}; });
