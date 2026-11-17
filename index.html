@@ -306,7 +306,12 @@ main { overflow-x: clip; }
 .rep-table .c { text-align: center; }
 .rep-table .rep-k .konp-tag { margin-left: 0; }
 @media (max-width: 640px) { .rep-table .row { grid-template-columns: minmax(0, 1fr) 48px auto; } }
-.st-side { display: inline-flex; align-items: center; gap: 8px; }
+.st-side { display: grid; grid-template-columns: 74px 92px; gap: 8px; align-items: center; }
+.st-side .st-k { display: flex; justify-content: center; }
+.st-side .st-m { display: flex; justify-content: flex-end; }
+.st-side .metro-b.big { margin-left: 0; min-width: 84px; justify-content: center; }
+.stage-dialog select.konp-sel { width: 74px !important; text-align: center; text-align-last: center; padding-left: 8px; padding-right: 18px; }
+@media (max-width: 640px) { .st-side { grid-template-columns: 66px 78px; gap: 6px; } .stage-dialog select.konp-sel { width: 66px !important; } .st-side .metro-b.big { min-width: 72px; } }
 .st-side .konp-tag { margin-left: 0; font-size: 13px; padding: 3px 9px; }
 .metro-b small { font-size: .78em; font-weight: 500; opacity: .75; margin-left: 2px; }
 .metro-b.metro-empty { border-style: dashed; color: var(--muted); font-weight: 500; background: transparent; }
@@ -356,6 +361,10 @@ main { overflow-x: clip; }
 .stage-list li { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 10px 2px; border-bottom: 1px solid #262626; }
 .stage-list .st-n { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
 .stage-list .st-body { display: grid; gap: 3px; min-width: 0; }
+.stage-dialog select.konp-sel, .konp-sel { width: auto !important; min-width: 0; font-size: 13px !important; line-height: 1.3; -webkit-appearance: none; appearance: none; border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 999px; font: 700 13px var(--font-body); padding: 4px 22px 4px 10px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%); background-position: right 11px center, right 7px center; background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; font-variant-numeric: tabular-nums; }
+.stage-dialog select.konp-sel.empty, .konp-sel.empty { border-style: dashed; color: #8a8a8a; border-color: #5a5a5a; font-weight: 500; }
+.konp-sel option { color: #000; background: #fff; }
+@media print { .konp-sel { border: 0; padding: 0; background: none; } .konp-sel.empty { display: none; } }
 .stage-list .st-name { font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.15; letter-spacing: .01em; overflow-wrap: anywhere; }
 .stage-list .st-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 14px; color: #a6a6a6; }
 .stage-list .st-sub b { color: #fff; font-weight: 600; }
@@ -392,8 +401,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117j"></script>
-<script src="firebase-shim.js?v=20261117j"></script>
+<script src="config.js?v=20261117l"></script>
+<script src="firebase-shim.js?v=20261117l"></script>
 </head>
 <body>
 <header class="top">
@@ -580,6 +589,8 @@ main { overflow-x: clip; }
     return h;
   }
   const payKey = (x) => x.from + "__" + x.to;
+  // Erritmoa setlistetik aldatzeko baimena: admina bakarrik.
+  const canKonp = () => state.canWrite && !state.limited;
   const myComp = () => { if (window.sustraiMyComp && state.componentes.some((c) => c.id === window.sustraiMyComp)) return window.sustraiMyComp; if (!state.myEmail && !state.myId) return null; const c = state.componentes.find((c) => (state.myEmail && String(c.email || "").trim().toLowerCase() === state.myEmail) || (state.myId && c.uid === state.myId)); return c ? c.id : null; };
   const canPay = (x) => state.canWrite && (!state.limited || (myComp() && (x.from === myComp() || x.to === myComp())));
   function boloPagos(b, l) {
@@ -1129,7 +1140,7 @@ main { overflow-x: clip; }
     $("dialog").classList.add("stage-dialog");
     $("dialog").innerHTML = `
       <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
-      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side">${a ? konpTag(a) : ""}${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li data-st-i="${i}" data-st-a="${esc(x.a)}"><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side"><span class="st-k">${a ? (canKonp() ? konpSelect(a, i) : konpTag(a)) : ""}</span><span class="st-m">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
       <div class="actions stage-actions">${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
@@ -1506,6 +1517,16 @@ main { overflow-x: clip; }
     mark(on) { document.querySelectorAll(".metro-b.on").forEach((b) => b.classList.remove("on")); if (on && this.key) document.querySelectorAll(`[data-metro-key="${CSS.escape(this.key)}"]`).forEach((b) => b.classList.add("on")); },
     stop() { clearInterval(this.timer); this.timer = null; this.key = null; this.mark(false); },
   };
+  // ---- Agertokian: erritmoa zuzenean aldatu (adminak bakarrik), desplegable batetik ----
+  const konpSelect = (a, i) => `<select class="konp-sel${KONPAS[a.konpasa] ? "" : " empty"}" data-konp-sel="${esc(a.id)}" data-st-i="${i}" aria-label="Erritmoa: ${esc(a.izena || "")}" title="Erritmoa aldatu">${KONPAS[a.konpasa] ? "" : `<option value="" selected>—</option>`}${Object.keys(KONPAS).map((k) => `<option value="${k}" ${a.konpasa === k ? "selected" : ""}>${k}</option>`).join("")}</select>`;
+  document.addEventListener("change", async (e) => {
+    const sel = e.target.closest && e.target.closest("[data-konp-sel]"); if (!sel || !sel.value) return;
+    const id = sel.dataset.konpSel, k = konpOk(sel.value), a = abestia(id);
+    sel.classList.remove("empty"); const ph = sel.querySelector('option[value=""]'); if (ph) ph.remove();
+    const mb = (sel.closest(".st-side") || sel.parentElement).querySelector("[data-metro]"); if (mb) { mb.dataset.metroK = k; if (Metro.key === mb.dataset.metroKey) Metro.start(mb.dataset.metro, mb.dataset.metroKey, k); }
+    try { await state.db.collection("abestiak").doc(id).update({ konpasa: k, actualizado: new Date().toISOString() }); if (a) a.konpasa = k; toast("Erritmoa gordeta: " + k); }
+    catch (er) { handleWriteError(er); }
+  });
   document.addEventListener("click", (e) => {
     const m = e.target.closest("[data-metro], [data-metro-input]"); if (!m) return;
     e.preventDefault(); e.stopPropagation();
