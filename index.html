@@ -148,7 +148,7 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .overlay[hidden] { display: none; }
 .dialog { background: var(--surface); border-radius: 14px; width: 100%; max-width: 520px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.25); display: grid; gap: 14px; }
 .dialog h3 { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 600; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .field { display: grid; gap: 4px; }
 .field.full { grid-column: 1 / -1; }
 .field label { font-size: 13px; color: var(--muted); font-weight: 500; }
@@ -173,7 +173,7 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
   .only-m { display: inline; }
   .coche-detail { padding-left: 0; }
   .bolos-card .row, .bolos-card .ledger-foot { grid-template-columns: minmax(0,1fr) auto auto; }
-  .form-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
   .brand h1 { font-size: 24px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -211,6 +211,25 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .ap-toggle { color: var(--ink); font-weight: 500; cursor: pointer; }
 .ap-toggle input { width: auto !important; }
 .coche-row input:disabled { opacity: .45; }
+/* "Nork hartu du autoa?" — ordenatuta */
+.coches .coche-row { gap: 8px; padding: 10px 2px; grid-template-columns: minmax(0, 1fr); }
+.coches .coche-detail { grid-template-columns: minmax(0, 1fr); }
+.coches .coche-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.coches .coche-head .check { flex: 1; min-width: 0; justify-content: flex-start; }
+.coches .coche-head .check > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.coches .coche-head .meta { font-size: 12px; }
+.coches input[type=checkbox] { width: auto !important; flex: none; margin: 0; }
+.coches .coche-detail { padding-left: 26px; gap: 8px; }
+.coches .coche-line { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+.coches .coche-line .coche-tray { flex: 1; min-width: 0; width: auto !important; }
+.coches .coche-line .coche-calc { flex: none; }
+.coches .coche-nums { flex-wrap: wrap; gap: 8px 16px; }
+.coches .coche-nums .mini { white-space: nowrap; }
+.coches .coche-nums input[type=number] { width: 84px !important; text-align: right; }
+.coches .coche-imp { margin-left: auto; font-weight: 700; white-space: nowrap; }
+.coches .coche-note { font-size: 12px; line-height: 1.4; }
+.coches .coche-links { font-size: 12px; }
+@media (max-width: 640px) { .coches .coche-detail { padding-left: 0; } }
 .deudas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .deudas li { display: flex; gap: 8px; align-items: baseline; }
 .deudas li .num { margin-left: auto; font-weight: 600; }
@@ -292,6 +311,10 @@ main { overflow-x: clip; }
 .dialog .field select, .dialog .field input, .dialog .field textarea { width: 100%; }
 .sl-add select { width: auto; max-width: 100%; text-overflow: ellipsis; }
 .dialog input, .dialog select, .dialog textarea { max-width: 100%; min-width: 0; }
+.dialog input[type="radio"], .dialog input[type="checkbox"] { width: auto !important; flex: none; }
+.dialog .field { grid-template-columns: minmax(0, 1fr); }
+.dialog .coches, .dialog .multi { min-width: 0; }
+.dialog .coches { grid-template-columns: minmax(0, 1fr); }
 .dialog input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-height: 38px; }
 @media (max-width: 640px) {
   /* 16px-tik behera, iPhoneak handitu egiten du idazten hastean eta koadroak ateratzen dira */
@@ -345,8 +368,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117e"></script>
-<script src="firebase-shim.js?v=20261117e"></script>
+<script src="config.js?v=20261117f"></script>
+<script src="firebase-shim.js?v=20261117f"></script>
 </head>
 <body>
 <header class="top">
@@ -1260,17 +1283,16 @@ main { overflow-x: clip; }
         const cSorted = [...state.componentes].sort((a, b) => (!!a.ordezkoa - !!b.ordezkoa) || (a.nombre || "").localeCompare(b.nombre || "", "es"));
         input = `<div class="coches" id="${fid}">${cSorted.map((c, ci) => { const it = list.find((x) => x.c === c.id); return `${c.ordezkoa && (ci === 0 || !cSorted[ci - 1].ordezkoa) ? `<div class="meta" style="font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.04em;padding-top:8px;border-top:2px solid var(--line)">Ordezkoak</div>` : ""}
           <div class="coche-row" data-c="${esc(c.id)}" data-tray="${esc(it ? it.trayecto || "" : "")}">
-            <label class="check"><input type="checkbox" class="coche-on" ${it ? "checked" : ""} ${ro ? "disabled" : ""}> <span>${esc(c.nombre)}${c.instrumento ? ` <span class="meta" style="font-size:12px">· ${esc(c.instrumento)}</span>` : ""}</span></label>
+            <div class="coche-head"><label class="check"><input type="checkbox" class="coche-on" ${it ? "checked" : ""} ${ro ? "disabled" : ""}> <span><strong>${esc(c.nombre)}</strong>${c.instrumento ? ` <span class="meta">${esc(c.instrumento)}</span>` : ""}</span></label><span class="num coche-imp"></span></div>
             <div class="coche-detail">
               <div class="coche-line">
                 <input type="text" class="coche-tray" list="dl-rutas" placeholder="Idatzi ibilbidea: Azpeitia – Gasteiz" aria-label="${esc(c.nombre)}ren ibilbidea" value="${esc(it ? it.trayecto || "" : "")}" ${ro ? "readonly" : ""}>
                 ${ro ? "" : `<button type="button" class="btn small coche-calc">Kalkulatu</button>`}
               </div>
-              <div class="coche-line">
+              <div class="coche-line coche-nums">
                 <label class="mini">km <input type="number" class="coche-km" step="1" min="0" inputmode="decimal" value="${esc(it ? it.km ?? "" : "")}" ${ro ? "readonly" : ""}></label>
                 <label class="mini ap-toggle"><input type="checkbox" class="coche-ap" ${(it ? (it.autobidea !== undefined ? it.autobidea : num(it.peajes) > 0) : true) ? "checked" : ""} ${ro ? "disabled" : ""}> Bidesaria</label>
-                <label class="mini">bidesariak € <input type="number" class="coche-peajes" step="0.01" min="0" inputmode="decimal" value="${esc(it ? it.peajes ?? "" : "")}" ${ro ? "readonly" : ""}></label>
-                <span class="num coche-imp"></span>
+                <label class="mini">bidesariak (€) <input type="number" class="coche-peajes" step="0.01" min="0" inputmode="decimal" value="${esc(it ? it.peajes ?? "" : "")}" ${ro ? "readonly" : ""}></label>
               </div>
               <div class="coche-note meta">${esc(it && it.nota ? it.nota : "")}</div>
               <div class="coche-links meta"></div>
