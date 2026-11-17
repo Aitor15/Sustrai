@@ -21,6 +21,6 @@ window.SUSTRAI_CONFIG = {
   //    Hutsik utziz gero, km-ak eskuz idatzi beharko dira.
   openRouteServiceKey: "",
 
-  // OpenRouteService-rekin bakarrik: bidesariaren estimazioa, autobideko km bakoitzeko (€).
-  bidesariaKm: 0.12,
+  // Bidesariaren estimazioa, ordainpeko km bakoitzeko (€). Google-k ez du Espainiako preziorik ematen.
+  bidesariaKm: 0.14,
 };

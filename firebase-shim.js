@@ -94,7 +94,7 @@
       const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Goog-Api-Key": CFG.googleMapsKey,
-          "X-Goog-FieldMask": "routes.distanceMeters,routes.description,routes.travelAdvisory.tollInfo" },
+          "X-Goog-FieldMask": "routes.distanceMeters,routes.description,routes.travelAdvisory.tollInfo,routes.legs.steps.distanceMeters,routes.legs.steps.navigationInstruction.instructions" },
         body: JSON.stringify(body),
       });
       if (!r.ok) { let m = ""; try { m = (await r.json()).error.message; } catch (e) {} console.error("Google Routes:", r.status, m); throw new Error("routes " + r.status); }
@@ -102,14 +102,19 @@
       const rt = j.routes && j.routes[0];
       if (!rt || !rt.distanceMeters) return null;
       const ti = rt.travelAdvisory && rt.travelAdvisory.tollInfo;
-      let peajes;
+      // Google-k ez du Espainiako bidesarien preziorik ematen: ordainpeko tarteak ("Carretera con peajes")
+      // markatzen ditu, eta haien km-ak × €/km egiten dugu (config.js: bidesariaKm).
+      let tollM = 0;
+      (rt.legs || []).forEach((lg) => (lg.steps || []).forEach((st) => { const t = (st.navigationInstruction && st.navigationInstruction.instructions) || ""; if (/peaje/i.test(t)) tollM += st.distanceMeters || 0; }));
+      const tollKm = Math.round(tollM / 100) / 10;
+      const rate = Number(CFG.bidesariaKm) > 0 ? Number(CFG.bidesariaKm) : 0.14;
+      let peajes, kalkulua = "";
       if (!ap) peajes = 0;
-      else if (!ti) peajes = 0; // ibilbideak ez du bidesaririk
-      else if (ti.estimatedPrice && ti.estimatedPrice.length) {
+      else if (ti && ti.estimatedPrice && ti.estimatedPrice.length) {
         const eur = ti.estimatedPrice.find((x) => x.currencyCode === "EUR") || ti.estimatedPrice[0];
         peajes = Math.round((Number(eur.units || 0) + Number(eur.nanos || 0) / 1e9) * 100) / 100;
-      } // bestela: bidesaria badago baina preziorik ez → eskuz
-      return { km: Math.round(rt.distanceMeters / 100) / 10, ruta: rt.description || (ap ? "ibilbide azkarrena" : "bidesaririk gabeko ibilbidea"), peaje: !!ap, peajes, fuente: "Google Maps" };
+      } else { peajes = Math.round(tollKm * rate * 100) / 100; if (tollKm) kalkulua = `${String(tollKm).replace(".", ",")} km ordainpeko × ${String(rate).replace(".", ",")} €`; }
+      return { km: Math.round(rt.distanceMeters / 100) / 10, ruta: (rt.description || (ap ? "ibilbide azkarrena" : "bidesaririk gabeko ibilbidea")) + (kalkulua ? ` (${kalkulua})` : ""), peaje: !!ap, peajes, tollKm, fuente: "Google Maps" };
     };
   }
 
