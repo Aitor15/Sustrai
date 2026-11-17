@@ -241,7 +241,7 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
   .coches .coche-nums .mini { white-space: normal; }
   .coches .coche-nums .mini:not(.ap-toggle) { display: grid; gap: 3px; font-size: 12px; }
   .coches .coche-nums input[type=number] { width: 100% !important; }
-  .coches .coche-nums .ap-toggle { grid-column: 1 / -1; order: 3; font-size: 13px; }
+  .coches .coche-nums .ap-toggle { order: 3; font-size: 13px; }
 }
 .deudas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .deudas li { display: flex; gap: 8px; align-items: baseline; }
@@ -381,8 +381,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117g"></script>
-<script src="firebase-shim.js?v=20261117g"></script>
+<script src="config.js?v=20261117h"></script>
+<script src="firebase-shim.js?v=20261117h"></script>
 </head>
 <body>
 <header class="top">
@@ -1210,7 +1210,6 @@ main { overflow-x: clip; }
         { id: "tocan", label: "Nork jo zuen (haien artean banatzen da)", type: "multi", full: true, options: compOpts(), defSel: titulares().map((c) => c.id) },
         { sep: "Autoa" },
         { id: "coches", label: "Nork hartu du autoa?", type: "coches", full: true },
-        { id: "idaVuelta", label: "Joan-etorria?", type: "yesno", def: true, hint: "Kalkulatzean, km-ak eta bidesariak bikoizten dira" },
         { id: "eurKm", label: "Km-ko prezioa (€)", type: "number", step: "0.01", min: "0", def: num(state.ajustes.eurKm) || EURKM_DEF },
         { id: "notas", label: "Oharrak", type: "textarea", full: true },
       ],
@@ -1304,6 +1303,7 @@ main { overflow-x: clip; }
               </div>
               <div class="coche-line coche-nums">
                 <label class="mini">km <input type="number" class="coche-km" step="1" min="0" inputmode="decimal" value="${esc(it ? it.km ?? "" : "")}" ${ro ? "readonly" : ""}></label>
+                <label class="mini ap-toggle"><input type="checkbox" class="coche-ida" ${(it ? (it.idaVuelta !== undefined ? it.idaVuelta !== false : values.idaVuelta !== false) : true) ? "checked" : ""} ${ro ? "disabled" : ""}> Joan-etorria</label>
                 <label class="mini ap-toggle"><input type="checkbox" class="coche-ap" ${(it ? (it.autobidea !== undefined ? it.autobidea : num(it.peajes) > 0) : true) ? "checked" : ""} ${ro ? "disabled" : ""}> Bidesaria</label>
                 <label class="mini">bidesariak (€) <input type="number" class="coche-peajes" step="0.01" min="0" inputmode="decimal" value="${esc(it ? it.peajes ?? "" : "")}" ${ro ? "readonly" : ""}></label>
               </div>
@@ -1363,7 +1363,7 @@ main { overflow-x: clip; }
       else if (f.type === "cena3") { const r = $("dialog").querySelector(`input[name="${fid}"]:checked`); v = !r || r.value === "1" ? true : r.value === "0" ? false : "zehazteko"; }
       else if (f.type === "multi") v = [...$(fid).querySelectorAll("input:checked")].map((i) => i.value);
       else if (f.type === "pagadores") { v = {}; $(fid).querySelectorAll(".pag-in").forEach((i) => { const n = round2(num(i.value)); if (n > 0) v[i.dataset.c] = n; }); }
-      else if (f.type === "coches") v = [...$(fid).querySelectorAll(".coche-row")].filter((r) => r.querySelector(".coche-on").checked).map((r) => ({ c: r.dataset.c, autobidea: r.querySelector(".coche-ap").checked, manual: !!r.dataset.manual, trayecto: r.querySelector(".coche-tray").value.trim(), nota: r.querySelector(".coche-note").textContent, km: r.querySelector(".coche-km").value === "" ? null : round2(num(r.querySelector(".coche-km").value)), peajes: r.querySelector(".coche-peajes").value === "" ? null : round2(num(r.querySelector(".coche-peajes").value)) }));
+      else if (f.type === "coches") v = [...$(fid).querySelectorAll(".coche-row")].filter((r) => r.querySelector(".coche-on").checked).map((r) => ({ c: r.dataset.c, idaVuelta: r.querySelector(".coche-ida").checked, autobidea: r.querySelector(".coche-ap").checked, manual: !!r.dataset.manual, trayecto: r.querySelector(".coche-tray").value.trim(), nota: r.querySelector(".coche-note").textContent, km: r.querySelector(".coche-km").value === "" ? null : round2(num(r.querySelector(".coche-km").value)), peajes: r.querySelector(".coche-peajes").value === "" ? null : round2(num(r.querySelector(".coche-peajes").value)) }));
       else { const el = $(fid); if (!el) return; v = f.type === "number" ? (el.value === "" ? null : round2(num(el.value))) : el.value.trim(); }
       if (f.required && (v === "" || v === null)) missing = missing || f.label;
       data[f.id] = v;
@@ -1436,7 +1436,14 @@ main { overflow-x: clip; }
     if (current.kind === "bolo" && (e.target.id === "fld-modalidad" || e.target.name === "fld-cena")) boloTarifa();
     if (current.kind === "bolo" && e.target.classList.contains("coche-ap")) { const row = e.target.closest(".coche-row"); if (!e.target.checked) { row.querySelector(".coche-peajes").value = "0.00"; } if (row.querySelector(".coche-tray").value.trim()) { row.dataset.tray = ""; calcRuta(row, row.querySelector(".coche-calc")); } }
     if (current.kind === "bolo" && e.target.classList.contains("coche-tray")) { const row = e.target.closest(".coche-row"); if (e.target.value.trim() && e.target.value.trim() !== row.dataset.tray) calcRuta(row, row.querySelector(".coche-calc")); }
-    if (current.kind === "bolo" && e.target.name === "fld-idaVuelta") { const ida = e.target.value === "1"; $("dialog").querySelectorAll(".coche-row").forEach((row) => applyIda(row, ida)); }
+    if (current.kind === "bolo" && e.target.classList.contains("coche-ida")) {
+      const row = e.target.closest(".coche-row"), ida = e.target.checked;
+      if (row.dataset.km1) applyIda(row, ida);
+      else { const f = ida ? 2 : 0.5, k = row.querySelector(".coche-km"), pe = row.querySelector(".coche-peajes");
+        if (k.value !== "") k.value = round2(num(k.value) * f); if (pe.value !== "") pe.value = round2(num(pe.value) * f).toFixed(2);
+        const n = row.querySelector(".coche-note"); if (n.textContent) n.textContent = n.textContent.replace(/, ×2 joan-etorria|, joatea bakarrik/, ida ? ", ×2 joan-etorria" : ", joatea bakarrik"); }
+      updateCoches(); updateCalc();
+    }
     if (current.kind === "bolo") { syncPagoExtra(); updateCalc(); updateCoches(); }
     if (current.kind === "viaje" && e.target.id === "fld-tipo") updateKm(true);
   });
@@ -1558,9 +1565,9 @@ main { overflow-x: clip; }
   });
 
   async function guardarRutas(b) {
-    const ida = b.idaVuelta !== false;
     for (const it of (b.coches || [])) {
       if (!it.manual || !it.trayecto || !has(it.km)) continue;
+      const ida = itemIda(it, b);
       const key0 = rutaKey(it.trayecto); if (!key0) continue;
       const key = key0 + (it.autobidea ? "__ap" : "__doan");
       const div = ida ? 2 : 1;
@@ -1587,6 +1594,8 @@ main { overflow-x: clip; }
     }
     for (const v of state.viajes.filter((x) => x.auto && x.boloId === boloId && !keep.has(x.id))) await col.doc(v.id).delete();
   }
+  const rowIda = (row) => { const c = row && row.querySelector(".coche-ida"); return c ? c.checked : true; };
+  const itemIda = (it, b) => it && it.idaVuelta !== undefined ? it.idaVuelta !== false : !b || b.idaVuelta !== false;
   function applyIda(row, ida) {
     if (!row.dataset.km1) return;
     const km = num(row.dataset.km1), pe = num(row.dataset.pe1);
@@ -1626,7 +1635,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     if (!state.db || !state.canWrite || busy.has(v.id)) return;
     const ap = !(v.autobidea !== undefined ? v.autobidea : num(v.peajes) > 0);
     const b = v.boloId && state.bolos.find((x) => x.id === v.boloId);
-    const ida = v.auto && b ? b.idaVuelta !== false : false;
+    const ida = v.auto && b ? itemIda((b.coches || []).find((x) => x.c === v.componente), b) : false;
     if (ap && !v.trayecto) { toast("Bidaiak ez du ibilbiderik: idatzi ibilbidea bidesaria kalkulatzeko."); return; }
     busy.add(v.id); toast(ap ? "Bidesaria kalkulatzen…" : "Bidesaria kentzen…");
     try {
@@ -1912,8 +1921,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const tray = row.querySelector(".coche-tray").value.trim();
     const note = row.querySelector(".coche-note");
     if (!tray) { note.textContent = "Idatzi ibilbidea, adibidez: Azpeitia – Gasteiz."; return; }
-    const r0 = $("dialog").querySelector('input[name="fld-idaVuelta"]:checked');
-    const ida0 = r0 ? r0.value === "1" : true;
+    const ida0 = rowIda(row);
     const key = rutaKey(tray);
     const ap = row.querySelector(".coche-ap").checked;
     const saved = key && (state.rutas.find((x) => x.id === key + (ap ? "__ap" : "__doan")) || state.rutas.find((x) => x.id === key && (ap ? num(x.peajes) > 0 : num(x.peajes) === 0)));
@@ -1944,8 +1952,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
               try { const v = await sample.json(rutaPrompt(tray, true), { modelTier: "complex" }); pe = round2(num(v && v.peajes)); peNota = "bidesaria estimatua"; } catch (er) { peNota = "jarri bidesaria eskuz"; }
             } else peNota = "jarri bidesaria eskuz";
           }
-          const r1 = $("dialog").querySelector('input[name="fld-idaVuelta"]:checked');
-          const ida1 = r1 ? r1.value === "1" : true;
+          const ida1 = rowIda(row);
           row.dataset.km1 = gm.km; row.dataset.pe1 = pe; row.dataset.tray = tray; row.dataset.manual = "1";
           applyIda(row, ida1);
           note.dataset.base = `${gm.fuente || "Google Maps"}: ${String(gm.km).replace(".", ",")} km joaneko, ${gm.ruta} bidez${ap ? `; ${money(pe)} bidesari (${peNota})` : ", bidesaririk gabe"}{IDA}. Gordetzean, ibilbide hau gogoratuko da.`;
@@ -1958,8 +1965,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
       delete row.dataset.busy; if (btn) { btn.disabled = false; btn.textContent = "Kalkulatu"; }
     }
     if (!sample) { if (!note.textContent || /kalkulatzen/i.test(note.textContent)) note.textContent = rutaHook ? "Ezin izan da ibilbidea kalkulatu. Egiaztatu herrien izenak edo idatzi km-ak eskuz." : "Kalkulu automatikoa ez dago erabilgarri. Idatzi km-ak eta bidesariak eskuz (edo jarri OpenRouteService gakoa config.js-n)."; return; }
-    const r = $("dialog").querySelector('input[name="fld-idaVuelta"]:checked');
-    const ida = r ? r.value === "1" : true;
+    const ida = rowIda(row);
     row.dataset.busy = "1";
     if (btn) { btn.disabled = true; btn.textContent = "Kalkulatzen…"; }
     note.textContent = "Distantzia eta bidesariak kalkulatzen…";
