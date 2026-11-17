@@ -483,8 +483,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117p"></script>
-<script src="firebase-shim.js?v=20261117p"></script>
+<script src="config.js?v=20261117q"></script>
+<script src="firebase-shim.js?v=20261117q"></script>
 </head>
 <body>
 <header class="top">
@@ -795,9 +795,6 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   function tiles(t) {
     return `<div class="tiles">
-      <div class="tile hero"><div class="label">Kideentzat</div><div class="value">${money(t.pagos)}</div><div class="foot">Finkoa, emanaldi eta pertsonako</div></div>
-      <div class="tile"><div class="label">Artistamente</div><div class="value">${money(t.gestion)}</div><div class="foot">Aurrekontua ken kideak</div></div>
-      <div class="tile"><div class="label">Aurrekontuak</div><div class="value">${money(t.presupuesto)}</div><div class="foot">${t.bolos.length} emanaldi</div></div>
       <div class="tile tile-btn${state.filtroCobro === "fac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="fac" title="Ikusi fakturarekin egindako emanaldiak"><div class="label">BEZ (%${IVA_DEF}) ›</div><div class="value">${money(t.iva)}</div><div class="foot">${t.bolos.filter((b) => boloCalc(b).facturado).length} emanaldi fakturarekin</div></div>
       ${(() => { const sf = t.bolos.filter((b) => !boloCalc(b).facturado); return `<div class="tile tile-btn${state.filtroCobro === "sinfac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="sinfac" title="Ikusi fakturarik gabeko emanaldiak"><div class="label">BEZ gabe ›</div><div class="value">${money(sf.reduce((a, b) => a + num(b.presupuesto), 0))}</div><div class="foot">${sf.length} emanaldi fakturarik gabe</div></div>`; })()}
       ${(() => { const fb = t.bolos.filter((b) => boloCalc(b).facturado), fp = fb.filter((b) => !b.facturaEmitida); return `<div class="tile tile-btn${state.filtroCobro === "facpend" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="facpend" title="Ikusi faktura egin gabeko emanaldiak"><div class="label">Faktura egiteko ›</div><div class="value" style="color:${fp.length ? "var(--warn)" : "var(--good)"}">${fp.length ? fp.length + " emanaldi" : "✓ Denak"}</div><div class="foot">${fb.length - fp.length} / ${fb.length} faktura emanda</div></div>`; })()}
