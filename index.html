@@ -505,8 +505,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117y"></script>
-<script src="firebase-shim.js?v=20261117y"></script>
+<script src="config.js?v=20261117z"></script>
+<script src="firebase-shim.js?v=20261117z"></script>
 </head>
 <body>
 <header class="top">
@@ -605,7 +605,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   const TABS = [
     { id: "bolos", label: "Emanaldiak" },
-    { id: "integrantes", label: "Kideen irabaziak" },
+    { id: "integrantes", label: "Doiketak" },
     { id: "laburpena", label: "Laburpena" },
     { id: "bezeroak", label: "Bezeroak" },
     { id: "viajes", label: "Bidaiak" },
@@ -945,7 +945,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   }
 
   function viewIntegrantes() {
-    if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Kideen irabaziak</h2>${noComps()}</section>`;
+    if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Doiketak</h2>${noComps()}</section>`;
     const t = totals();
     const cols = "minmax(0,.8fr) 80px 1fr 1fr 1fr 1fr 1fr";
     const balG = {}, balV = {}, balA = {}, cuotaG = {}, pendG = {}, porBolo = [];
@@ -988,7 +988,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const signed = (v) => `<div class="r num hide-m" style="color:${v < 0 ? "var(--bad)" : v > 0 ? "var(--good)" : "inherit"}">${v > 0 ? "+" : ""}${money(v)}</div>`;
     return `
       ${state.limited ? "" : `<section style="display:grid;gap:12px">
-        <div class="section-head"><div><h2>Kideen irabaziak · ${esc(periodoTxt())}</h2><p class="hint">Kide bakoitzak kopuru finkoa kobratzen du emanaldiko: ${money(tarifa().pago1)} Gipuzkoan eta ${money(tarifa().pago2)} Gipuzkoatik kanpo. Aurrekontuaren gainerakoa kudeaketa gastuak dira.</p></div></div>
+        <div class="section-head"><div><h2>Doiketak · ${esc(periodoTxt())}</h2><p class="hint">Kide bakoitzak kopuru finkoa kobratzen du emanaldiko: ${money(tarifa().pago1)} Gipuzkoan eta ${money(tarifa().pago2)} Gipuzkoatik kanpo. Aurrekontuaren gainerakoa kudeaketa gastuak dira.</p></div></div>
         <div class="card kid-table" style="--cols:${cols}">
           <div class="ledger-head"><div>Kidea</div><div class="r hide-m">Emanaldiak</div><div class="r">Behin-behineko irabazia</div><div class="r hide-m">Bidaien doikuntza</div><div class="r hide-m">Bazkari/afari doikuntza</div><div class="r hide-m">Jasotzekoa guztira</div><div class="r">Behin betiko irabazia</div></div>
           <ul class="ledger">${rows.map((r, i) => `${r.c.ordezkoa && (i === 0 || !rows[i - 1].c.ordezkoa) ? `<li class="ledger-head" style="border-top:2px solid var(--line)"><div>Ordezkoak</div></li>` : ""}
