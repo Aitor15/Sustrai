@@ -157,7 +157,13 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .field .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink); }
 .field .check input { width: auto; }
 .calc { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 14px; display: grid; gap: 2px; }
-.calc div { display: flex; justify-content: space-between; }
+.calc div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.calc div > span:first-child { min-width: 0; }
+.calc div > .num { white-space: nowrap; }
+.calc .calc-sub { display: grid; gap: 2px; margin-top: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+/* Ordutegia: hasiera eta amaiera elkarren ondoan, mugikorrean ere */
+.form-grid .field.half-m { grid-column: auto; }
+@media (max-width: 640px) { .form-grid.has-half { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .form-grid.has-half > .field:not(.half-m) { grid-column: 1 / -1; } }
 .calc .tot { font-weight: 600; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
 .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .actions .spacer { flex: 1; }
@@ -229,7 +235,14 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .coches .coche-imp { margin-left: auto; font-weight: 700; white-space: nowrap; }
 .coches .coche-note { font-size: 12px; line-height: 1.4; }
 .coches .coche-links { font-size: 12px; }
-@media (max-width: 640px) { .coches .coche-detail { padding-left: 0; } }
+@media (max-width: 640px) {
+  .coches .coche-detail { padding-left: 0; }
+  .coches .coche-nums { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 10px; }
+  .coches .coche-nums .mini { white-space: normal; }
+  .coches .coche-nums .mini:not(.ap-toggle) { display: grid; gap: 3px; font-size: 12px; }
+  .coches .coche-nums input[type=number] { width: 100% !important; }
+  .coches .coche-nums .ap-toggle { grid-column: 1 / -1; order: 3; font-size: 13px; }
+}
 .deudas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .deudas li { display: flex; gap: 8px; align-items: baseline; }
 .deudas li .num { margin-left: auto; font-weight: 600; }
@@ -368,8 +381,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117f"></script>
-<script src="firebase-shim.js?v=20261117f"></script>
+<script src="config.js?v=20261117g"></script>
+<script src="firebase-shim.js?v=20261117g"></script>
 </head>
 <body>
 <header class="top">
@@ -1178,10 +1191,10 @@ main { overflow-x: clip; }
         { id: "evento", label: "Emanaldiaren lekua", type: "text", required: true, placeholder: "Azpeitiko jaiak" },
         { id: "fecha", label: "Emanaldiaren data", type: "date", required: true, def: today() },
         { sep: "Ordutegia" },
-        { id: "ordua", label: "1. txanda · hasiera", type: "time" },
-        { id: "amaiera", label: "1. txanda · amaiera", type: "time" },
-        { id: "ordua2", label: "2. txanda · hasiera (aukerakoa)", type: "time" },
-        { id: "amaiera2", label: "2. txanda · amaiera", type: "time" },
+        { id: "ordua", label: "1. txanda · hasiera", type: "time", halfM: true },
+        { id: "amaiera", label: "1. txanda · amaiera", type: "time", halfM: true },
+        { id: "ordua2", label: "2. txanda · hasiera", type: "time", halfM: true },
+        { id: "amaiera2", label: "2. txanda · amaiera", type: "time", halfM: true },
         { id: "cliente", label: "Bezeroa", type: "text", full: true, list: "dl-clientes", placeholder: "Udala, aretoa, elkartea…" },
         { id: "clienteEmail", label: "Bezeroaren emaila", type: "text", full: true, placeholder: "kultura@udala.eus" },
         { sep: "Tarifa" },
@@ -1312,11 +1325,11 @@ main { overflow-x: clip; }
           : `<div class="multi" id="${fid}">${tit.map(chk).join("")}</div>`;
       } else input = `<input id="${fid}" type="${f.type}" ${f.step ? `step="${f.step}"` : ""} ${f.min ? `min="${f.min}"` : ""} ${f.list ? `list="${f.list}"` : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""} value="${esc(v ?? "")}" ${f.type === "number" ? 'inputmode="decimal"' : ""} ${ro ? "readonly" : ""}>`;
       const extra = f.suggest && !ro ? ` <button type="button" class="linkbtn" id="btn-sug">Hurrengo zk.</button>` : "";
-      return `<div class="field ${f.full ? "full" : ""}" id="wrap-${f.id}"><label for="${fid}" id="${fid}-l">${esc(f.label)}${req}${extra}</label>${input}${f.hint ? `<span class="hint" style="margin:0">${esc(f.hint)}</span>` : ""}</div>`;
+      return `<div class="field ${f.full ? "full" : ""}${f.halfM ? " half-m" : ""}" id="wrap-${f.id}"><label for="${fid}" id="${fid}-l">${esc(f.label)}${req}${extra}</label>${input}${f.hint ? `<span class="hint" style="margin:0">${esc(f.hint)}</span>` : ""}</div>`;
     }).join("");
     $("dialog").innerHTML = `
       <h3>${def.title[id ? 1 : 0]}</h3>
-      <div class="form-grid">${html}</div>
+      <div class="form-grid has-half">${html}</div>
       ${kind === "bolo" ? `<div class="calc" id="calc"></div>` : ""}
       ${kind === "viaje" ? `<p class="hint" id="km-hint" style="margin:0"></p>` : ""}
       <div class="err" id="form-err" role="alert"></div>
@@ -1374,7 +1387,7 @@ main { overflow-x: clip; }
         const coches = (data.coches || []).map((it) => ({ componente: it.c, importe: cocheImporte(it, rate) }));
         const l = boloViajes(data, [...otros, ...coches]);
         if (!l.total) return "";
-        return `<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px"><div><span><strong>Bidaiak${afariGastuak(data).length ? " eta afaria" : ""}</strong> (${money(l.total)} ÷ ${l.n} = ${money(l.share)} bakoitzak)</span><span></span></div>${l.transfers.map((x) => `<div><span>${esc(compName(x.from))} → ${esc(compName(x.to))}</span><span class="num">${money(x.amount)}</span></div>`).join("") || `<div><span>Inork ez dio inori ezer zor</span><span></span></div>`}</div>`;
+        return `<div class="calc-sub"><div><span><strong>Bidaiak${afariGastuak(data).length ? " eta afaria" : ""}</strong> (${money(l.total)} ÷ ${l.n} = ${money(l.share)} bakoitzak)</span><span></span></div>${l.transfers.map((x) => `<div><span>${esc(compName(x.from))} → ${esc(compName(x.to))}</span><span class="num">${money(x.amount)}</span></div>`).join("") || `<div><span>Inork ez dio inori ezer zor</span><span></span></div>`}</div>`;
       })()}
       <div class="tot"><span>Kudeaketa gastuak</span><span class="num" style="color:${c.gestion < 0 ? "var(--bad)" : "inherit"}">${money(c.gestion)}</span></div>
       ${c.facturado ? `<div style="margin-top:6px;color:var(--muted)"><span>Bezeroari kobratzekoa (%${IVA_DEF} BEZarekin)</span><span class="num">${money(c.aCobrar)}</span></div>` : ""}`;
