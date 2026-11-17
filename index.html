@@ -306,7 +306,8 @@ main { overflow-x: clip; }
 .rep-table .c { text-align: center; }
 .rep-table .rep-k .konp-tag { margin-left: 0; }
 @media (max-width: 640px) { .rep-table .row { grid-template-columns: minmax(0, 1fr) 48px auto; } }
-.st-name .konp-tag { font-size: .55em; vertical-align: .25em; }
+.st-side { display: inline-flex; align-items: center; gap: 8px; }
+.st-side .konp-tag { margin-left: 0; font-size: 13px; padding: 3px 9px; }
 .metro-b small { font-size: .78em; font-weight: 500; opacity: .75; margin-left: 2px; }
 .metro-b.metro-empty { border-style: dashed; color: var(--muted); font-weight: 500; background: transparent; }
 .metro-b.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
@@ -391,8 +392,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117i"></script>
-<script src="firebase-shim.js?v=20261117i"></script>
+<script src="config.js?v=20261117j"></script>
+<script src="firebase-shim.js?v=20261117j"></script>
 </head>
 <body>
 <header class="top">
@@ -1128,7 +1129,7 @@ main { overflow-x: clip; }
     $("dialog").classList.add("stage-dialog");
     $("dialog").innerHTML = `
       <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
-      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}${konpTag(a)}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side">${a ? konpTag(a) : ""}${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
       <div class="actions stage-actions">${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
