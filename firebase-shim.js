@@ -310,10 +310,13 @@
   };
 
   // ---- Admin barra txikia (saioa, babeskopia, inportazioa) ----
-  const COLS = ["componentes", "bolos", "viajes", "rutas", "materiala", "abestiak", "setlistak", "ajustes"];
+  const COLS = ["componentes", "bolos", "viajes", "rutas", "materiala", "abestiak", "setlistak", "ajustes", "bezeroak"];
   async function collectAll() {
     const out = {};
-    for (const c of COLS) { const snap = await fs.collection(c).get(); out[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); }
+    for (const c of COLS) {
+      try { const snap = await fs.collection(c).get(); out[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); }
+      catch (e) { if (c === "bezeroak") out[c] = []; else throw e; } // arau berriak oraindik argitaratu gabe badaude
+    }
     return out;
   }
   // ---- Babeskopia automatikoa: astean behin, Firebase barruan (azken 8ak gordetzen dira) ----
