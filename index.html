@@ -99,6 +99,17 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .tile-btn { cursor: pointer; transition: border-color .15s; }
 .tile-btn:hover { border-color: var(--muted); }
 .tile-btn.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+/* Emanaldietako koadroen koloreak */
+.tile.t-fac, .tile.t-sinfac, .tile.t-pend, .tile.t-done { --tc: #3b82f6; background: color-mix(in srgb, var(--tc) 11%, var(--surface)); border-color: color-mix(in srgb, var(--tc) 40%, var(--line)); border-left: 5px solid var(--tc); }
+.tile.tcol { background: color-mix(in srgb, var(--tc) 11%, var(--surface)); border-color: color-mix(in srgb, var(--tc) 40%, var(--line)); border-left: 5px solid var(--tc); }
+.tile.tcol .label { color: var(--tc); font-weight: 700; } .tile.tcol .value { color: var(--tc); }
+.tile.t-all { background: var(--ink); color: var(--bg); border-color: var(--ink); border-left: 5px solid var(--accent); }
+.tile.t-all .label, .tile.t-all .foot { color: color-mix(in srgb, var(--bg) 70%, transparent); font-weight: 700; } .tile.t-all .value { color: var(--bg); }
+.tile.t-all.on { box-shadow: none; }
+.tile.t-sinfac { --tc: #d97706; } .tile.t-pend { --tc: var(--bad); } .tile.t-done { --tc: var(--good); }
+.tile.t-fac .value, .tile.t-sinfac .value { color: var(--tc); }
+.tile.t-fac .label, .tile.t-sinfac .label, .tile.t-pend .label, .tile.t-done .label { color: var(--tc); font-weight: 700; }
+.tile.t-fac.on, .tile.t-sinfac.on, .tile.t-pend.on, .tile.t-done.on { border-color: var(--tc); box-shadow: inset 0 0 0 1px var(--tc); }
 .tile-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -339,14 +350,25 @@ body.sm-on { overflow: hidden; }
 .sm-next em { font-style: normal; font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .stage-list li[data-st-a] .st-body { cursor: pointer; }
 @media print { #stagemode { display: none !important; } .sm-hint { display: none; } }
+/* ---- Bezeroak ---- */
+.bz-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bz-hist { border-top: 1px solid var(--line); padding-top: 6px; }
+input.autofill { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; transition: background .3s; }
+@media (max-width: 640px) { .bz-table .row { grid-template-columns: minmax(0, 1fr) 70px 80px !important; } .bz-table .row > .r { display: block !important; } .bz-table .row > .hide-m { display: none !important; } }
 /* ---- Abisuak ---- */
 .ab-steps { margin: 0 0 4px; padding-left: 20px; display: grid; gap: 6px; }
 .ab-topic { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; background: var(--surface); }
 .ab-topic code { font-size: 16px; font-weight: 700; word-break: break-all; user-select: all; -webkit-user-select: all; }
 .ab-btns { display: flex; gap: 8px; flex-wrap: wrap; } .ab-btns a.btn { text-decoration: none; color: var(--ink); }
 /* ---- Letrak ---- */
+.lt-tr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0 2px; }
+.lt-tr-lab { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8a8a8a; font-weight: 700; }
+.lt-tr button { border: 1px solid #3a3a3a; background: #161616; color: #fff; border-radius: 10px; padding: 7px 11px; font: 700 14px var(--font-body); cursor: pointer; }
+.lt-tr-val { min-width: 34px; text-align: center; font-weight: 800; font-size: 16px; color: var(--accent); }
+.lt-tr-note { flex-basis: 100%; font-size: 12px; color: #8a8a8a; }
+.lt-tr-note:empty { display: none; }
 textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.5; min-height: 180px; }
-#letra-panel { position: fixed; inset: 0; z-index: 70; background: #0b0b0b; color: #fff; display: grid; grid-template-rows: auto 1fr auto; padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+#letra-panel { position: fixed; inset: 0; z-index: 70; background: #0b0b0b; color: #fff; display: grid; grid-template-rows: auto auto 1fr auto; padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
 .lt-top { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
 .lt-title { min-width: 0; display: grid; } .lt-title strong { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .lt-title span { font-size: 13px; color: #9a9a9a; }
 .lt-size { display: flex; gap: 6px; } .lt-size button { border: 1px solid #3a3a3a; background: #161616; color: #fff; border-radius: 10px; padding: 8px 10px; font: 700 14px var(--font-body); cursor: pointer; }
@@ -483,8 +505,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117q"></script>
-<script src="firebase-shim.js?v=20261117q"></script>
+<script src="config.js?v=20261117y"></script>
+<script src="firebase-shim.js?v=20261117y"></script>
 </head>
 <body>
 <header class="top">
@@ -574,7 +596,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   const state = {
     abisuak: null,
     repOpen: new Set(),
-    componentes: [], bolos: [], viajes: [], rutas: [], materiala: [], abestiak: [], setlistak: [],
+    componentes: [], bolos: [], viajes: [], rutas: [], materiala: [], abestiak: [], setlistak: [], bezeroak: [],
     ajustes: { eurKm: EURKM_DEF },
     loaded: { componentes: false, bolos: false, viajes: false, rutas: false, materiala: false, abestiak: false, setlistak: false },
     year: "all", tab: "bolos", filtroComp: "all", canWrite: true, db: null, limited: true, filtroCobro: "all", myEmail: null, myId: null,
@@ -585,6 +607,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     { id: "bolos", label: "Emanaldiak" },
     { id: "integrantes", label: "Kideen irabaziak" },
     { id: "laburpena", label: "Laburpena" },
+    { id: "bezeroak", label: "Bezeroak" },
     { id: "viajes", label: "Bidaiak" },
     { id: "materiala", label: "Materiala" },
     { id: "setlist", label: "Setlist" },
@@ -731,13 +754,43 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     $("btn-ajustes").style.display = state.limited ? "none" : "";
     renderYears();
     renderTabs();
-    const v = { bolos: viewBolos, integrantes: viewIntegrantes, laburpena: viewLaburpena, viajes: viewViajes, materiala: viewMateriala, setlist: viewSetlist, componentes: viewComponentes }[state.tab];
+    const v = { bolos: viewBolos, integrantes: viewIntegrantes, laburpena: viewLaburpena, bezeroak: viewBezeroak, viajes: viewViajes, materiala: viewMateriala, setlist: viewSetlist, componentes: viewComponentes }[state.tab];
     $("view").innerHTML = v();
   }
   const periodoTxt = () => state.year === "all" ? "epe osoa" : state.year;
   const addBtn = (kind, label) => state.canWrite ? `<button type="button" class="btn primary" data-add="${kind}">+ ${label}</button>` : "";
   const loadingOr = (key, html) => state.loaded[key] ? html : `<div class="card empty">Kargatzen…</div>`;
   const noComps = () => `<div class="card empty"><strong>Lehenik, gehitu taldeko kideak</strong>Horrela, aplikazioak kalkula dezake bakoitzak zenbat kobratzen duen.<div style="margin-top:12px">${addBtn("componente", "Gehitu kidea")}</div></div>`;
+
+  // ================= BEZEROAK =================
+  const bzKey = (s) => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ");
+  const bezeroaOf = (name) => { const k = bzKey(name); return k ? state.bezeroak.find((z) => bzKey(z.izena) === k) : null; };
+  const bezeroBolos = (name) => { const k = bzKey(name); return state.bolos.filter((b) => bzKey(b.cliente) === k).sort((a, b) => boloKey(b).localeCompare(boloKey(a))); };
+  function viewBezeroak() {
+    const rows = [...state.bezeroak].sort((a, b) => (a.izena || "").localeCompare(b.izena || "", "es")).map((z) => { const bs = bezeroBolos(z.izena); return { z, bs, tot: bs.reduce((s, b) => s + num(b.presupuesto), 0) }; });
+    const sinFitxa = [...new Set(state.bolos.map((b) => String(b.cliente || "").trim()).filter(Boolean))].filter((n) => !bezeroaOf(n)).sort((a, b) => a.localeCompare(b, "es"));
+    const list = rows.length ? `<div class="card bz-table" style="--cols:minmax(0,1.4fr) 90px 120px 110px">
+        <div class="ledger-head"><div>Bezeroa</div><div class="r">Emanaldiak</div><div class="r hide-m">Aurrekontuak</div><div class="r">Azkena</div></div>
+        <ul class="ledger">${rows.map((r) => `<li class="row" tabindex="0" data-edit="bezeroa" data-id="${esc(r.z.id)}">
+          <div><div class="main">${esc(r.z.izena)}</div><div class="meta">${[r.z.kontaktua, r.z.tel, r.z.nif ? "NIF " + r.z.nif : ""].filter(Boolean).map(esc).join(" · ") || "—"}</div></div>
+          <div class="r num">${r.bs.length}</div><div class="r num hide-m">${r.tot ? money(r.tot) : "—"}</div><div class="r num">${r.bs[0] ? esc(fdate(r.bs[0].fecha)) : "—"}</div></li>`).join("")}</ul></div>`
+      : `<div class="card empty"><strong>Oraindik ez dago bezerorik</strong>Gehitu bat, edo sortu fitxa emanaldietako bezeroetatik (behean).</div>`;
+    return `<section style="display:grid;gap:14px">
+      <div class="section-head"><div><h2>Bezeroak</h2><p class="hint">Udalak, elkarteak, aretoak… Emanaldi bat sortzean bezeroa aukeratuz gero, bere datuak bere kabuz betetzen dira.</p></div>${addBtn("bezeroa", "Bezero berria")}</div>
+      ${loadingOr("bolos", list)}
+      ${sinFitxa.length ? `<div class="card card-pad"><div class="liq-h" style="margin-top:0">Fitxarik gabeko bezeroak (emanaldietan agertzen dira)</div><div class="bz-chips">${sinFitxa.map((n) => `<button type="button" class="btn small" data-bz-new="${esc(n)}">+ ${esc(n)}</button>`).join("")}</div></div>` : ""}
+    </section>`;
+  }
+  const bezeroHist = (z) => { const bs = bezeroBolos(z.izena); return bs.length ? `<div class="bz-hist"><div class="liq-h">Emanaldiak (${bs.length}) · ${money(bs.reduce((s, b) => s + num(b.presupuesto), 0))}</div><ul class="liq-list">${bs.map((b) => `<li><span><strong>${esc(b.evento || "Emanaldia")}</strong> <span class="meta">· ${esc(fdate(b.fecha))}</span></span><span class="num">${money(num(b.presupuesto))}</span></li>`).join("")}</ul></div>` : ""; };
+  // Emanaldiaren formularioan bezeroa aukeratzean, haren datuak bete (hutsik dauden eremuak bakarrik).
+  document.addEventListener("change", (e) => {
+    if (!e.target || e.target.id !== "fld-cliente" || !current || current.kind !== "bolo") return;
+    const z = bezeroaOf(e.target.value); if (!z) return;
+    const put = (fid, v) => { const el = $(fid); if (el && !el.value && v) { el.value = v; el.classList.add("autofill"); setTimeout(() => el.classList.remove("autofill"), 1200); } };
+    put("fld-clienteEmail", z.email); put("fld-kontaktua", z.kontaktua); put("fld-kontaktuTel", z.tel); put("fld-helbidea", z.helbidea);
+    toast("Bezeroaren datuak beteta");
+  });
+  document.addEventListener("click", (e) => { const b = e.target.closest("[data-bz-new]"); if (!b) return; e.preventDefault(); const bs = bezeroBolos(b.dataset.bzNew), last = bs[0] || {}; openForm("bezeroa", null, { izena: b.dataset.bzNew, email: last.clienteEmail || "", kontaktua: last.kontaktua || "", tel: last.kontaktuTel || "" }); }, true);
 
   // ================= URTEKO LABURPENA =================
   function laburpenaDatuak(bolos) {
@@ -764,18 +817,18 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     // Urteka (epe osoa aukeratuta badago)
     const years = [...new Set(state.bolos.map((b) => (b.fecha || "").slice(0, 4)).filter((y) => /^\d{4}$/.test(y)))].sort();
     const yearRows = state.year === "all" && years.length > 1 ? years.map((y) => ({ y, t: laburpenaDatuak(state.bolos.filter((b) => (b.fecha || "").startsWith(y))).tot })) : [];
-    const kpi = (lab, val, foot, cls) => `<div class="tile${cls ? " " + cls : ""}"><div class="label">${lab}</div><div class="value">${val}</div>${foot ? `<div class="foot">${foot}</div>` : ""}</div>`;
+    const kpi = (lab, val, foot, cls, col) => `<div class="tile${cls ? " " + cls : ""}${col ? " tcol" : ""}"${col ? ` style="--tc:${col}"` : ""}><div class="label">${lab}</div><div class="value">${val}</div>${foot ? `<div class="foot">${foot}</div>` : ""}</div>`;
     const km = (v) => v ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " km" : "—";
     return `<section style="display:grid;gap:16px">
       <div><h2>Laburpena · ${esc(periodoTxt())}</h2><p class="hint">Emanaldiak, dirua eta kide bakoitzaren irabaziak. Urtea goian aukeratzen da ("Epea").</p></div>
       ${loadingOr("bolos", bolos.length ? `
       <div class="tiles">
-        ${kpi("Emanaldiak", tot.n, `${bolos.filter((b) => b.cobrado).length} kobratuta`, "hero")}
-        ${kpi("Aurrekontuak", money(tot.presupuesto), tot.iva ? `+ ${money(tot.iva)} BEZ` : "BEZik gabe")}
-        ${kpi("Kideentzat", money(tot.pagos), "Behin-behineko irabaziak")}
-        ${kpi("Artistamente", money(tot.gestion), "Aurrekontua ken kideak")}
-        ${kpi("Bidaiak eta afariak", money(tot.bidaiak), km(tot.km))}
-        ${kpi("Kobratzeko", money(tot.pendiente), `${money(tot.cobrado)} kobratuta`)}
+        ${kpi("Emanaldiak", tot.n, `${bolos.filter((b) => b.cobrado).length} kobratuta`, "t-all")}
+        ${kpi("Aurrekontuak", money(tot.presupuesto), tot.iva ? `+ ${money(tot.iva)} BEZ` : "BEZik gabe", "", "#3b82f6")}
+        ${kpi("Kideentzat", money(tot.pagos), "Behin-behineko irabaziak", "", "var(--good)")}
+        ${kpi("Artistamente", money(tot.gestion), "Aurrekontua ken kideak", "", "#8b5cf6")}
+        ${kpi("Bidaiak eta afariak", money(tot.bidaiak), km(tot.km), "", "#d97706")}
+        ${kpi("Kobratzeko", money(tot.pendiente), `${money(tot.cobrado)} kobratuta`, "", tot.pendiente > 0 ? "var(--bad)" : "var(--good)")}
       </div>
       ${yearRows.length ? `<div class="card lab-years" style="--cols:70px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)">
         <div class="ledger-head"><div>Urtea</div><div class="r">Emanaldiak</div><div class="r">Aurrekontuak</div><div class="r">Kideentzat</div><div class="r">Artistamente</div></div>
@@ -795,11 +848,10 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   function tiles(t) {
     return `<div class="tiles">
-      <div class="tile tile-btn${state.filtroCobro === "fac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="fac" title="Ikusi fakturarekin egindako emanaldiak"><div class="label">BEZ (%${IVA_DEF}) ›</div><div class="value">${money(t.iva)}</div><div class="foot">${t.bolos.filter((b) => boloCalc(b).facturado).length} emanaldi fakturarekin</div></div>
-      ${(() => { const sf = t.bolos.filter((b) => !boloCalc(b).facturado); return `<div class="tile tile-btn${state.filtroCobro === "sinfac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="sinfac" title="Ikusi fakturarik gabeko emanaldiak"><div class="label">BEZ gabe ›</div><div class="value">${money(sf.reduce((a, b) => a + num(b.presupuesto), 0))}</div><div class="foot">${sf.length} emanaldi fakturarik gabe</div></div>`; })()}
-      ${(() => { const fb = t.bolos.filter((b) => boloCalc(b).facturado), fp = fb.filter((b) => !b.facturaEmitida); return `<div class="tile tile-btn${state.filtroCobro === "facpend" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="facpend" title="Ikusi faktura egin gabeko emanaldiak"><div class="label">Faktura egiteko ›</div><div class="value" style="color:${fp.length ? "var(--warn)" : "var(--good)"}">${fp.length ? fp.length + " emanaldi" : "✓ Denak"}</div><div class="foot">${fb.length - fp.length} / ${fb.length} faktura emanda</div></div>`; })()}
-      <div class="tile tile-btn${state.filtroCobro === "si" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="si" title="Ikusi kobratutako emanaldiak"><div class="label">Kobratuta ›</div><div class="value">${money(t.cobrado)}</div><div class="foot">${t.bolos.filter((b) => b.cobrado).length} emanaldi kobratuta</div></div>
-      <div class="tile tile-btn${state.filtroCobro === "no" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="no" title="Ikusi kobratu gabeko emanaldiak"><div class="label">Kobratzeko ›</div><div class="value" style="color:${t.pendiente > 0 ? "var(--warn)" : "inherit"}">${money(t.pendiente)}</div><div class="foot">${t.bolos.filter((b) => !b.cobrado).length} emanaldi kobratu gabe</div></div>
+      <div class="tile tile-btn t-all${state.filtroCobro === "all" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="all" title="Ikusi emanaldi guztiak"><div class="label">Guztira ›</div><div class="value">${t.bolos.length}</div><div class="foot">emanaldi${state.year === "all" ? "" : " · " + esc(periodoTxt())}</div></div>
+      <div class="tile tile-btn t-fac${state.filtroCobro === "fac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="fac" title="Ikusi fakturarekin egindako emanaldiak"><div class="label">Fakturarekin ›</div><div class="value">${t.bolos.filter((b) => boloCalc(b).facturado).length}</div><div class="foot">emanaldi fakturarekin</div></div>
+      ${(() => { const sf = t.bolos.filter((b) => !boloCalc(b).facturado); return `<div class="tile tile-btn t-sinfac${state.filtroCobro === "sinfac" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="sinfac" title="Ikusi fakturarik gabeko emanaldiak"><div class="label">Faktura gabe ›</div><div class="value">${sf.length}</div><div class="foot">emanaldi fakturarik gabe</div></div>`; })()}
+      ${(() => { const fb = t.bolos.filter((b) => boloCalc(b).facturado), fp = fb.filter((b) => !b.facturaEmitida); return `<div class="tile tile-btn ${fp.length ? "t-pend" : "t-done"}${state.filtroCobro === "facpend" ? " on" : ""}" role="button" tabindex="0" data-filtro-cobro="facpend" title="Ikusi faktura egin gabeko emanaldiak"><div class="label">Faktura egiteko ›</div><div class="value" style="color:${fp.length ? "var(--bad)" : "var(--good)"}">${fp.length ? fp.length + " emanaldi" : "✓ Denak"}</div><div class="foot">${fb.length - fp.length} / ${fb.length} faktura emanda</div></div>`; })()}
     </div>`;
   }
 
@@ -1414,19 +1466,29 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   const hasLetra = (a) => !!(a && (String(a.letra || "").trim() || String(a.esteka || "").trim()));
   const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "";
   // "[G]Kantu[C]aren lerroa" → akordeak letraren gainean (letra-tipo monoespazioarekin).
-  function letraHtml(txt) {
+  function letraHtml(txt, tr) {
     return String(txt || "").replace(/\r/g, "").split("\n").map((line) => {
       if (!/\[[^\]\n]{1,12}\]/.test(line)) return `<div class="lt-l">${esc(line) || "&nbsp;"}</div>`;
       let ch = "", ly = "", m, last = 0; const re = /\[([^\]\n]{1,12})\]/g;
       while ((m = re.exec(line))) {
         ly += line.slice(last, m.index); last = re.lastIndex;
         if (ch.length > ly.length) ly += " ".repeat(ch.length - ly.length);
-        ch += " ".repeat(Math.max(0, ly.length - ch.length)) + m[1] + " ";
+        ch += " ".repeat(Math.max(0, ly.length - ch.length)) + trChord(m[1], tr || 0) + " ";
       }
       ly += line.slice(last);
       return `<div class="lt-c">${esc(ch.trimEnd())}</div><div class="lt-l">${esc(ly) || "&nbsp;"}</div>`;
     }).join("");
   }
+  // ---- Akordeak transposatu (erdi-tonuka) ----
+  const NOTE_IDX = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const NAMES_S = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+  const NAMES_F = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  const trNote = (root, n) => { const m = /^([A-Ga-g])([#b]?)$/.exec(root); if (!m) return root; let i = NOTE_IDX[m[1].toUpperCase()] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0); i = ((i + n) % 12 + 12) % 12; const out = (m[2] === "b" ? NAMES_F : NAMES_S)[i]; return m[1] === m[1].toLowerCase() ? out.toLowerCase() : out; };
+  // "Am7", "F#m", "Bb/D", "G-C" (triki notazioa) → n erdi-tonu
+  // Letra larriak beti erroak dira (Ebmaj7, Gsus4…); letra xehea ("c" = Do minorra) hitz baten hasiera ez bada bakarrik.
+  const trChord = (ch, n) => !n ? ch : String(ch).replace(/(^|[\s/\-(])(?:([A-G])([#b]?)|([a-g])([#b]?)(?![a-z]))/g, (all, pre, L, accL, l, acc) => pre + (L ? trNote(L + accL, n) : trNote(l + acc, n)));
+  const trTxt = (n) => n === 0 ? "" : (n > 0 ? "+" : "−") + Math.abs(n);
+  let LT_TR = {}; try { LT_TR = JSON.parse(localStorage.getItem("sustrai-lt-tr") || "{}") || {}; } catch (e) {}
   let LT_SIZE = 18; try { LT_SIZE = Number(localStorage.getItem("sustrai-lt-size")) || 18; } catch (e) {}
   function openLetra(id) {
     const a = abestia(id); if (!a) return;
@@ -1434,14 +1496,26 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const el = document.createElement("div"); el.id = "letra-panel"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Letra: " + (a.izena || ""));
     const url = safeUrl(a.esteka);
     el.innerHTML = `<div class="lt-top"><button type="button" class="sm-x" data-lt="close" aria-label="Itxi">✕</button>
-        <div class="lt-title"><strong>${esc(a.izena || "")}</strong><span>${[a.tonua, a.triki ? "triki " + a.triki : "", KONPAS[a.konpasa] ? a.konpasa : "", bpmOk(a.bpm) ? bpmOk(a.bpm) + " BPM" : ""].filter(Boolean).map(esc).join(" · ")}</span></div>
+        <div class="lt-title"><strong>${esc(a.izena || "")}</strong><span class="lt-meta"></span></div>
         <div class="lt-size"><button type="button" data-lt="-" aria-label="Letra txikiagoa">A−</button><button type="button" data-lt="+" aria-label="Letra handiagoa">A+</button></div></div>
-      <div class="lt-body" style="font-size:${LT_SIZE}px">${String(a.letra || "").trim() ? letraHtml(a.letra) : `<p class="lt-empty">Abesti honek ez du letrarik idatzita.</p>`}</div>
+      <div class="lt-tr" role="group" aria-label="Transposatu"><span class="lt-tr-lab">Tonua</span><button type="button" data-lt="tr-" aria-label="Erdi-tonu bat behera">♭ −½</button><output class="lt-tr-val num" aria-live="polite"></output><button type="button" data-lt="tr+" aria-label="Erdi-tonu bat gora">♯ +½</button><button type="button" data-lt="tr0" class="lt-tr-reset">Jatorrizkoa</button><span class="lt-tr-note"></span></div>
+      <div class="lt-body" style="font-size:${LT_SIZE}px"></div>
       ${url ? `<div class="lt-bottom"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">📄 Akordeak ireki (esteka)</a></div>` : ""}`;
     document.body.appendChild(el); document.body.classList.add("sm-on");
+    const hasCh = /\[[^\]\n]{1,12}\]/.test(String(a.letra || ""));
+    const paint = () => {
+      const n = LT_TR[a.id] || 0;
+      el.querySelector(".lt-meta").textContent = [a.tonua ? trChord(a.tonua, n) + (n ? ` (${a.tonua})` : "") : "", a.triki ? "triki " + a.triki : "", KONPAS[a.konpasa] ? a.konpasa : "", bpmOk(a.bpm) ? bpmOk(a.bpm) + " BPM" : ""].filter(Boolean).join(" · ");
+      el.querySelector(".lt-tr-val").textContent = n ? trTxt(n) : "0";
+      el.querySelector(".lt-tr-reset").hidden = !n;
+      el.querySelector(".lt-tr-note").textContent = hasCh || !String(a.letra || "").trim() ? "" : "Akordeak [kortxete] artean idatziz gero, horiek ere aldatzen dira";
+      el.querySelector(".lt-body").innerHTML = String(a.letra || "").trim() ? letraHtml(a.letra, n) : `<p class="lt-empty">Abesti honek ez du letrarik idatzita.</p>`;
+    };
+    paint();
     el.addEventListener("click", (e) => {
       const b = e.target.closest("[data-lt]"); if (!b) return;
       if (b.dataset.lt === "close") return closeLetra();
+      if (/^tr/.test(b.dataset.lt)) { let n = LT_TR[a.id] || 0; n = b.dataset.lt === "tr0" ? 0 : n + (b.dataset.lt === "tr+" ? 1 : -1); if (n > 6) n -= 12; if (n < -6) n += 12; if (n) LT_TR[a.id] = n; else delete LT_TR[a.id]; try { localStorage.setItem("sustrai-lt-tr", JSON.stringify(LT_TR)); } catch (er) {} return paint(); }
       LT_SIZE = Math.max(12, Math.min(40, LT_SIZE + (b.dataset.lt === "+" ? 2 : -2))); try { localStorage.setItem("sustrai-lt-size", LT_SIZE); } catch (er) {}
       el.querySelector(".lt-body").style.fontSize = LT_SIZE + "px";
     });
@@ -1673,6 +1747,18 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
         { id: "esteka", label: "Akordeen esteka (PDF, Drive, YouTube…)", type: "text", full: true, placeholder: "https://…" },
       ],
     },
+    bezeroa: {
+      col: "bezeroak", title: ["Bezero berria", "Editatu bezeroa"],
+      fields: () => [
+        { id: "izena", label: "Izena", type: "text", required: true, full: true, placeholder: "Azpeitiko Udala, Lagunarte elkartea…" },
+        { id: "nif", label: "NIF / IFZ", type: "text", placeholder: "P2001800A" },
+        { id: "tel", label: "Telefonoa", type: "text", placeholder: "943 000 000" },
+        { id: "kontaktua", label: "Kontaktu-pertsona", type: "text", full: true },
+        { id: "email", label: "Emaila", type: "text", full: true, placeholder: "kultura@udala.eus" },
+        { id: "helbidea", label: "Helbidea (fakturetarako edo emanaldietarako)", type: "text", full: true },
+        { id: "oharrak", label: "Oharrak", type: "textarea", full: true, placeholder: "Nola ordaintzen duten, nori deitu…" },
+      ],
+    },
     materiala: {
       col: "materiala", title: ["Erosketa berria", "Editatu erosketa"],
       fields: () => [
@@ -1723,7 +1809,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const values = Object.assign({}, prefill || {}, item || {});
     current = { kind, id: id || null };
     const ro = !state.canWrite;
-    const clientes = [...new Set(state.bolos.map((x) => x.cliente).filter(Boolean))];
+    const clientes = [...new Set([...state.bezeroak.map((z) => z.izena), ...state.bolos.map((x) => x.cliente)].filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
     const html = def.fields().map((f) => {
       if (f.sep) return `<div class="field full sep">${esc(f.sep)}</div>`;
       let v = values[f.id] !== undefined ? values[f.id] : f.def;
@@ -1780,6 +1866,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       <div class="form-grid has-half">${html}</div>
       ${kind === "bolo" ? `<div class="calc" id="calc"></div>` : ""}
       ${kind === "viaje" ? `<p class="hint" id="km-hint" style="margin:0"></p>` : ""}
+      ${kind === "bezeroa" && item ? bezeroHist(item) : ""}
       <div class="err" id="form-err" role="alert"></div>
       <div class="actions">
         ${id && !ro && !(kind === "componente" && state.componentes.some((c) => c.id === id && c.admin)) ? `<button type="button" class="btn danger" id="btn-del">Ezabatu</button>` : ""}
@@ -2033,6 +2120,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       await ref.set(data);
       if (newPin && window.sustraiSetPin) await window.sustraiSetPin(ref.id, newPin);
       if (current.kind === "bolo") { await syncCoches(ref.id, data); await guardarRutas(data); }
+      if (current.kind === "bolo" && !state.limited && String(data.cliente || "").trim() && !bezeroaOf(data.cliente)) {
+        try { await state.db.collection("bezeroak").doc().set({ izena: String(data.cliente).trim(), email: data.clienteEmail || "", kontaktua: data.kontaktua || "", tel: data.kontaktuTel || "", creado: data.actualizado, actualizado: data.actualizado }); } catch (er) { console.warn("bezeroa:", er); }
+      }
       if (current.kind === "bolo" && state.abisuak && state.abisuak.aktibo) {
         const KS = ["evento", "fecha", "ordua", "amaiera", "ordua2", "amaiera2", "helbidea", "elkartu", "elkartuLekua", "proba"];
         if (!prev) ntfySend(state.abisuak.taldea, "🎵 Emanaldi berria", boloAbisuTxt(data), ["musical_note"]);
@@ -2684,6 +2774,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
         render();
       });
     });
+    if (!state.limited) db.collection("bezeroak").onSnapshot((snap) => { state.bezeroak = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); if ($("overlay").hidden) render(); }, () => {});
     db.doc("ajustes/abisuak").onSnapshot((snap) => { state.abisuak = snap.exists ? snap.data() : null; if ($("overlay").hidden) render(); }, () => {});
     db.doc("ajustes/general").onSnapshot((snap) => { if (snap.exists) { state.ajustes = Object.assign({ eurKm: EURKM_DEF }, snap.data()); if ($("overlay").hidden) render(); } }, () => {});
   }
