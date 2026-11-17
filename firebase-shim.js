@@ -72,8 +72,49 @@
     await Promise.all(snap.docs.map((d) => d.ref.delete()));
   };
 
+  // ---- Kilometroak eta bidesariak: Google Routes API (aukerakoa, gakoa config.js-n) ----
+  const splitTray = (tray) => {
+    let pts = tray.split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+/).map((x) => x.trim()).filter(Boolean);
+    if (pts.length < 2) pts = tray.split("-").map((x) => x.trim()).filter(Boolean);
+    return pts;
+  };
+  if (CFG.googleMapsKey) {
+    window.sustraiRouteKm = async (tray, ap) => {
+      const pts = splitTray(tray);
+      if (pts.length < 2) return null;
+      const wp = (p) => ({ address: p });
+      const body = {
+        origin: wp(pts[0]), destination: wp(pts[pts.length - 1]),
+        intermediates: pts.slice(1, -1).map(wp),
+        travelMode: "DRIVE", routingPreference: "TRAFFIC_UNAWARE",
+        extraComputations: ["TOLLS"],
+        routeModifiers: { avoidTolls: !ap, vehicleInfo: { emissionType: "GASOLINE" } },
+        regionCode: "es", languageCode: "es", units: "METRIC",
+      };
+      const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Goog-Api-Key": CFG.googleMapsKey,
+          "X-Goog-FieldMask": "routes.distanceMeters,routes.description,routes.travelAdvisory.tollInfo" },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) { let m = ""; try { m = (await r.json()).error.message; } catch (e) {} console.error("Google Routes:", r.status, m); throw new Error("routes " + r.status); }
+      const j = await r.json();
+      const rt = j.routes && j.routes[0];
+      if (!rt || !rt.distanceMeters) return null;
+      const ti = rt.travelAdvisory && rt.travelAdvisory.tollInfo;
+      let peajes;
+      if (!ap) peajes = 0;
+      else if (!ti) peajes = 0; // ibilbideak ez du bidesaririk
+      else if (ti.estimatedPrice && ti.estimatedPrice.length) {
+        const eur = ti.estimatedPrice.find((x) => x.currencyCode === "EUR") || ti.estimatedPrice[0];
+        peajes = Math.round((Number(eur.units || 0) + Number(eur.nanos || 0) / 1e9) * 100) / 100;
+      } // bestela: bidesaria badago baina preziorik ez → eskuz
+      return { km: Math.round(rt.distanceMeters / 100) / 10, ruta: rt.description || (ap ? "ibilbide azkarrena" : "bidesaririk gabeko ibilbidea"), peaje: !!ap, peajes, fuente: "Google Maps" };
+    };
+  }
+
   // ---- Kilometroak: OpenRouteService (aukerakoa, gakoa config.js-n) ----
-  if (CFG.openRouteServiceKey) {
+  if (CFG.openRouteServiceKey && !CFG.googleMapsKey) {
     const K = CFG.openRouteServiceKey;
     const geocode = async (name) => {
       const u = `https://api.openrouteservice.org/geocode/search?api_key=${encodeURIComponent(K)}&text=${encodeURIComponent(name)}&boundary.country=ES,FR&focus.point.lon=-2.0&focus.point.lat=43.1&size=1`;
@@ -88,14 +129,21 @@
       if (pts.length < 2) return null;
       const coords = [];
       for (const p of pts) coords.push(await geocode(p));
-      const body = { coordinates: coords, preference: ap ? "fastest" : "shortest" };
+      const body = { coordinates: coords, preference: ap ? "fastest" : "shortest", extra_info: ["tollways"] };
       if (!ap) body.options = { avoid_features: ["tollways"] };
       const r = await fetch("https://api.openrouteservice.org/v2/directions/driving-car", { method: "POST", headers: { Authorization: K, "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!r.ok) throw new Error("directions " + r.status);
       const j = await r.json();
-      const m = j.routes && j.routes[0] && j.routes[0].summary && j.routes[0].summary.distance;
+      const r0 = j.routes && j.routes[0];
+      const m = r0 && r0.summary && r0.summary.distance;
       if (!m) return null;
-      return { km: Math.round(m / 100) / 10, ruta: ap ? "ibilbide azkarrena" : "ibilbide laburrena, bidesaririk gabe", peaje: !!ap, fuente: "OpenRouteService" };
+      // Bidesaria: ibilbideko ordainpeko km-ak × €/km (config.js-n aldatu daiteke).
+      const tw = (r0.extras && r0.extras.tollways && r0.extras.tollways.summary) || [];
+      const tollM = tw.filter((x) => x.value === 1).reduce((s, x) => s + (x.distance || 0), 0);
+      const tollKm = Math.round(tollM / 100) / 10;
+      const rate = Number(CFG.bidesariaKm) > 0 ? Number(CFG.bidesariaKm) : 0.12;
+      const peajes = ap ? Math.round(tollKm * rate * 100) / 100 : 0;
+      return { km: Math.round(m / 100) / 10, ruta: ap ? (tollKm ? `ibilbide azkarrena (${String(tollKm).replace(".", ",")} km autobidean)` : "ibilbide azkarrena, bidesaririk gabe") : "ibilbide laburrena, bidesaririk gabe", peaje: !!ap, peajes, tollKm, fuente: "OpenRouteService" };
     };
   }
 

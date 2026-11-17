@@ -13,7 +13,14 @@ window.SUSTRAI_CONFIG = {
   // 2) Zure Google emaila (admina). firestore.rules fitxategian ere bera jarri.
   adminEmail: "aitoramilibia@gmail.com",
 
-  // 3) Aukerakoa: OpenRouteService gakoa, km-ak bere kabuz kalkulatzeko.
+  // 3) Google Maps gakoa (Routes API): km-ak eta bidesariak bere kabuz kalkulatzeko.
+  //    Hutsik utziz gero, km-ak eskuz idatzi beharko dira.
+  googleMapsKey: "AIzaSyBAJDmFjjyDCDoeNlbiNf02nLFM-pDn7MY",
+
+  // Aukerakoa (Google-ren ordez): OpenRouteService gakoa, km-ak bere kabuz kalkulatzeko.
   //    Hutsik utziz gero, km-ak eskuz idatzi beharko dira.
   openRouteServiceKey: "",
+
+  // OpenRouteService-rekin bakarrik: bidesariaren estimazioa, autobideko km bakoitzeko (€).
+  bidesariaKm: 0.12,
 };
