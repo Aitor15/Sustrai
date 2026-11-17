@@ -401,8 +401,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117m"></script>
-<script src="firebase-shim.js?v=20261117m"></script>
+<script src="config.js?v=20261117n"></script>
+<script src="firebase-shim.js?v=20261117n"></script>
 </head>
 <body>
 <header class="top">
@@ -2199,6 +2199,22 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   const showBanner = (text) => { const b = $("banner"); b.textContent = text; b.hidden = !text; };
 
   window.addEventListener("sustrai-pins", () => { if ($("overlay").hidden) render(); });
+  // ---- Bertsio berria dagoen begiratu (iPhone-ko aplikazioak index.html zaharra gordetzen du) ----
+  (function autoUpdate() {
+    const tag = document.querySelector('script[src^="config.js?v="]'); if (!tag) return;
+    const cur = (tag.getAttribute("src").match(/v=(\w+)/) || [])[1];
+    const check = () => fetch("./?eguneratu=" + Date.now(), { cache: "no-store" }).then((r) => r.text()).then((t) => {
+      const srv = (t.match(/config\.js\?v=(\w+)/) || [])[1];
+      if (!srv || srv === cur) return;
+      let tried = null; try { tried = sessionStorage.getItem("sustrai-upd"); } catch (e) {}
+      if (tried === srv) return; // begizta ekiditeko
+      try { sessionStorage.setItem("sustrai-upd", srv); } catch (e) {}
+      location.replace(location.pathname + "?v=" + srv + location.hash);
+    }).catch(() => {});
+    check();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+  })();
+
   async function start() {
     render();
     let db = null, user = null;
