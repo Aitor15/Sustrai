@@ -345,8 +345,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117b"></script>
-<script src="firebase-shim.js?v=20261117b"></script>
+<script src="config.js?v=20261117d"></script>
+<script src="firebase-shim.js?v=20261117d"></script>
 </head>
 <body>
 <header class="top">
@@ -1903,7 +1903,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
           if (ap) {
             const g = rutaGuardada(tray, true);
             if (g && num(g.peajes) > 0) { pe = num(g.peajes); peNota = "gordetako bidesaria"; }
-            else if (gm.peajes !== undefined) { pe = round2(num(gm.peajes)); peNota = "estimazioa; zuzendu behar bada eta gordeko da"; }
+            else if (gm.peajes !== undefined) { pe = round2(num(gm.peajes)); peNota = gm.exacto ? "tarifa ofiziala" : "estimazioa; zuzendu behar bada eta gordeko da"; }
             else if (sample) {
               note.textContent = "Bidesaria kalkulatzen…";
               try { const v = await sample.json(rutaPrompt(tray, true), { modelTier: "complex" }); pe = round2(num(v && v.peajes)); peNota = "bidesaria estimatua"; } catch (er) { peNota = "jarri bidesaria eskuz"; }

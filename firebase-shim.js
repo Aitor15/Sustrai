@@ -78,6 +78,96 @@
     if (pts.length < 2) pts = tray.split("-").map((x) => x.trim()).filter(Boolean);
     return pts;
   };
+  // ---- Bidesarien taula ofiziala (Bidegi / Interbiak, arinak, 2026-01-01etik) ----
+  // Euskal Herriko ordainpeko autobideak, arinak / 1. klasea. Urtarrilero eguneratu (Iparraldea: otsailean):
+  // Bidegi/Interbiak (AP-8, AP-1, AP-636), Audenasa (AP-15), Bizkaia/Araba (AP-68), ASF-Vinci (A63).
+  // W = AP-8/AP-1 mendebaldea (Bilbo – Gasteiz – Donostia); E = AP-8 Donostia – Irun.
+  const TOLL_YEAR = 2026;
+  const WN = ["AO", "Amorebieta", "Iurreta", "Abadino", "Ermua", "Eibar", "BergaraIN", "BergaraHS", "Arrasate", "Eskoriatza", "Luko", "Etxabarri", "Elgoibar", "Itziar", "Zestoa", "Zarautz", "Donostia"];
+  const WROWS = {
+    AO: [null, 1.05, 2.8, 3.3, 4.6, 6.66, 8.23, 9.01, 9.66, 11.31, 15.14, 16.39, 7.56, 8.84, 9.74, 11.12, 13.81],
+    Iurreta: [2.8, 2.8, null, null, 1.75, 2.97, 4.54, 5.32, 5.97, 7.62, 11.45, 12.7, 3.87, 5.15, 6.05, 7.43, 10.12],
+    Abadino: [3.3, 3.3, null, null, 1.25, 2.44, 4.01, 4.79, 5.44, 7.09, 10.92, 12.17, 3.34, 4.62, 5.52, 6.9, 9.59],
+    Ermua: [4.6, 4.6, 1.75, 1.25, null, 1.22, 2.79, 3.57, 4.22, 5.87, 9.7, 10.95, 2.12, 3.4, 4.3, 5.68, 8.37],
+    Eibar: [6.66, 6.66, 2.97, 2.44, 1.22, null, 1.88, 2.66, 3.31, 4.96, 8.79, 10.04, 1.17, 2.47, 3.27, 4.75, 7.43],
+    BergaraIN: [8.23, 8.23, 4.54, 4.01, 2.79, 1.88, null, null, null, null, null, null, 2.58, 3.85, 4.57, 6.13, 8.71],
+    BergaraHS: [9.01, 9.01, 5.32, 4.79, 3.57, 2.66, null, null, 0.89, 2.45, 6.31, 7.56, 3.36, 4.63, 5.35, 6.91, 9.49],
+    Arrasate: [9.66, 9.66, 5.97, 5.44, 4.22, 3.31, null, 0.89, null, 1.71, 5.54, 6.79, 4.01, 5.28, 6.0, 7.56, 10.14],
+    Eskoriatza: [11.31, 11.31, 7.62, 7.09, 5.87, 4.96, null, 2.45, 1.71, null, 3.97, 5.22, 5.66, 6.93, 7.65, 9.21, 11.79],
+    Luko: [15.14, 15.14, 11.45, 10.92, 9.7, 8.79, null, 6.31, 5.54, 3.97, null, 1.5, 9.49, 10.76, 11.48, 13.04, 15.62],
+    Etxabarri: [16.39, 16.39, 12.7, 12.17, 10.95, 10.04, null, 7.56, 6.79, 5.22, 1.5, null, 10.74, 12.01, 12.73, 14.29, 16.87],
+    Elgoibar: [7.56, 7.56, 3.87, 3.34, 2.12, 1.17, 2.58, 3.36, 4.01, 5.66, 9.49, 10.74, null, 1.63, 2.35, 3.92, 6.41],
+    Itziar: [8.84, 8.84, 5.15, 4.62, 3.4, 2.47, 3.85, 4.63, 5.28, 6.93, 10.76, 12.01, 1.63, null, 1.17, 2.47, 5.17],
+    Zestoa: [9.74, 9.74, 6.05, 5.52, 4.3, 3.27, 4.57, 5.35, 6.0, 7.65, 11.48, 12.73, 2.35, 1.17, null, 1.74, 4.41],
+    // Zarautz – Donostia: taulan ez dago zuzenean; besteen arteko diferentziatik (Zarautz nagusiko barrera).
+    Zarautz: [11.12, 11.12, 7.43, 6.9, 5.68, 4.75, 6.13, 6.91, 7.56, 9.21, 13.04, 14.29, 3.92, 2.47, 1.74, null, 2.69],
+  };
+  const W = {};
+  WN.forEach((n) => { W[n] = {}; });
+  Object.entries(WROWS).forEach(([a, row]) => row.forEach((v, i) => { if (v != null) { W[a][WN[i]] = v; W[WN[i]][a] = v; } }));
+  W.Amorebieta.AO = W.AO.Amorebieta = 1.05;
+  const E = { Donostia: { Oiartzun: 1.61, Irun: 2.24, Behobia: 2.47 }, Oiartzun: { Irun: 2.24, Behobia: 2.47 }, Irun: { Behobia: 0.5 } };
+  // A63 Iparralde (ASF / Vinci, 1. klasea, 2026-02-01etik). Biriatou = Behobia (muga).
+  const F = { Biriatou: { SJL: 2.0, Biarritz: 3.2, Bayonne: 4.8, Ondres: 5.8, Capbreton: 6.8 }, SJL: { Biarritz: 1.2, Bayonne: 2.8, Ondres: 3.8, Capbreton: 4.8 },
+    Biarritz: { Bayonne: 1.2, Ondres: 2.2, Capbreton: 3.2 }, Bayonne: { Ondres: 1.0, Capbreton: 2.0 }, Ondres: { Capbreton: 1.0 } };
+  // Lerroko sareak: barrera bakoitzaren prezioa, ondoz ondoko sarbideen artean (batu egiten dira).
+  // AP-636 (Bidegi 2026). Antzuola–Bergara = 1,55 − 0,52 (kalkulatua).
+  const G = [["Beasain", "Ormaiztegi", 0.42], ["Ormaiztegi", "Zumarraga", 0.82], ["Zumarraga", "Antzuola", 0.52], ["Antzuola", "Bergara", 1.03]];
+  // AP-15 Nafarroa (Audenasa 2026): Sarasa, Oriz-Tiebas, Marcilla (enlace / tronco) barrerak.
+  const N = [["Irurtzun", "Pamplona", 2.65], ["Pamplona", "Tafalla", 4.55], ["Tafalla", "Marcilla", 3.45], ["Tafalla", "Tudela", 6.85]];
+  // AP-68 Euskadi, 2026-11-11tik (Bizkaia −20 %, Araba −70 %). Errioxa, Aragoi eta Nafarroako zatia doan.
+  const A = [["Bilbao", "Areta", 3.35], ["Areta", "Altube", 0.9], ["Altube", "Zambrana", 2.45]];
+  const mGet = (T, a, b) => (T[a] && T[a][b]) ?? (T[b] && T[b][a]);
+  const lineGet = (edges, a, b) => { // zuhaitza: bide bakarra
+    const adj = {}; edges.forEach(([x, y, v]) => { (adj[x] = adj[x] || []).push([y, v]); (adj[y] = adj[y] || []).push([x, v]); });
+    if (!adj[a] || !adj[b]) return undefined;
+    const seen = { [a]: 0 }, q = [a];
+    while (q.length) { const x = q.shift(); for (const [y, v] of adj[x]) if (!(y in seen)) { seen[y] = seen[x] + v; q.push(y); } }
+    return b in seen ? Math.round(seen[b] * 100) / 100 : undefined;
+  };
+  const SOUTH = new Set(["Arrasate", "Eskoriatza", "Luko", "Etxabarri"]);
+  const wGet = (a, b) => {
+    if (a === "Bergara") a = SOUTH.has(b) ? "BergaraHS" : "BergaraIN";
+    if (b === "Bergara") b = SOUTH.has(a) ? "BergaraHS" : "BergaraIN";
+    return W[a] ? W[a][b] : undefined;
+  };
+  const NET = {
+    W: (a, b) => wGet(a, b), E: (a, b) => mGet(E, a, b), F: (a, b) => mGet(F, a, b),
+    G: (a, b) => lineGet(G, a, b), N: (a, b) => lineGet(N, a, b), A: (a, b) => lineGet(A, a, b),
+  };
+  // Sareen arteko loturak (sarbide bera bi sareetan).
+  const GATES = [["W", "Donostia", "E", "Donostia"], ["E", "Behobia", "F", "Biriatou"], ["W", "Bergara", "G", "Bergara"], ["W", "AO", "A", "Bilbao"]];
+  // Sarbideen kokapena: Google-ren ibilbide errealetan ordainpeko tarteak hasi eta amaitzen diren lekuak.
+  const NODES = [["W:AO", 43.237, -2.885], ["W:Amorebieta", 43.220, -2.733], ["W:Iurreta", 43.174, -2.638], ["W:Abadino", 43.151, -2.611], ["W:Ermua", 43.189, -2.493], ["W:Eibar", 43.183, -2.472],
+    ["W:Bergara", 43.126, -2.423], ["W:Bergara", 43.107, -2.401], ["W:Arrasate", 43.066, -2.487], ["W:Arrasate", 43.074, -2.463], ["W:Eskoriatza", 43.017, -2.528], ["W:Luko", 42.935, -2.642], ["W:Etxabarri", 42.916, -2.710],
+    ["W:Elgoibar", 43.216, -2.413], ["W:Itziar", 43.276, -2.330], ["W:Zestoa", 43.255, -2.260], ["W:Zarautz", 43.285, -2.171], ["W:Donostia", 43.268, -2.018], ["W:Donostia", 43.281, -1.948], ["W:Donostia", 43.289, -2.022],
+    ["E:Oiartzun", 43.300, -1.860], ["E:Irun", 43.338, -1.789], ["E:Irun", 43.330, -1.803], ["E:Behobia", 43.339, -1.755],
+    ["F:SJL", 43.374, -1.682], ["F:Biarritz", 43.452, -1.556], ["F:Bayonne", 43.488, -1.449], ["F:Bayonne", 43.510, -1.460], ["F:Ondres", 43.565, -1.435], ["F:Capbreton", 43.631, -1.394],
+    ["G:Beasain", 43.046, -2.226], ["G:Ormaiztegi", 43.051, -2.261], ["G:Zumarraga", 43.080, -2.309], ["G:Antzuola", 43.095, -2.370],
+    ["N:Irurtzun", 42.901, -1.799], ["N:Pamplona", 42.837, -1.690], ["N:Pamplona", 42.757, -1.629], ["N:Tafalla", 42.563, -1.642], ["N:Tafalla", 42.512, -1.668], ["N:Marcilla", 42.334, -1.723], ["N:Tudela", 42.195, -1.675],
+    ["A:Bilbao", 43.235, -2.918], ["A:Areta", 43.158, -2.936], ["A:Altube", 42.964, -2.867], ["A:Zambrana", 42.660, -2.880]];
+  const NAMES = { AO: "Bilbo", Bilbao: "Bilbo", Abadino: "Abadiño", Etxabarri: "Etxabarri-Ibiña", Zestoa: "Zestoa-Zumaia", SJL: "Donibane Lohizune", Bayonne: "Baiona", Biarritz: "Biarritz", Pamplona: "Iruñea", Areta: "Areta (Laudio)" };
+  const kmBetween = (a, b) => { const R = 6371, r = Math.PI / 180, dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r; const h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+  const nearNode = (ll, maxKm = 6) => { let best = null, d = 1e9; NODES.forEach((n) => { const k = kmBetween(ll, [n[1], n[2]]); if (k < d) { d = k; best = n[0]; } }); return d <= maxKm ? best : null; };
+  const tollPrice = (A1, B1) => { // "Sarea:Sarbidea" formatuan
+    if (!A1 || !B1) return undefined;
+    const [na, a] = A1.split(":"), [nb, b] = B1.split(":");
+    if (na === nb) return a === b ? 0 : NET[na](a, b);
+    // sareen arteko bidea (BFS) eta zatien batura
+    const q = [[na, a, 0]], seen = new Set([na]);
+    while (q.length) {
+      const [n, at, sum] = q.shift();
+      for (const [x, xa, y, ya] of GATES.flatMap((g) => [g, [g[2], g[3], g[0], g[1]]])) {
+        if (x !== n || seen.has(y)) continue;
+        const p = at === xa ? 0 : NET[n](at, xa); if (p === undefined) continue;
+        if (y === nb) { const p2 = ya === b ? 0 : NET[y](ya, b); if (p2 !== undefined) return Math.round((sum + p + p2) * 100) / 100; continue; }
+        seen.add(y); q.push([y, ya, sum + p]);
+      }
+    }
+    return undefined;
+  };
+  window.sustraiTollPrice = tollPrice;
+
   if (CFG.googleMapsKey) {
     window.sustraiRouteKm = async (tray, ap) => {
       const pts = splitTray(tray);
@@ -94,7 +184,7 @@
       const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Goog-Api-Key": CFG.googleMapsKey,
-          "X-Goog-FieldMask": "routes.distanceMeters,routes.description,routes.travelAdvisory.tollInfo,routes.legs.steps.distanceMeters,routes.legs.steps.navigationInstruction.instructions" },
+          "X-Goog-FieldMask": "routes.distanceMeters,routes.description,routes.travelAdvisory.tollInfo,routes.legs.steps.distanceMeters,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.startLocation,routes.legs.steps.endLocation" },
         body: JSON.stringify(body),
       });
       if (!r.ok) { let m = ""; try { m = (await r.json()).error.message; } catch (e) {} console.error("Google Routes:", r.status, m); throw new Error("routes " + r.status); }
@@ -102,19 +192,38 @@
       const rt = j.routes && j.routes[0];
       if (!rt || !rt.distanceMeters) return null;
       const ti = rt.travelAdvisory && rt.travelAdvisory.tollInfo;
-      // Google-k ez du Espainiako bidesarien preziorik ematen: ordainpeko tarteak ("Carretera con peajes")
-      // markatzen ditu, eta haien km-ak × €/km egiten dugu (config.js: bidesariaKm).
-      let tollM = 0;
-      (rt.legs || []).forEach((lg) => (lg.steps || []).forEach((st) => { const t = (st.navigationInstruction && st.navigationInstruction.instructions) || ""; if (/peaje/i.test(t)) tollM += st.distanceMeters || 0; }));
-      const tollKm = Math.round(tollM / 100) / 10;
+      // Google-k ez du Espainiako bidesarien preziorik ematen, baina ordainpeko tarteak markatzen ditu
+      // ("Carretera con peajes"). Tarte bakoitzaren sarrera eta irteera ezagututa, taula ofizialeko prezioa;
+      // taulan ez badago (AP-15, AP-68…), km-ak × €/km (config.js: bidesariaKm).
       const rate = Number(CFG.bidesariaKm) > 0 ? Number(CFG.bidesariaKm) : 0.14;
-      let peajes, kalkulua = "";
+      const LL = (l) => l && l.latLng ? [l.latLng.latitude, l.latLng.longitude] : null;
+      const runs = []; let cur = null;
+      (rt.legs || []).forEach((lg) => (lg.steps || []).forEach((st) => {
+        const t = (st.navigationInstruction && st.navigationInstruction.instructions) || "";
+        if (/peaje/i.test(t)) { if (!cur) { cur = { from: LL(st.startLocation), m: 0 }; runs.push(cur); } cur.to = LL(st.endLocation); cur.m += st.distanceMeters || 0; }
+        else if ((st.distanceMeters || 0) > 1500) cur = null; // zati libre luze batek tartea mozten du
+      }));
+      let tollKm = 0, peajes = 0; const parts = [];
+      runs.forEach((r) => {
+        const km = r.m / 1000; tollKm += km;
+        let a = r.from && nearNode(r.from), b = r.to && nearNode(r.to);
+        // AP-68: Zambranatik hegoaldera doan da 2026-11-11tik (Google-k oraindik ordainpekotzat markatzen du).
+        if (a && a.startsWith("A:") && !b && r.to && r.to[0] < 42.7) b = "A:Zambrana";
+        if (b && b.startsWith("A:") && !a && r.from && r.from[0] < 42.7) a = "A:Zambrana";
+        if (!b && a && a.startsWith("N:") && r.to && r.to[0] < 42.2) b = "N:Tudela";
+        const p = a && b ? tollPrice(a, b) : undefined;
+        const nm = (n) => { const k = n.split(":")[1]; return NAMES[k] || k; };
+        if (p !== undefined) { if (p > 0) parts.push(`${nm(a)} → ${nm(b)} ${p.toFixed(2).replace(".", ",")} € (tarifa ${TOLL_YEAR})`); peajes += p; }
+        else if (km >= 0.5) { const e = Math.round(km * rate * 100) / 100; parts.push(`${String(Math.round(km * 10) / 10).replace(".", ",")} km ordainpeko × ${String(rate).replace(".", ",")} € (estimazioa)`); peajes += e; }
+      });
+      tollKm = Math.round(tollKm * 10) / 10; peajes = Math.round(peajes * 100) / 100;
       if (!ap) peajes = 0;
       else if (ti && ti.estimatedPrice && ti.estimatedPrice.length) {
         const eur = ti.estimatedPrice.find((x) => x.currencyCode === "EUR") || ti.estimatedPrice[0];
-        peajes = Math.round((Number(eur.units || 0) + Number(eur.nanos || 0) / 1e9) * 100) / 100;
-      } else { peajes = Math.round(tollKm * rate * 100) / 100; if (tollKm) kalkulua = `${String(tollKm).replace(".", ",")} km ordainpeko × ${String(rate).replace(".", ",")} €`; }
-      return { km: Math.round(rt.distanceMeters / 100) / 10, ruta: (rt.description || (ap ? "ibilbide azkarrena" : "bidesaririk gabeko ibilbidea")) + (kalkulua ? ` (${kalkulua})` : ""), peaje: !!ap, peajes, tollKm, fuente: "Google Maps" };
+        peajes = Math.round((Number(eur.units || 0) + Number(eur.nanos || 0) / 1e9) * 100) / 100; parts.length = 0;
+      }
+      const kalkulua = ap ? parts.join(" + ") : "";
+      return { km: Math.round(rt.distanceMeters / 100) / 10, ruta: (rt.description || (ap ? "ibilbide azkarrena" : "bidesaririk gabeko ibilbidea")) + (kalkulua ? ` — ${kalkulua}` : ""), peaje: !!ap, peajes, tollKm, exacto: ap && parts.length > 0 && parts.every((x) => /tarifa/.test(x)), fuente: "Google Maps" };
     };
   }
 
