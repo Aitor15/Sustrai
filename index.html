@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sustrai kontuak</title>
+<title>Sustrai erromeria</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -302,6 +302,12 @@ main { overflow-x: clip; }
 .sl-list li.sl-group .sl-n { color: var(--muted); }
 .metro-b { display: inline-flex; align-items: center; gap: 3px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap; transition: transform .06s; }
 .metro-b:hover { border-color: var(--muted); }
+.konp-tag { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; font-size: 11px; font-weight: 700; font-family: var(--font-body); letter-spacing: 0; text-transform: none; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rep-table .c { text-align: center; }
+.rep-table .rep-k .konp-tag { margin-left: 0; }
+@media (max-width: 640px) { .rep-table .row { grid-template-columns: minmax(0, 1fr) 48px auto; } }
+.st-name .konp-tag { font-size: .55em; vertical-align: .25em; }
+.metro-b small { font-size: .78em; font-weight: 500; opacity: .75; margin-left: 2px; }
 .metro-b.metro-empty { border-style: dashed; color: var(--muted); font-weight: 500; background: transparent; }
 .metro-b.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .metro-b.on.beat { transform: scale(1.12); }
@@ -312,6 +318,10 @@ main { overflow-x: clip; }
 @media (max-width: 640px) { .kide-bolos .row, .kide-bolos .ledger-head { grid-template-columns: var(--cols) !important; } .kide-bolos .row > * { display: block !important; } .kide-bolos .row, .kide-bolos .ledger-head { gap: 8px; padding-left: 12px; padding-right: 12px; font-size: 14px; } }
 .rep-group { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 8px 14px 6px; background: var(--bg); border-bottom: 1px solid var(--line); border-top: 2px solid var(--accent); font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: 14px; }
 .ledger .rep-group:first-child { border-top: 0; }
+.rep-group[data-rep-group] { cursor: pointer; user-select: none; }
+.rep-group[data-rep-group]:hover { background: var(--surface); }
+.rep-caret { display: inline-block; width: 1em; transition: transform .15s; color: var(--accent); }
+.rep-group.open .rep-caret { transform: rotate(90deg); }
 .rep-group .meta { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
 .sl-groups { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .sl-list li.sl-addrow { display: block; padding: 5px 8px 7px 38px; background: var(--bg); }
@@ -381,15 +391,15 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117h"></script>
-<script src="firebase-shim.js?v=20261117h"></script>
+<script src="config.js?v=20261117i"></script>
+<script src="firebase-shim.js?v=20261117i"></script>
 </head>
 <body>
 <header class="top">
   <div class="top-inner">
     <div class="brand">
       <div>
-        <h1>Sustrai <span>· kontuak</span></h1>
+        <h1>Sustrai <span>· erromeria</span></h1>
         <div class="sub" id="sync-status">Konektatzen…</div>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
@@ -470,6 +480,7 @@ main { overflow-x: clip; }
 
   // ---------- Estado ----------
   const state = {
+    repOpen: new Set(),
     componentes: [], bolos: [], viajes: [], rutas: [], materiala: [], abestiak: [], setlistak: [],
     ajustes: { eurKm: EURKM_DEF },
     loaded: { componentes: false, bolos: false, viajes: false, rutas: false, materiala: false, abestiak: false, setlistak: false },
@@ -991,8 +1002,8 @@ main { overflow-x: clip; }
           </li>`; }).join("")}</ul></div>`
       : `<div class="card empty"><strong>Ez dago setlistik (${esc(periodoTxt())})</strong>${state.limited ? "Aukeratu beste urte bat goian." : "Sortu bat emanaldi baterako, errepertorioko abestiak ordenatuz."}</div>`;
     const reps = repSorted();
-    const repHtml = reps.length ? `<div class="card" style="--cols:minmax(0,1.5fr) 80px 100px 80px">
-        <div class="ledger-head"><div>Abestia</div><div class="hide-m">Tonua</div><div class="hide-m">Triki</div><div class="r">Iraupena</div></div>
+    const repHtml = reps.length ? `<div class="card rep-table" style="--cols:minmax(0,1.5fr) 80px 100px 80px 96px">
+        <div class="ledger-head"><div>Abestia</div><div class="hide-m">Tonua</div><div class="hide-m">Triki</div><div class="c">Erritmoa</div><div class="r">Iraupena</div></div>
         <ul class="ledger">${(() => {
           // Trikiaren tonuaren arabera taldekatuta (tonurik gabekoak azkenean).
           const grupos = new Map();
@@ -1000,15 +1011,17 @@ main { overflow-x: clip; }
           const keys = [...grupos.keys()].sort((x, y) => (x === "") - (y === "") || x.localeCompare(y, "es", { numeric: true }));
           const conTono = keys.some((k) => k !== "");
           return keys.map((k) => { const g = grupos.get(k); const sec = g.list.reduce((s2, a) => s2 + durSec(a.iraupena), 0);
-            return (conTono ? `<li class="rep-group"><span>${k ? "Triki: " + esc(g.label) : "Triki tonurik gabe"}</span><span class="meta">${g.list.length} abesti${sec ? " · " + fmtDur(sec) : ""}</span></li>` : "") + g.list.map((a) => { const uses = state.setlistak.filter((sl) => (sl.items || []).some((x) => x.a === a.id)).length; return `
+            const open = !conTono || state.repOpen.has(k);
+            return (conTono ? `<li class="rep-group${open ? " open" : ""}" role="button" tabindex="0" aria-expanded="${open}" data-rep-group="${esc(k)}"><span><span class="rep-caret" aria-hidden="true">▸</span>${k ? "Triki: " + esc(g.label) : "Triki tonurik gabe"}</span><span class="meta">${g.list.length} abesti${sec ? " · " + fmtDur(sec) : ""}</span></li>` : "") + (open ? g.list : []).map((a) => { const uses = state.setlistak.filter((sl) => (sl.items || []).some((x) => x.a === a.id)).length; return `
           <li class="row" tabindex="0" data-edit="abestia" data-id="${esc(a.id)}">
             <div><div class="main">${esc(a.izena)}</div><div class="meta">${uses ? uses + " setlistatan" : "setlistarik gabe"}${a.notas ? " · " + esc(String(a.notas).slice(0, 60)) : ""}<span class="only-m">${a.tonua ? " · " + esc(a.tonua) : ""}${a.triki ? " · triki: " + esc(a.triki) : ""}</span></div></div>
             <div class="meta hide-m">${esc(a.tonua || "—")}</div>
             <div class="meta hide-m">${esc(a.triki || "—")}</div>
+            <div class="c rep-k">${KONPAS[a.konpasa] ? `<span class="konp-tag">${esc(a.konpasa)}</span>` : `<span class="meta">—</span>`}</div>
             <div class="r num">${a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : "—"}<div style="margin-top:3px">${bpmOk(a.bpm) ? metroBtn(a, "rep-" + a.id) : `<span class="metro-b metro-empty" title="Sakatu abestia BPM-a jartzeko">♩ BPM?</span>`}</div></div>
           </li>`; }).join(""); }).join("");
         })()}</ul>
-        <div class="ledger-foot"><div>${reps.length} abesti</div><div class="hide-m"></div><div class="hide-m"></div><div class="r num">${fmtDur(reps.reduce((s2, a) => s2 + durSec(a.iraupena), 0))}</div></div></div>`
+        <div class="ledger-foot"><div>${reps.length} abesti</div><div class="hide-m"></div><div class="hide-m"></div><div class="hide-m"></div><div class="r num">${fmtDur(reps.reduce((s2, a) => s2 + durSec(a.iraupena), 0))}</div></div></div>`
       : `<div class="card empty"><strong>Errepertorioa hutsik dago</strong>Gehitu taldearen abestiak, iraupenarekin, setlistak egiteko.</div>`;
     const pdfBtn = sls.length ? `<button type="button" class="btn" data-sl-pdf>PDF deskargatu</button>` : "";
     if (state.limited) return `<section style="display:grid;gap:12px">
@@ -1088,7 +1101,7 @@ main { overflow-x: clip; }
     // Talde bakoitzaren amaieran (hurrengo taldearen aurretik) abestia zuzenean gehitzeko lerroa.
     const addRow = (at) => ro || !gs.length ? "" : `<li class="sl-addrow"><select data-sl-gsel="${at}" aria-label="Gehitu abestia talde honetara">${songOpts()}</select></li>`;
     $("sl-list").innerHTML = it.length ? it.map((x, i) => { const pre = x.g !== undefined && i > 0 && gs.some((z) => z.i < i) ? addRow(i) : "";
-      return pre + (() => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="sl-group"><span class="sl-n">▣</span><span class="sl-name">${esc(x.g || "Taldea")}</span><span class="num meta">${g ? esc(grpTxt(g)) : ""}</span>${btns(i)}</li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${a && (a.tonua || a.triki) ? ` <span class="meta">${esc([a.tonua, a.triki ? "triki " + a.triki : ""].filter(Boolean).join(" · "))}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; })(); }).join("") + addRow(it.length) : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
+      return pre + (() => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="sl-group"><span class="sl-n">▣</span><span class="sl-name">${esc(x.g || "Taldea")}</span><span class="num meta">${g ? esc(grpTxt(g)) : ""}</span>${btns(i)}</li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return `<li class="${x.a ? "" : "sl-text"}"><span class="sl-n">${x.a ? pos : "·"}</span><span class="sl-name">${esc(itemName(x))}${konpTag(a)}${a && (a.tonua || a.triki) ? ` <span class="meta">${esc([a.tonua, a.triki ? "triki " + a.triki : ""].filter(Boolean).join(" · "))}</span>` : ""}</span><span class="num meta">${a && a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""}</span>${ro ? "" : `<span class="sl-btns"><button type="button" class="sl-b" data-sl-up="${i}" aria-label="Gora" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" class="sl-b" data-sl-down="${i}" aria-label="Behera" ${i === it.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="sl-b sl-x" data-sl-del="${i}" aria-label="Kendu">×</button></span>`}</li>`; })(); }).join("") + addRow(it.length) : `<li class="sl-empty meta">Oraindik ez dago abestirik. Gehitu behean errepertoriotik.</li>`;
     const inf = setlistInfo({ items: it });
     $("sl-total").textContent = inf.n ? `Guztira: ${durTxt(inf)}` : "";
     const sel = $("sl-add-sel");
@@ -1115,7 +1128,7 @@ main { overflow-x: clip; }
     $("dialog").classList.add("stage-dialog");
     $("dialog").innerHTML = `
       <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
-      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}${konpTag(a)}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
       <div class="actions stage-actions">${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
@@ -1220,6 +1233,7 @@ main { overflow-x: clip; }
         { id: "izena", label: "Abestiaren izena", type: "text", required: true, full: true },
         { id: "iraupena", label: "Iraupena (mm:ss)", type: "text", placeholder: "3:45" },
         { id: "bpm", label: "Tempoa (BPM)", type: "number", placeholder: "120", min: 20, step: 1 },
+        { id: "konpasa", label: "Erritmoa (konpasa)", type: "select", def: "4/4", options: KONPAS_OPTS },
         { id: "tonua", label: "Tonua", type: "text", placeholder: "La m" },
         { id: "triki", label: "Ze triki?", type: "text", full: true, list: "dl-triki", placeholder: "Fa-Sib, Sol-Do…" },
         { id: "notas", label: "Oharrak", type: "textarea", full: true, placeholder: "Hasiera, aldaketak, nork abesten duen…" },
@@ -1450,26 +1464,40 @@ main { overflow-x: clip; }
 
   // ---------- Metronomoa (Web Audio; ez du ezer deskargatzen) ----------
   const bpmOk = (v) => { const n = Math.round(num(v)); return n >= 20 && n <= 400 ? n : 0; };
-  const metroBtn = (a, key, big) => { const b = bpmOk(a && a.bpm); return b ? `<button type="button" class="metro-b${big ? " big" : ""}${Metro.key === key ? " on" : ""}" data-metro="${b}" data-metro-key="${esc(key)}" title="Metronomoa ${b} BPM-tan (sakatu berriro gelditzeko)" aria-label="Metronomoa ${b} BPM">♩ ${b}</button>` : ""; };
+  // Erritmoak: p = kolpe bakoitzaren indarra (2 = konpasaren lehena, 1 = kolpea, 0 = zatiketa leuna);
+  // sub = BPM-ko kolpe bakoitzean zenbat klik (6/8-n BPM = kortxea puntuduna, 3 klik).
+  const KONPAS = {
+    "4/4": { p: [2, 1, 1, 1], sub: 1, t: "4/4" },
+    "3/4": { p: [2, 1, 1], sub: 1, t: "3/4 (fandangoa, baltsa…)" },
+    "2/4": { p: [2, 1], sub: 1, t: "2/4 (arin-arin, porrusalda, pasodoble…)" },
+    "6/8": { p: [2, 0, 0, 1, 0, 0], sub: 3, t: "6/8 (BPM = kolpe puntuduna)" },
+    "12/8": { p: [2, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0], sub: 3, t: "12/8 (BPM = kolpe puntuduna)" },
+    "5/8": { p: [2, 0, 1, 0, 0], sub: 1, t: "5/8 zortzikoa (2+3, BPM = kortxea)" },
+    "7/8": { p: [2, 0, 1, 0, 1, 0, 0], sub: 1, t: "7/8 (2+2+3, BPM = kortxea)" },
+  };
+  const KONPAS_OPTS = Object.keys(KONPAS).map((k) => [k, KONPAS[k].t]);
+  const konpOk = (k) => (KONPAS[k] ? k : "4/4");
+  const konpTag = (a) => a && KONPAS[a.konpasa] ? ` <span class="konp-tag" title="Erritmoa">${esc(a.konpasa)}</span>` : "";
+  const metroBtn = (a, key, big) => { const b = bpmOk(a && a.bpm), k = konpOk(a && a.konpasa); return b ? `<button type="button" class="metro-b${big ? " big" : ""}${Metro.key === key ? " on" : ""}" data-metro="${b}" data-metro-k="${k}" data-metro-key="${esc(key)}" title="Metronomoa ${b} BPM, ${k} (sakatu berriro gelditzeko)" aria-label="Metronomoa ${b} BPM, ${k}">♩ ${b}</button>` : ""; };
   const Metro = {
     ctx: null, timer: null, bpm: 0, next: 0, beat: 0, key: null,
-    toggle(bpm, key) { if (this.timer && this.key === key) return this.stop(); this.start(bpm, key); },
-    start(bpm, key) {
+    toggle(bpm, key, k) { if (this.timer && this.key === key) return this.stop(); this.start(bpm, key, k); },
+    start(bpm, key, k) {
       this.stop(); bpm = bpmOk(bpm); if (!bpm) return toast("Idatzi tempo bat (20–400 BPM).");
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return toast("Gailu honek ezin du soinurik sortu.");
       try { this.ctx = this.ctx || new AC(); this.ctx.resume(); } catch (er) { return toast("Ezin izan da soinua piztu."); }
-      this.bpm = bpm; this.key = key; this.beat = 0; this.next = this.ctx.currentTime + 0.06;
+      this.bpm = bpm; this.key = key; this.beat = 0; this.k = KONPAS[konpOk(k)]; this.next = this.ctx.currentTime + 0.06;
       this.mark(true); this.timer = setInterval(() => this.tick(), 25);
     },
     tick() {
-      const spb = 60 / this.bpm;
+      const K = this.k || KONPAS["4/4"], spb = 60 / this.bpm / K.sub;
       while (this.next < this.ctx.currentTime + 0.12) {
-        const t = this.next, acc = this.beat % 4 === 0;
+        const t = this.next, lv = K.p[this.beat % K.p.length], acc = lv === 2;
         const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.frequency.value = acc ? 1650 : 1050;
-        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(acc ? 0.9 : 0.55, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+        o.frequency.value = lv === 2 ? 1650 : lv === 1 ? 1050 : 800;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(lv === 2 ? 0.9 : lv === 1 ? 0.55 : 0.22, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
         o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.06);
-        setTimeout(() => this.flash(acc), Math.max(0, (t - this.ctx.currentTime) * 1000));
+        if (lv > 0) setTimeout(() => this.flash(acc), Math.max(0, (t - this.ctx.currentTime) * 1000));
         this.next += spb; this.beat++;
       }
     },
@@ -1480,8 +1508,8 @@ main { overflow-x: clip; }
   document.addEventListener("click", (e) => {
     const m = e.target.closest("[data-metro], [data-metro-input]"); if (!m) return;
     e.preventDefault(); e.stopPropagation();
-    if (m.hasAttribute("data-metro-input")) { const f = $("fld-bpm"); return Metro.toggle(f && f.value, "form"); }
-    Metro.toggle(m.dataset.metro, m.dataset.metroKey);
+    if (m.hasAttribute("data-metro-input")) { const f = $("fld-bpm"), k = $("fld-konpasa"); return Metro.toggle(f && f.value, "form", k && k.value); }
+    Metro.toggle(m.dataset.metro, m.dataset.metroKey, m.dataset.metroK);
   }, true);
   function closeForm() { Metro.stop(); $("overlay").hidden = true; current = null; $("dialog").innerHTML = ""; $("dialog").classList.remove("stage-dialog"); document.body.classList.remove("printing-stage"); render(); }
   $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeForm(); });
@@ -1677,7 +1705,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const kids = [];
     pages.forEach((ops, i) => {
       const body = ops.map((o) => o.t !== undefined ? `${o.c || "0 0 0"} rg BT /F${o.b ? 2 : 1} ${o.s} Tf ${o.x.toFixed(2)} ${o.y.toFixed(2)} Td (${enc(o.t)}) Tj ET` : o.raw).join("\n")
-        + `\n0.45 0.45 0.45 rg BT /F1 8 Tf 40 28 Td (${enc("Sustrai kontuak · " + (i + 1) + "/" + pages.length)}) Tj ET`;
+        + `\n0.45 0.45 0.45 rg BT /F1 8 Tf 40 28 Td (${enc("Sustrai erromeria · " + (i + 1) + "/" + pages.length)}) Tj ET`;
       const c = add(`<< /Length ${body.length} >>\nstream\n${body}\nendstream`);
       kids.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${c} 0 R >>`));
     });
@@ -1742,7 +1770,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
           const a = abestia(x.a) || {}; pos++;
           need(20);
           const n = String(pos); text(n, { x: L + 22 - pdfWidth(n, 13) * 1.07, s: 13, b: true, c: RED });
-          const meta = [a.tonua, a.triki ? "triki " + a.triki : "", bpmOk(a.bpm) ? bpmOk(a.bpm) + " bpm" : ""].filter(Boolean).join(" · ");
+          const meta = [a.tonua, a.triki ? "triki " + a.triki : "", bpmOk(a.bpm) ? bpmOk(a.bpm) + " bpm" : "", KONPAS[a.konpasa] ? a.konpasa : ""].filter(Boolean).join(" · ");
           text(fit(itemName(x), meta ? 290 : 420, 13), { x: L + 32, s: 13, b: true });
           if (meta) text(fit(meta, 110, 9), { x: 410, s: 9, c: GREY });
           if (a.iraupena) right(fmtDur(durSec(a.iraupena)), { s: 10, c: GREY });
@@ -2050,6 +2078,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const t = e.target;
     const add = t.closest("[data-add]"); if (add) return add.dataset.add === "setlist" ? openSetlist(null) : openForm(add.dataset.add);
     const stg = t.closest("[data-stage]"); if (stg) { e.stopPropagation(); return openStage(stg.dataset.stage); }
+    const rg = t.closest("[data-rep-group]"); if (rg) { const k = rg.dataset.repGroup; if (state.repOpen.has(k)) state.repOpen.delete(k); else state.repOpen.add(k); return render(); }
     if (t.closest("[data-sl-pdf]")) return exportSetlistPdf([...state.setlistak].filter((sl) => slInYear(sl)).sort((a, b) => slFecha(a).localeCompare(slFecha(b))));
     const esl = t.closest("[data-edit-setlist]"); if (esl && !state.limited) return openSetlist(esl.dataset.editSetlist);
     if (t.closest("[data-edit-ajustes]")) return openAjustes();
@@ -2094,7 +2123,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const gc = t.closest("[data-goto-comp]"); if (gc) { state.filtroComp = gc.dataset.gotoComp; return goTab("viajes"); }
     const row = t.closest("[data-edit]"); if (row) return openForm(row.dataset.edit, row.dataset.id);
   });
-  $("view").addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && (e.target.classList.contains("row") || e.target.classList.contains("tile-btn"))) { e.preventDefault(); e.target.click(); } });
+  $("view").addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && (e.target.classList.contains("row") || e.target.classList.contains("tile-btn") || e.target.classList.contains("rep-group"))) { e.preventDefault(); e.target.click(); } });
   $("view").addEventListener("change", (e) => { if (e.target.id === "f-comp") { state.filtroComp = e.target.value; render(); } });
 
   async function togglePago(boloId, key, amount, col) {
