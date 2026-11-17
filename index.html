@@ -302,6 +302,88 @@ main { overflow-x: clip; }
 .sl-list li.sl-group .sl-n { color: var(--muted); }
 .metro-b { display: inline-flex; align-items: center; gap: 3px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap; transition: transform .06s; }
 .metro-b:hover { border-color: var(--muted); }
+/* ---- Agertoki modua ---- */
+body.sm-on { overflow: hidden; }
+#stagemode { position: fixed; inset: 0; z-index: 60; background: #0b0b0b; color: #fff; display: grid; grid-template-rows: auto 1fr auto;
+  padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  font-family: var(--font-body); user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+#stagemode .sm-flash { position: absolute; inset: 0; pointer-events: none; border: 0 solid var(--accent); transition: border-width .06s; }
+#stagemode .sm-flash.beat { border-width: 6px; border-color: #5a5a5a; }
+#stagemode .sm-flash.beat1 { border-width: 10px; border-color: var(--accent); }
+.sm-top { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; position: relative; }
+.sm-x { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #3a3a3a; background: #161616; color: #fff; font-size: 18px; cursor: pointer; }
+.sm-where { display: flex; gap: 10px; align-items: baseline; justify-content: center; min-width: 0; }
+.sm-sl { font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 13px; color: #bdbdbd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sm-count { font-size: 13px; color: #8a8a8a; white-space: nowrap; }
+.sm-auto { border: 1px solid #3a3a3a; background: #161616; color: #8a8a8a; border-radius: 999px; padding: 8px 12px; font: 700 13px var(--font-body); cursor: pointer; }
+.sm-auto[aria-pressed="true"] { border-color: var(--accent); color: #fff; background: var(--accent); }
+.sm-main { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 14px; min-height: 0; position: relative; padding: 10px 0; }
+.sm-grp { color: var(--accent); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: clamp(14px, 2.4vw, 20px); min-height: 1.2em; }
+.sm-name { font-family: var(--font-display, var(--font-body)); font-weight: 800; line-height: 1.02; font-size: clamp(40px, 9.5vw, 120px); text-wrap: balance; overflow-wrap: anywhere; max-width: 100%; }
+.sm-name.is-text { color: #9a9a9a; font-style: italic; font-weight: 600; }
+.sm-sub { font-size: clamp(18px, 3.4vw, 30px); color: #bdbdbd; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.sm-sub b { color: #fff; } .sm-sub i { font-style: normal; color: #555; }
+.sm-tempo { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.sm-k { border: 2px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 6px 16px; font-weight: 800; font-size: clamp(18px, 3vw, 26px); font-variant-numeric: tabular-nums; }
+.sm-play { display: inline-flex; align-items: baseline; gap: 6px; border: 2px solid #4a4a4a; background: #161616; color: #fff; border-radius: 999px; padding: 8px 20px; font: 800 clamp(22px, 4vw, 34px) var(--font-body); cursor: pointer; }
+.sm-play small { font-size: .45em; color: #9a9a9a; font-weight: 700; letter-spacing: .08em; }
+.sm-play.on { border-color: var(--accent); }
+.sm-play.beat1 { background: var(--accent); }
+.sm-play.beat { background: #2c2c2c; }
+.sm-bottom { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; gap: 10px; align-items: center; }
+.sm-nav { height: 64px; border-radius: 14px; border: 1px solid #3a3a3a; background: #161616; color: #fff; font-size: 40px; line-height: 1; cursor: pointer; }
+.sm-nav:disabled { opacity: .25; cursor: default; }
+.sm-next { text-align: center; min-width: 0; display: grid; gap: 2px; }
+.sm-next span { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8a8a8a; font-weight: 700; }
+.sm-next strong { font-size: clamp(16px, 2.6vw, 22px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sm-next em { font-style: normal; font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.stage-list li[data-st-a] .st-body { cursor: pointer; }
+@media print { #stagemode { display: none !important; } .sm-hint { display: none; } }
+/* ---- Abisuak ---- */
+.ab-steps { margin: 0 0 4px; padding-left: 20px; display: grid; gap: 6px; }
+.ab-topic { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; background: var(--surface); }
+.ab-topic code { font-size: 16px; font-weight: 700; word-break: break-all; user-select: all; -webkit-user-select: all; }
+.ab-btns { display: flex; gap: 8px; flex-wrap: wrap; } .ab-btns a.btn { text-decoration: none; color: var(--ink); }
+/* ---- Letrak ---- */
+textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.5; min-height: 180px; }
+#letra-panel { position: fixed; inset: 0; z-index: 70; background: #0b0b0b; color: #fff; display: grid; grid-template-rows: auto 1fr auto; padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.lt-top { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+.lt-title { min-width: 0; display: grid; } .lt-title strong { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .lt-title span { font-size: 13px; color: #9a9a9a; }
+.lt-size { display: flex; gap: 6px; } .lt-size button { border: 1px solid #3a3a3a; background: #161616; color: #fff; border-radius: 10px; padding: 8px 10px; font: 700 14px var(--font-body); cursor: pointer; }
+.lt-body { overflow: auto; -webkit-overflow-scrolling: touch; padding: 14px 2px 24px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; line-height: 1.35; user-select: text; -webkit-user-select: text; }
+.lt-c { color: var(--accent); font-weight: 700; white-space: pre; }
+.lt-l { white-space: pre-wrap; margin-bottom: .25em; }
+.lt-empty { color: #8a8a8a; font-family: var(--font-body); }
+.lt-bottom { padding-top: 10px; } .lt-bottom .btn { width: 100%; text-align: center; text-decoration: none; color: var(--ink); }
+.lt-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #4a4a4a; background: transparent; color: #fff; cursor: pointer; font-size: 15px; flex: none; }
+.sm-letra { border: 2px solid #4a4a4a; background: #161616; color: #fff; border-radius: 999px; padding: 8px 16px; font: 700 clamp(16px, 3vw, 22px) var(--font-body); cursor: pointer; }
+.stage-list:not(.has-letra) .st-l { display: none; }
+.has-letra .st-side { grid-template-columns: 34px 74px 92px; }
+.st-lm { display: none; }
+.lt-pill { border: 1px solid #4a4a4a; background: transparent; color: #ddd; border-radius: 999px; padding: 3px 10px; font: 600 12px var(--font-body); cursor: pointer; }
+@media (max-width: 640px) { .has-letra .st-side { grid-template-columns: 66px 78px; } .stage-list .st-l { display: none !important; } .st-lm { display: block; grid-column: 2; grid-row: 2; margin-top: -6px; } .stage-list li > .st-side { grid-column: 3; grid-row: 1; } .stage-list li > .st-n { grid-row: 1; } }
+@media print { #letra-panel, .lt-btn { display: none !important; } }
+/* ---- Laburpena ---- */
+.lab-sub { list-style: none; padding: 10px 14px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--muted); border-top: 2px solid var(--line); }
+@media (max-width: 640px) { .lab-years .row { grid-template-columns: 52px repeat(4, minmax(0, 1fr)) !important; font-size: 13px; } .lab-years .row > * { display: block !important; } .lab-years .ledger-head { display: grid !important; grid-template-columns: 52px repeat(4, minmax(0, 1fr)) !important; font-size: 10px; } }
+/* ---- Emanaldiaren fitxa ---- */
+.sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.kide-bolos .row[data-fitxa] { cursor: pointer; }
+.kide-bolos .row[data-fitxa]:hover { background: var(--surface); }
+.fitxa-dot { color: var(--accent); font-size: 13px; font-weight: 700; }
+.fx-head { border-bottom: 3px solid var(--accent); padding-bottom: 10px; margin-bottom: 4px; }
+.fx-date { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; font-weight: 700; color: var(--accent); }
+.fx-title { margin: 2px 0 0; font-size: clamp(24px, 6vw, 34px); line-height: 1.1; }
+.fx-grid { display: grid; }
+.fx-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.fx-lab { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; padding-top: 2px; }
+.fx-val { min-width: 0; overflow-wrap: anywhere; }
+.fx-val strong { font-size: 18px; }
+.fx-links { margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
+.fx-links .btn, .fx-actions a.btn { text-decoration: none; color: var(--ink); }
+.fx-notes { white-space: pre-wrap; }
+.fx-actions { flex-wrap: wrap; }
+@media (max-width: 640px) { .fx-row { grid-template-columns: 1fr; gap: 3px; } .fx-actions .btn { flex: 1 1 auto; text-align: center; } }
 .konp-tag { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; font-size: 11px; font-weight: 700; font-family: var(--font-body); letter-spacing: 0; text-transform: none; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rep-table .c { text-align: center; }
 .rep-table .rep-k .konp-tag { margin-left: 0; }
@@ -365,7 +447,7 @@ main { overflow-x: clip; }
 .stage-dialog select.konp-sel.empty, .konp-sel.empty { border-style: dashed; color: #8a8a8a; border-color: #5a5a5a; font-weight: 500; }
 .konp-sel option { color: #000; background: #fff; }
 @media print { .konp-sel { border: 0; padding: 0; background: none; } .konp-sel.empty { display: none; } }
-.stage-list .st-name { font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.15; letter-spacing: .01em; overflow-wrap: anywhere; }
+.stage-list .st-name { font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.15; letter-spacing: .01em; overflow-wrap: break-word; hyphens: auto; }
 .stage-list .st-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 14px; color: #a6a6a6; }
 .stage-list .st-sub b { color: #fff; font-weight: 600; }
 .stage-list .st-sub i { font-style: normal; color: #555; }
@@ -401,8 +483,8 @@ main { overflow-x: clip; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117n"></script>
-<script src="firebase-shim.js?v=20261117n"></script>
+<script src="config.js?v=20261117p"></script>
+<script src="firebase-shim.js?v=20261117p"></script>
 </head>
 <body>
 <header class="top">
@@ -490,6 +572,7 @@ main { overflow-x: clip; }
 
   // ---------- Estado ----------
   const state = {
+    abisuak: null,
     repOpen: new Set(),
     componentes: [], bolos: [], viajes: [], rutas: [], materiala: [], abestiak: [], setlistak: [],
     ajustes: { eurKm: EURKM_DEF },
@@ -501,6 +584,7 @@ main { overflow-x: clip; }
   const TABS = [
     { id: "bolos", label: "Emanaldiak" },
     { id: "integrantes", label: "Kideen irabaziak" },
+    { id: "laburpena", label: "Laburpena" },
     { id: "viajes", label: "Bidaiak" },
     { id: "materiala", label: "Materiala" },
     { id: "setlist", label: "Setlist" },
@@ -647,13 +731,67 @@ main { overflow-x: clip; }
     $("btn-ajustes").style.display = state.limited ? "none" : "";
     renderYears();
     renderTabs();
-    const v = { bolos: viewBolos, integrantes: viewIntegrantes, viajes: viewViajes, materiala: viewMateriala, setlist: viewSetlist, componentes: viewComponentes }[state.tab];
+    const v = { bolos: viewBolos, integrantes: viewIntegrantes, laburpena: viewLaburpena, viajes: viewViajes, materiala: viewMateriala, setlist: viewSetlist, componentes: viewComponentes }[state.tab];
     $("view").innerHTML = v();
   }
   const periodoTxt = () => state.year === "all" ? "epe osoa" : state.year;
   const addBtn = (kind, label) => state.canWrite ? `<button type="button" class="btn primary" data-add="${kind}">+ ${label}</button>` : "";
   const loadingOr = (key, html) => state.loaded[key] ? html : `<div class="card empty">Kargatzen…</div>`;
   const noComps = () => `<div class="card empty"><strong>Lehenik, gehitu taldeko kideak</strong>Horrela, aplikazioak kalkula dezake bakoitzak zenbat kobratzen duen.<div style="margin-top:12px">${addBtn("componente", "Gehitu kidea")}</div></div>`;
+
+  // ================= URTEKO LABURPENA =================
+  function laburpenaDatuak(bolos) {
+    const per = {}; const P = (id) => (per[id] = per[id] || { id, bolos: 0, behin: 0, share: 0, jarri: 0, km: 0 });
+    const tot = { n: bolos.length, presupuesto: 0, iva: 0, pagos: 0, gestion: 0, bidaiak: 0, cobrado: 0, pendiente: 0, km: 0 };
+    bolos.forEach((b) => {
+      const c = boloCalc(b), l = boloViajes(b);
+      tot.presupuesto += c.ingreso; tot.iva += c.iva; tot.pagos += c.pagos; tot.gestion += c.gestion; tot.bidaiak += l.total;
+      if (b.cobrado) tot.cobrado += c.aCobrar; else tot.pendiente += c.aCobrar;
+      c.tocan.forEach((id) => { const p = P(id); p.bolos++; p.behin += c.porIntegrante; p.share += l.share; });
+      viajesDeBolo(b).forEach((v) => { if (!v.componente) return; const p = P(v.componente); p.jarri += num(v.importe); p.km += num(v.km); tot.km += num(v.km); });
+      afariGastuak(b).forEach((x) => { P(x.componente).jarri += x.importe; });
+    });
+    Object.values(per).forEach((p) => { p.betiko = round2(p.behin - p.share); ["behin", "share", "jarri", "km"].forEach((k) => (p[k] = round2(p[k]))); });
+    Object.keys(tot).forEach((k) => (tot[k] = round2(tot[k])));
+    return { tot, per };
+  }
+  function viewLaburpena() {
+    const bolos = state.bolos.filter((b) => inYear(b.fecha));
+    const { tot, per } = laburpenaDatuak(bolos);
+    const comps = [...state.componentes].sort((a, b) => (!!a.ordezkoa - !!b.ordezkoa) || (a.nombre || "").localeCompare(b.nombre || "", "es"));
+    const rows = comps.map((c) => ({ c, p: per[c.id] || { bolos: 0, behin: 0, share: 0, jarri: 0, km: 0, betiko: 0 } })).filter((r) => r.p.bolos || r.p.jarri || !r.c.ordezkoa);
+    const sum = rows.reduce((s, r) => ({ bolos: s.bolos, behin: s.behin + r.p.behin, share: s.share + r.p.share, jarri: s.jarri + r.p.jarri, betiko: s.betiko + r.p.betiko }), { bolos: tot.n, behin: 0, share: 0, jarri: 0, betiko: 0 });
+    // Urteka (epe osoa aukeratuta badago)
+    const years = [...new Set(state.bolos.map((b) => (b.fecha || "").slice(0, 4)).filter((y) => /^\d{4}$/.test(y)))].sort();
+    const yearRows = state.year === "all" && years.length > 1 ? years.map((y) => ({ y, t: laburpenaDatuak(state.bolos.filter((b) => (b.fecha || "").startsWith(y))).tot })) : [];
+    const kpi = (lab, val, foot, cls) => `<div class="tile${cls ? " " + cls : ""}"><div class="label">${lab}</div><div class="value">${val}</div>${foot ? `<div class="foot">${foot}</div>` : ""}</div>`;
+    const km = (v) => v ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " km" : "—";
+    return `<section style="display:grid;gap:16px">
+      <div><h2>Laburpena · ${esc(periodoTxt())}</h2><p class="hint">Emanaldiak, dirua eta kide bakoitzaren irabaziak. Urtea goian aukeratzen da ("Epea").</p></div>
+      ${loadingOr("bolos", bolos.length ? `
+      <div class="tiles">
+        ${kpi("Emanaldiak", tot.n, `${bolos.filter((b) => b.cobrado).length} kobratuta`, "hero")}
+        ${kpi("Aurrekontuak", money(tot.presupuesto), tot.iva ? `+ ${money(tot.iva)} BEZ` : "BEZik gabe")}
+        ${kpi("Kideentzat", money(tot.pagos), "Behin-behineko irabaziak")}
+        ${kpi("Artistamente", money(tot.gestion), "Aurrekontua ken kideak")}
+        ${kpi("Bidaiak eta afariak", money(tot.bidaiak), km(tot.km))}
+        ${kpi("Kobratzeko", money(tot.pendiente), `${money(tot.cobrado)} kobratuta`)}
+      </div>
+      ${yearRows.length ? `<div class="card lab-years" style="--cols:70px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)">
+        <div class="ledger-head"><div>Urtea</div><div class="r">Emanaldiak</div><div class="r">Aurrekontuak</div><div class="r">Kideentzat</div><div class="r">Artistamente</div></div>
+        <ul class="ledger">${yearRows.map((r) => `<li class="row" style="cursor:default"><div class="num"><strong>${r.y}</strong></div><div class="r num">${r.t.n}</div><div class="r num">${money(r.t.presupuesto)}</div><div class="r num">${money(r.t.pagos)}</div><div class="r num">${money(r.t.gestion)}</div></li>`).join("")}</ul></div>` : ""}
+      <div class="card lab-per" style="--cols:minmax(0,1.3fr) 70px repeat(4,minmax(0,1fr)) 80px">
+        <div class="ledger-head"><div>Kidea</div><div class="r">Emanaldi</div><div class="r">Behin-behinekoa</div><div class="r">Bidai-zatia</div><div class="r">Jarritakoa</div><div class="r">Behin betikoa</div><div class="r">Km</div></div>
+        <ul class="ledger">${rows.map((r, i) => `${r.c.ordezkoa && (i === 0 || !rows[i - 1].c.ordezkoa) ? `<li class="lab-sub">Ordezkoak</li>` : ""}<li class="row" style="cursor:default">
+          <div><div class="main">${esc(r.c.nombre)}</div><div class="meta only-m">${r.p.bolos} emanaldi · behin-behinekoa ${money(r.p.behin)} · bidai-zatia −${money(r.p.share)}${r.p.jarri ? ` · jarritakoa ${money(r.p.jarri)}` : ""}${r.p.km ? " · " + km(r.p.km) : ""}</div></div>
+          <div class="r num hide-m">${r.p.bolos}</div><div class="r num hide-m">${money(r.p.behin)}</div><div class="r num hide-m">${r.p.share ? "−" + money(r.p.share) : "—"}</div><div class="r num hide-m">${r.p.jarri ? money(r.p.jarri) : "—"}</div>
+          <div class="r num"><strong>${money(r.p.betiko)}</strong></div><div class="r num hide-m">${km(r.p.km)}</div></li>`).join("")}</ul>
+        <div class="ledger-foot"><div>Guztira</div><div class="r num hide-m">${sum.bolos}</div><div class="r num hide-m">${money(sum.behin)}</div><div class="r num hide-m">−${money(sum.share)}</div><div class="r num hide-m">${money(sum.jarri)}</div><div class="r num"><strong>${money(sum.betiko)}</strong></div><div class="r num hide-m">${km(tot.km)}</div></div>
+      </div>
+      <p class="hint" style="margin:0"><strong>Behin-behinekoa</strong>: emanaldiengatik kobratzekoa. <strong>Bidai-zatia</strong>: bidaien eta afarien gastuetatik bakoitzari dagokiona. <strong>Jarritakoa</strong>: berak ordaindutakoa (autoa, bidesariak, afaria); beste kideek itzultzen diote. <strong>Behin betikoa</strong> = behin-behinekoa − bidai-zatia.</p>
+      ` : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Aukeratu beste urte bat goian.</div>`)}
+    </section>`;
+  }
 
   function tiles(t) {
     return `<div class="tiles">
@@ -714,10 +852,10 @@ main { overflow-x: clip; }
   // Kideentzat: emanaldien zerrenda soila (herria eta data), ikusteko bakarrik.
   function viewBolosKide() {
     const list = state.bolos.filter((b) => inYear(b.fecha)).sort((a, b) => boloKey(a).localeCompare(boloKey(b)));
-    const body = list.length ? `<div class="card kide-bolos" style="--cols:minmax(0,1fr) 96px 104px"><div class="ledger-head" style="display:grid"><div>Herria</div><div>Data</div><div class="r">Ordua</div></div><ul class="ledger">${list.map((b) => `<li class="row" style="cursor:default"><div class="main">${esc(b.evento || "Emanaldia")}</div><div class="num">${esc(fdate(b.fecha))}</div><div class="r num">${hTxt(b) ? esc(hTxt(b)).replace(" / ", "<br>") : "—"}</div></li>`).join("")}</ul></div>`
+    const body = list.length ? `<div class="card kide-bolos" style="--cols:minmax(0,1fr) 96px 104px"><div class="ledger-head" style="display:grid"><div>Herria</div><div>Data</div><div class="r">Ordua</div></div><ul class="ledger">${list.map((b) => `<li class="row" tabindex="0" role="button" data-fitxa="${esc(b.id)}"><div class="main">${esc(b.evento || "Emanaldia")}${b.helbidea || hhmm(b.elkartu) || b.fitxaOharrak ? ` <span class="fitxa-dot" title="Fitxa">ⓘ</span>` : ""}</div><div class="num">${esc(fdate(b.fecha))}</div><div class="r num">${hTxt(b) ? esc(hTxt(b)).replace(" / ", "<br>") : "—"}</div></li>`).join("")}</ul></div>`
       : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Aukeratu beste urte bat goian.</div>`;
     return `${avisoEmanaldiak()}<section style="display:grid;gap:12px">
-      <div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.length} emanaldi. Urtea goian, "Epea"-n aukeratzen da.</p></div>
+      <div class="sec-head"><div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.length} emanaldi. Sakatu emanaldi bat fitxa ikusteko.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${state.abisuak && state.abisuak.aktibo ? `<button type="button" class="btn small" data-abisuak>🔔 Abisuak</button>` : ""}${list.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn small" data-ics-all>📅 Datozenak egutegira</button>` : ""}</div></div>
       ${loadingOr("bolos", body)}
     </section>`;
   }
@@ -751,7 +889,7 @@ main { overflow-x: clip; }
       : state.filtroCobro !== "all" ? `<div class="card empty"><strong>${state.filtroCobro === "facpend" ? "Faktura guztiak emanda ✓" : state.filtroCobro === "si" ? "Ez dago emanaldi kobraturik" : state.filtroCobro === "fac" ? "Ez dago fakturarekin egindako emanaldirik" : state.filtroCobro === "sinfac" ? "Ez dago fakturarik gabeko emanaldirik" : "Dena kobratuta ✓"} (${esc(periodoTxt())})</strong></div>` : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Idatzi emanaldi bakoitzaren lekua eta aurrekontua.</div>`;
     return `${avisoPagos()}${tiles(t)}
       <section style="display:grid;gap:12px">
-        <div class="section-head"><div><h2>Emanaldiak</h2><p class="hint">Sakatu "Bai / Ez" kobratuta dagoen markatzeko. Kudeaketa = BEZik gabeko aurrekontua ken kideei ordaintzen zaiena.</p></div>${addBtn("bolo", "Emanaldi berria")}</div>
+        <div class="section-head"><div><h2>Emanaldiak</h2><p class="hint">Sakatu "Bai / Ez" kobratuta dagoen markatzeko. Kudeaketa = BEZik gabeko aurrekontua ken kideei ordaintzen zaiena.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${state.bolos.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn" data-ics-all>📅 Egutegira</button>` : ""}${addBtn("bolo", "Emanaldi berria")}</div></div>
         ${state.filtroCobro !== "all" ? `<div class="filters" id="bolos-list"><span class="pill ${state.filtroCobro === "si" ? "ok" : state.filtroCobro === "fac" || state.filtroCobro === "sinfac" ? "info" : "warn"}" style="cursor:default">${state.filtroCobro === "facpend" ? "Faktura egin gabeak bakarrik" : state.filtroCobro === "si" ? "Kobratutakoak bakarrik" : state.filtroCobro === "fac" ? "Fakturarekin bakarrik" : state.filtroCobro === "sinfac" ? "Fakturarik gabe bakarrik" : "Kobratu gabeak bakarrik"} · ${list.length}</span><button type="button" class="linkbtn" data-filtro-cobro="all">Ikusi guztiak</button></div>` : `<div id="bolos-list"></div>`}
         ${loadingOr("bolos", body)}
       </section>`;
@@ -1132,6 +1270,281 @@ main { overflow-x: clip; }
       closeForm(); toast("Setlista gordeta");
     } catch (er) { btn.disabled = false; btn.textContent = "Gorde"; handleWriteError(er, true); }
   }
+  // ================= EGUTEGIA (.ics) =================
+  const icsEsc = (t) => String(t || "").replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const icsUtc = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const atLocal = (fecha, hm) => { const [y, m, d] = fecha.split("-").map(Number); const [h, mi] = hm.split(":").map(Number); return new Date(y, m - 1, d, h, mi); };
+  const ymd = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  function boloEvents(b) {
+    if (!b || !/^\d{4}-\d{2}-\d{2}$/.test(b.fecha || "")) return [];
+    const title = "Sustrai · " + (b.evento || "Emanaldia");
+    const loc = b.helbidea || b.evento || "";
+    const desc = [hTxt(b) ? "Ordutegia: " + hTxt(b) : "",
+      hhmm(b.elkartu) || b.elkartuLekua ? "Elkartu: " + [hhmm(b.elkartu), b.elkartuLekua].filter(Boolean).join(" · ") : "",
+      hhmm(b.proba) ? "Soinu proba: " + hhmm(b.proba) : "",
+      b.kontaktua || b.kontaktuTel ? "Kontaktua: " + [b.kontaktua, b.kontaktuTel].filter(Boolean).join(" · ") : "",
+      b.fitxaOharrak || ""].filter(Boolean).join("\n");
+    const turns = [[b.ordua, b.amaiera], [b.ordua2, b.amaiera2]].filter(([a]) => hhmm(a));
+    if (!turns.length) { const d = atLocal(b.fecha, "12:00"); return [{ uid: b.id + "-0", allDay: true, d0: ymd(d), d1: ymd(new Date(d.getTime() + 864e5)), title, loc, desc }]; }
+    return turns.map(([a, z], k) => {
+      let st = atLocal(b.fecha, hhmm(a)), en = hhmm(z) ? atLocal(b.fecha, hhmm(z)) : new Date(st.getTime() + 2 * 36e5);
+      if (en <= st) en = new Date(en.getTime() + 864e5); // gauerdia pasata amaitzen bada
+      // Elkartzeko ordua lehen txanda baino lehen bada, gertaera hortik hasten da.
+      if (k === 0 && hhmm(b.elkartu)) { const e0 = atLocal(b.fecha, hhmm(b.elkartu)); if (e0 < st && st - e0 < 12 * 36e5) st = e0; }
+      return { uid: b.id + "-" + k, st, en, title: turns.length > 1 ? `${title} (${k + 1}. txanda)` : title, loc, desc };
+    });
+  }
+  function icsText(bolos) {
+    const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Sustrai erromeria//EU", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Sustrai"];
+    const now = icsUtc(new Date());
+    bolos.flatMap(boloEvents).forEach((e) => {
+      L.push("BEGIN:VEVENT", `UID:${e.uid}@sustrai-erromeria`, `DTSTAMP:${now}`);
+      if (e.allDay) L.push(`DTSTART;VALUE=DATE:${e.d0}`, `DTEND;VALUE=DATE:${e.d1}`); else L.push(`DTSTART:${icsUtc(e.st)}`, `DTEND:${icsUtc(e.en)}`);
+      L.push(`SUMMARY:${icsEsc(e.title)}`);
+      if (e.loc) L.push(`LOCATION:${icsEsc(e.loc)}`);
+      if (e.desc) L.push(`DESCRIPTION:${icsEsc(e.desc)}`);
+      L.push("BEGIN:VALARM", "TRIGGER:-PT3H", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(e.title)}`, "END:VALARM", "END:VEVENT");
+    });
+    L.push("END:VCALENDAR");
+    return L.join("\r\n") + "\r\n";
+  }
+  async function saveIcs(bolos, name) {
+    const ics = icsText(bolos);
+    const file = String(name || "sustrai-emanaldiak").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w.-]+/g, "-").toLowerCase() + ".ics";
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios) {
+      // iPhone: fitxategia partekatu → "Egutegia"; bestela zuzenean ireki.
+      try { const f = new File([blob], file, { type: "text/calendar" }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f] }); return; } }
+      catch (e) { if (e && e.name === "AbortError") return; }
+      location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics); return;
+    }
+    try { const dl = await window.claude.use("downloads"); if (dl) { await dl.save({ filename: file, data: blob }); toast("Deskargatuta: ireki fitxategia egutegian gehitzeko"); return; } } catch (e) {}
+    const u = URL.createObjectURL(blob), aEl = document.createElement("a"); aEl.href = u; aEl.download = file; document.body.appendChild(aEl); aEl.click(); aEl.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+  }
+  const gcalUrl = (b) => { const ev = boloEvents(b); if (!ev.length) return ""; const e = ev[0];
+    const dates = e.allDay ? `${e.d0}/${e.d1}` : `${icsUtc(e.st)}/${icsUtc(ev[ev.length - 1].en)}`;
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("Sustrai · " + (b.evento || "Emanaldia")) + "&dates=" + dates + "&location=" + encodeURIComponent(e.loc) + "&details=" + encodeURIComponent(e.desc); };
+  const mapsUrl = (b) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(b.helbidea || b.evento || "");
+
+  // ================= EMANALDIAREN FITXA =================
+  function openFitxa(id) {
+    const b = state.bolos.find((x) => x.id === id); if (!b) return;
+    Metro.stop();
+    current = { kind: "fitxa", id };
+    const sl = state.setlistak.find((x) => x.boloId === id);
+    const tel = String(b.kontaktuTel || "").replace(/[^\d+]/g, "");
+    const row = (lab, val) => val ? `<div class="fx-row"><div class="fx-lab">${lab}</div><div class="fx-val">${val}</div></div>` : "";
+    const cena = b.cena === false ? "Ez dago barne (bakoitzak bere kontu)" : b.cena === "zehazteko" ? "Zehazteko" : b.cena ? "Bai, antolatzaileek jartzen dute" : "";
+    $("dialog").classList.remove("stage-dialog");
+    $("dialog").innerHTML = `
+      <div class="fx-head"><div class="fx-date">${esc(fdateLong(b.fecha))}</div><h2 class="fx-title">${esc(b.evento || "Emanaldia")}</h2></div>
+      <div class="fx-grid">
+        ${row("Elkartu", [hhmm(b.elkartu) ? `<strong class="num">${esc(hhmm(b.elkartu))}</strong>` : "", esc(b.elkartuLekua || "")].filter(Boolean).join(" · "))}
+        ${row("Soinu proba", hhmm(b.proba) ? `<strong class="num">${esc(hhmm(b.proba))}</strong>` : "")}
+        ${row("Emanaldia", hTxt(b) ? `<strong class="num">${esc(hTxt(b)).replace(" / ", "<br>")}</strong>` : `<span class="meta">Ordutegia zehazteko</span>`)}
+        ${row("Lekua", `${esc(b.helbidea || b.evento || "")}<div class="fx-links"><a class="btn small" href="${esc(mapsUrl(b))}" target="_blank" rel="noopener">🗺 Mapan ireki</a></div>`)}
+        ${row("Kontaktua", b.kontaktua || tel ? `${esc(b.kontaktua || "")}${tel ? `<div class="fx-links"><a class="btn small" href="tel:${esc(tel)}">📞 ${esc(b.kontaktuTel)}</a></div>` : ""}` : "")}
+        ${row("Afaria", cena)}
+        ${row("Oharrak", b.fitxaOharrak ? `<div class="fx-notes">${esc(b.fitxaOharrak)}</div>` : "")}
+        ${row("Setlista", sl ? `<button type="button" class="btn small" data-fitxa-stage="${esc(sl.id)}">▶ ${esc(sl.izena || "Setlista")}</button>` : "")}
+      </div>
+      <div class="actions fx-actions">
+        <button type="button" class="btn primary" data-ics-one="${esc(b.id)}">📅 Egutegira gehitu</button>
+        <a class="btn" href="${esc(gcalUrl(b))}" target="_blank" rel="noopener">Google Calendar</a>
+        <span class="spacer"></span>
+        ${state.canWrite && !state.limited ? `<button type="button" class="btn" data-fitxa-edit="${esc(b.id)}">Editatu</button>` : ""}
+        <button type="button" class="btn" id="btn-cancel">Itxi</button>
+      </div>`;
+    $("overlay").hidden = false;
+    $("dialog").scrollTop = 0;
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    const fx = t.closest("[data-fitxa]"); if (fx) { e.preventDefault(); e.stopPropagation(); return openFitxa(fx.dataset.fitxa); }
+    const one = t.closest("[data-ics-one]"); if (one) { e.preventDefault(); const b = state.bolos.find((x) => x.id === one.dataset.icsOne); if (b) saveIcs([b], "sustrai-" + (b.fecha || "") + "-" + (b.evento || "emanaldia")); return; }
+    if (t.closest("[data-ics-all]")) { e.preventDefault(); const list = state.bolos.filter((b) => (b.fecha || "") >= today()).sort((a, b) => boloKey(a).localeCompare(boloKey(b))); if (list.length) saveIcs(list, "sustrai-emanaldiak"); return; }
+    const fe = t.closest("[data-fitxa-edit]"); if (fe) { e.preventDefault(); e.stopPropagation(); return openForm("bolo", fe.dataset.fitxaEdit); }
+    const fs2 = t.closest("[data-fitxa-stage]"); if (fs2) { e.preventDefault(); e.stopPropagation(); return openStage(fs2.dataset.fitxaStage); }
+  }, true);
+  document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("li[data-fitxa]")) { e.preventDefault(); openFitxa(e.target.dataset.fitxa); } });
+
+  // ================= ABISUAK MUGIKORRERA (ntfy) =================
+  // Zerbitzaririk gabe: ntfy.sh doako zerbitzua. Kide bakoitzak "ntfy" aplikazioa instalatu eta taldearen gaira harpidetzen da.
+  const NTFY = "https://ntfy.sh";
+  const randTopic = (pre) => { const a = new Uint8Array(9); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256)); return pre + Array.from(a, (x) => (x % 36).toString(36)).join(""); };
+  const appUrl = () => /^https?:/.test(location.protocol) ? location.origin + location.pathname : "";
+  async function ntfySend(topic, title, message, tags) {
+    if (!topic || !state.abisuak || !state.abisuak.aktibo) return;
+    try { await fetch(NTFY + "/", { method: "POST", body: JSON.stringify({ topic, title, message, tags: tags || [], click: appUrl() || undefined }) }); } catch (e) { console.warn("ntfy:", e); }
+  }
+  const boloAbisuTxt = (b) => [b.evento || "Emanaldia", fdateLong(b.fecha), hTxt(b)].filter(Boolean).join(" · ");
+  function openAbisuak() {
+    const A = state.abisuak || {}, admin = state.canWrite && !state.limited;
+    current = { kind: "abisuak" };
+    const topicBox = (t, lab) => `<div class="ab-topic"><div class="meta">${lab}</div><code>${esc(t)}</code><div class="ab-btns"><button type="button" class="btn small" data-copy="${esc(t)}">Kopiatu</button><a class="btn small" href="${NTFY}/${esc(t)}" target="_blank" rel="noopener">Ireki ntfy-n</a></div></div>`;
+    $("dialog").classList.remove("stage-dialog");
+    $("dialog").innerHTML = `<h3>🔔 Abisuak mugikorrean</h3>
+      ${A.aktibo ? `
+      <ol class="ab-steps">
+        <li>Instalatu <strong>ntfy</strong> aplikazioa (doan): <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a>.</li>
+        <li>Ireki ntfy, sakatu <strong>+</strong> eta idatzi gai hau (edo kopiatu eta itsatsi):</li>
+      </ol>
+      ${topicBox(A.taldea, "Taldearen abisuak: emanaldi berriak eta aldaketak")}
+      ${admin ? topicBox(A.admina, "Zuretzat bakarrik (admina): kideek ordainketa bat markatzen dutenean") : ""}
+      <p class="hint" style="margin:0">Gaiaren izena dakienak abisuak ikus ditzake; ez partekatu taldetik kanpo. Abisuek ntfy.sh zerbitzaritik pasatzen dira.</p>` : `
+      <p>Aktibatzen badituzu, taldekideei abisu bat iristen zaie mugikorrera <strong>emanaldi berri bat sortzen duzunean</strong> edo data/ordua aldatzen duzunean, eta zuri <strong>kide batek ordainketa bat markatzen duenean</strong>.</p>
+      <p class="hint">Doakoa da (ntfy.sh). Kide bakoitzak "ntfy" aplikazioa instalatu beharko du.</p>`}
+      <div class="err" id="form-err" role="alert"></div>
+      <div class="actions">${admin ? (A.aktibo ? `<button type="button" class="btn danger" data-ab="off">Desaktibatu</button><button type="button" class="btn" data-ab="test">Probatu</button>` : `<button type="button" class="btn primary" data-ab="on">Aktibatu</button>`) : ""}<span class="spacer"></span><button type="button" class="btn" id="btn-cancel">Itxi</button></div>`;
+    $("overlay").hidden = false;
+  }
+  document.addEventListener("click", async (e) => {
+    const t = e.target;
+    if (t.closest("[data-abisuak]")) { e.preventDefault(); return openAbisuak(); }
+    const cp = t.closest("[data-copy]"); if (cp) { e.preventDefault(); try { await navigator.clipboard.writeText(cp.dataset.copy); toast("Kopiatuta"); } catch (er) { const r = document.createRange(); const c = cp.closest(".ab-topic").querySelector("code"); r.selectNodeContents(c); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Hautatuta: kopiatu eskuz"); } return; }
+    const ab = t.closest("[data-ab]"); if (!ab) return;
+    e.preventDefault();
+    const k = ab.dataset.ab, A = state.abisuak || {};
+    try {
+      if (k === "on") { const d = { aktibo: true, taldea: A.taldea || randTopic("sustrai-"), admina: A.admina || randTopic("sustrai-adm-"), actualizado: new Date().toISOString() }; await state.db.doc("ajustes/abisuak").set(d); state.abisuak = d; openAbisuak(); toast("Abisuak aktibatuta"); }
+      else if (k === "off") { await state.db.doc("ajustes/abisuak").set(Object.assign({}, A, { aktibo: false, actualizado: new Date().toISOString() })); state.abisuak = Object.assign({}, A, { aktibo: false }); openAbisuak(); toast("Abisuak desaktibatuta"); }
+      else if (k === "test") { await ntfySend(A.taldea, "Sustrai · proba", "Abisuak ondo dabiltza 🎶", ["musical_note"]); await ntfySend(A.admina, "Sustrai · proba (admina)", "Ordainketen abisuak hemen iritsiko dira", ["moneybag"]); toast("Proba bidalita: begiratu mugikorra"); }
+    } catch (er) { handleWriteError(er, true); }
+  }, true);
+
+  // ================= LETRAK ETA AKORDEAK =================
+  const hasLetra = (a) => !!(a && (String(a.letra || "").trim() || String(a.esteka || "").trim()));
+  const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "";
+  // "[G]Kantu[C]aren lerroa" → akordeak letraren gainean (letra-tipo monoespazioarekin).
+  function letraHtml(txt) {
+    return String(txt || "").replace(/\r/g, "").split("\n").map((line) => {
+      if (!/\[[^\]\n]{1,12}\]/.test(line)) return `<div class="lt-l">${esc(line) || "&nbsp;"}</div>`;
+      let ch = "", ly = "", m, last = 0; const re = /\[([^\]\n]{1,12})\]/g;
+      while ((m = re.exec(line))) {
+        ly += line.slice(last, m.index); last = re.lastIndex;
+        if (ch.length > ly.length) ly += " ".repeat(ch.length - ly.length);
+        ch += " ".repeat(Math.max(0, ly.length - ch.length)) + m[1] + " ";
+      }
+      ly += line.slice(last);
+      return `<div class="lt-c">${esc(ch.trimEnd())}</div><div class="lt-l">${esc(ly) || "&nbsp;"}</div>`;
+    }).join("");
+  }
+  let LT_SIZE = 18; try { LT_SIZE = Number(localStorage.getItem("sustrai-lt-size")) || 18; } catch (e) {}
+  function openLetra(id) {
+    const a = abestia(id); if (!a) return;
+    closeLetra();
+    const el = document.createElement("div"); el.id = "letra-panel"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Letra: " + (a.izena || ""));
+    const url = safeUrl(a.esteka);
+    el.innerHTML = `<div class="lt-top"><button type="button" class="sm-x" data-lt="close" aria-label="Itxi">✕</button>
+        <div class="lt-title"><strong>${esc(a.izena || "")}</strong><span>${[a.tonua, a.triki ? "triki " + a.triki : "", KONPAS[a.konpasa] ? a.konpasa : "", bpmOk(a.bpm) ? bpmOk(a.bpm) + " BPM" : ""].filter(Boolean).map(esc).join(" · ")}</span></div>
+        <div class="lt-size"><button type="button" data-lt="-" aria-label="Letra txikiagoa">A−</button><button type="button" data-lt="+" aria-label="Letra handiagoa">A+</button></div></div>
+      <div class="lt-body" style="font-size:${LT_SIZE}px">${String(a.letra || "").trim() ? letraHtml(a.letra) : `<p class="lt-empty">Abesti honek ez du letrarik idatzita.</p>`}</div>
+      ${url ? `<div class="lt-bottom"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">📄 Akordeak ireki (esteka)</a></div>` : ""}`;
+    document.body.appendChild(el); document.body.classList.add("sm-on");
+    el.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-lt]"); if (!b) return;
+      if (b.dataset.lt === "close") return closeLetra();
+      LT_SIZE = Math.max(12, Math.min(40, LT_SIZE + (b.dataset.lt === "+" ? 2 : -2))); try { localStorage.setItem("sustrai-lt-size", LT_SIZE); } catch (er) {}
+      el.querySelector(".lt-body").style.fontSize = LT_SIZE + "px";
+    });
+  }
+  function closeLetra() { const el = document.getElementById("letra-panel"); if (el) el.remove(); if (!SM.el) document.body.classList.remove("sm-on"); }
+  const letraBtn = (a, big, pill) => hasLetra(a) ? `<button type="button" class="${big ? "sm-letra" : pill ? "lt-pill" : "lt-btn"}" data-letra="${esc(a.id)}" title="Letra eta akordeak" aria-label="Letra eta akordeak: ${esc(a.izena || "")}">${big || pill ? "📄 Letra" : "📄"}</button>` : "";
+  document.addEventListener("click", (e) => { const b = e.target.closest("[data-letra]"); if (!b) return; e.preventDefault(); e.stopPropagation(); openLetra(b.dataset.letra); }, true);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.getElementById("letra-panel")) { e.preventDefault(); e.stopImmediatePropagation(); closeLetra(); } }, true);
+
+  // ================= AGERTOKI MODUA (pantaila osoa) =================
+  const SM = { sl: null, slides: [], i: 0, el: null, lock: null, auto: true };
+  try { SM.auto = localStorage.getItem("sustrai-sm-auto") !== "0"; } catch (e) {}
+  function smSlides(sl) {
+    const out = []; let grp = "", pos = 0;
+    (sl.items || []).forEach((x) => {
+      if (x.g !== undefined) { grp = x.g || "Taldea"; pos = 0; return; }
+      if (x.a) { pos++; out.push({ a: abestia(x.a) || { izena: itemName(x) }, grp, pos }); }
+      else if (x.t) out.push({ t: x.t, grp });
+    });
+    return out;
+  }
+  async function smLock() { try { if (navigator.wakeLock && document.visibilityState === "visible") SM.lock = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  function smOpen(slId, startA) {
+    const sl = state.setlistak.find((x) => x.id === slId); if (!sl) return;
+    const slides = smSlides(sl); if (!slides.length) return toast("Setlist honek ez du abestirik.");
+    Metro.stop();
+    SM.sl = sl; SM.slides = slides; SM.i = Math.max(0, startA ? slides.findIndex((s) => s.a && s.a.id === startA) : 0);
+    const el = document.createElement("div"); el.id = "stagemode"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Agertoki modua");
+    el.innerHTML = `
+      <div class="sm-flash" data-metro-key="sm" aria-hidden="true"></div>
+      <div class="sm-top">
+        <button type="button" class="sm-x" data-sm="close" aria-label="Itxi">✕</button>
+        <div class="sm-where"><span class="sm-sl">${esc(sl.izena || "Setlista")}</span><span class="sm-count num"></span></div>
+        <button type="button" class="sm-auto" data-sm="auto" aria-pressed="${SM.auto}">♩ auto</button>
+      </div>
+      <div class="sm-main">
+        <div class="sm-grp"></div>
+        <div class="sm-name"></div>
+        <div class="sm-sub"></div>
+        <div class="sm-tempo"></div>
+      </div>
+      <div class="sm-bottom">
+        <button type="button" class="sm-nav" data-sm="prev" aria-label="Aurrekoa">‹</button>
+        <div class="sm-next"></div>
+        <button type="button" class="sm-nav" data-sm="next" aria-label="Hurrengoa">›</button>
+      </div>`;
+    document.body.appendChild(el); SM.el = el; document.body.classList.add("sm-on");
+    let x0 = null, y0 = null;
+    el.addEventListener("touchstart", (e) => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; }, { passive: true });
+    el.addEventListener("touchend", (e) => { if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) smGo(dx < 0 ? 1 : -1); });
+    el.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-sm]"); if (!b) return;
+      const k = b.dataset.sm;
+      if (k === "close") return smClose();
+      if (k === "prev") return smGo(-1);
+      if (k === "next") return smGo(1);
+      if (k === "auto") { SM.auto = !SM.auto; try { localStorage.setItem("sustrai-sm-auto", SM.auto ? "1" : "0"); } catch (er) {} b.setAttribute("aria-pressed", SM.auto); if (!SM.auto) Metro.stop(); else smMetro(); return; }
+      if (k === "play") { const a = SM.slides[SM.i].a; if (Metro.key === "sm") Metro.stop(); else if (a) Metro.start(a.bpm, "sm", a.konpasa); }
+    });
+    smLock(); document.addEventListener("visibilitychange", smVis);
+    try { if (el.requestFullscreen && !/iPhone|iPod/.test(navigator.userAgent)) el.requestFullscreen().catch(() => {}); } catch (e) {}
+    smShow();
+  }
+  function smVis() { if (SM.el && document.visibilityState === "visible") smLock(); }
+  function smMetro() { const a = SM.slides[SM.i] && SM.slides[SM.i].a; if (SM.auto && a && bpmOk(a.bpm)) Metro.start(a.bpm, "sm", a.konpasa); else if (SM.auto) Metro.stop(); }
+  function smShow() {
+    const el = SM.el; if (!el) return;
+    const s = SM.slides[SM.i], n = SM.slides[SM.i + 1], songs = SM.slides.filter((x) => x.a).length;
+    const songNo = SM.slides.slice(0, SM.i + 1).filter((x) => x.a).length;
+    el.querySelector(".sm-count").textContent = s.a ? `${songNo} / ${songs}` : "";
+    el.querySelector(".sm-grp").textContent = s.grp ? s.grp + (s.pos ? " · " + s.pos : "") : "";
+    const name = el.querySelector(".sm-name"); name.textContent = s.a ? s.a.izena || "" : s.t; name.classList.toggle("is-text", !s.a);
+    const a = s.a || {};
+    el.querySelector(".sm-sub").innerHTML = s.a ? [a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(a.iraupena) : ""].filter(Boolean).join("<i>·</i>") : "";
+    el.querySelector(".sm-tempo").innerHTML = s.a ? `${letraBtn(a, true)}${KONPAS[a.konpasa] ? `<span class="sm-k">${esc(a.konpasa)}</span>` : ""}${bpmOk(a.bpm) ? `<button type="button" class="sm-play" data-sm="play" data-metro-key="sm" aria-label="Metronomoa ${bpmOk(a.bpm)} BPM"><span class="num">${bpmOk(a.bpm)}</span><small>BPM</small></button>` : ""}` : "";
+    el.querySelector(".sm-next").innerHTML = n ? `<span>Hurrengoa</span><strong>${esc(n.a ? n.a.izena || "" : n.t)}</strong>${n.a && n.grp !== s.grp && n.grp ? `<em>${esc(n.grp)}</em>` : ""}` : `<span>Amaiera</span><strong>Eskerrik asko!</strong>`;
+    el.querySelector('[data-sm="prev"]').disabled = SM.i === 0;
+    el.querySelector('[data-sm="next"]').disabled = SM.i >= SM.slides.length - 1;
+    Metro.mark(Metro.key === "sm");
+    smMetro();
+  }
+  function smGo(d) { const j = SM.i + d; if (j < 0 || j >= SM.slides.length) return; SM.i = j; smShow(); }
+  function smClose() {
+    Metro.stop(); document.removeEventListener("visibilitychange", smVis);
+    try { if (SM.lock) SM.lock.release(); } catch (e) {} SM.lock = null;
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+    if (SM.el) SM.el.remove(); SM.el = null; document.body.classList.remove("sm-on");
+  }
+  document.addEventListener("keydown", (e) => {
+    if (!SM.el) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); smGo(1); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); smGo(-1); }
+    else if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); smClose(); }
+  }, true);
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sm-open]"); if (b) { e.preventDefault(); e.stopPropagation(); return smOpen(b.dataset.smOpen); }
+    // Agertokiko zerrendan abesti baten izena sakatuz gero, abesti horretatik hasi.
+    const body = e.target.closest(".stage-list li[data-st-a] .st-body"); if (body && current && current.kind === "stage") { e.preventDefault(); return smOpen(current.id, body.closest("li").dataset.stA); }
+  }, true);
+
   function openStage(id) {
     const sl = state.setlistak.find((x) => x.id === id); if (!sl) return;
     current = { kind: "stage", id };
@@ -1139,10 +1552,10 @@ main { overflow-x: clip; }
     let pos = 0;
     $("dialog").classList.add("stage-dialog");
     $("dialog").innerHTML = `
-      <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
-      <ol class="stage-list">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li data-st-i="${i}" data-st-a="${esc(x.a)}"><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span><span class="st-side"><span class="st-k">${a ? (canKonp() ? konpSelect(a, i) : konpTag(a)) : ""}</span><span class="st-m">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta sm-hint">Sakatu abesti bat agertoki modua hortik hasteko</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
+      <ol class="stage-list${(sl.items || []).some((x) => x.a && hasLetra(abestia(x.a))) ? " has-letra" : ""}">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li data-st-i="${i}" data-st-a="${esc(x.a)}"><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span>${a && hasLetra(a) ? `<span class="st-lm">${letraBtn(a, false, true)}</span>` : ""}<span class="st-side"><span class="st-l">${a ? letraBtn(a) : ""}</span><span class="st-k">${a ? (canKonp() ? konpSelect(a, i) : konpTag(a)) : ""}</span><span class="st-m">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
-      <div class="actions stage-actions">${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
+      <div class="actions stage-actions"><button type="button" class="btn primary" data-sm-open="${esc(sl.id)}">⛶ Agertoki modua</button>${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
   }
 
@@ -1220,6 +1633,15 @@ main { overflow-x: clip; }
         { id: "amaiera", label: "1. txanda · amaiera", type: "time", halfM: true },
         { id: "ordua2", label: "2. txanda · hasiera", type: "time", halfM: true },
         { id: "amaiera2", label: "2. txanda · amaiera", type: "time", halfM: true },
+        { sep: "Taldearentzako fitxa (kide guztiek ikusten dute)" },
+        { id: "helbidea", label: "Helbidea edo lekua (mapan bilatzeko)", type: "text", full: true, placeholder: "Plaza, Errazkin (Nafarroa)" },
+        { id: "elkartu", label: "Elkartzeko ordua", type: "time", halfM: true },
+        { id: "proba", label: "Soinu proba", type: "time", halfM: true },
+        { id: "elkartuLekua", label: "Non elkartu", type: "text", full: true, placeholder: "Lokalean, Zarauzko geltokian…" },
+        { id: "kontaktua", label: "Kontaktua (izena)", type: "text", halfM: true, placeholder: "Antolatzailea" },
+        { id: "kontaktuTel", label: "Kontaktuaren telefonoa", type: "text", halfM: true, placeholder: "600 000 000" },
+        { id: "fitxaOharrak", label: "Taldearentzako oharrak", type: "textarea", full: true, placeholder: "Aparkatu frontoiaren atzean, afaria 21:00etan…" },
+        { sep: "Bezeroa" },
         { id: "cliente", label: "Bezeroa", type: "text", full: true, list: "dl-clientes", placeholder: "Udala, aretoa, elkartea…" },
         { id: "clienteEmail", label: "Bezeroaren emaila", type: "text", full: true, placeholder: "kultura@udala.eus" },
         { sep: "Tarifa" },
@@ -1236,7 +1658,7 @@ main { overflow-x: clip; }
         { sep: "Autoa" },
         { id: "coches", label: "Nork hartu du autoa?", type: "coches", full: true },
         { id: "eurKm", label: "Km-ko prezioa (€)", type: "number", step: "0.01", min: "0", def: num(state.ajustes.eurKm) || EURKM_DEF },
-        { id: "notas", label: "Oharrak", type: "textarea", full: true },
+        { id: "notas", label: "Oharrak (adminarentzat bakarrik)", type: "textarea", full: true },
       ],
     },
     abestia: {
@@ -1249,6 +1671,9 @@ main { overflow-x: clip; }
         { id: "tonua", label: "Tonua", type: "text", placeholder: "La m" },
         { id: "triki", label: "Ze triki?", type: "text", full: true, list: "dl-triki", placeholder: "Fa-Sib, Sol-Do…" },
         { id: "notas", label: "Oharrak", type: "textarea", full: true, placeholder: "Hasiera, aldaketak, nork abesten duen…" },
+        { sep: "Letra eta akordeak" },
+        { id: "letra", label: "Letra eta akordeak", type: "textarea", full: true, mono: true, placeholder: "[G]Lehen lerroa, akordea [C]hitzaren aurretik\n[D]bigarren [G]lerroa", hint: "Akordeak kortxete artean: [G], [Am], [D7]… Letraren gainean agertuko dira." },
+        { id: "esteka", label: "Akordeen esteka (PDF, Drive, YouTube…)", type: "text", full: true, placeholder: "https://…" },
       ],
     },
     materiala: {
@@ -1308,7 +1733,7 @@ main { overflow-x: clip; }
       const fid = "fld-" + f.id, req = f.required ? " *" : "";
       let input;
       if (f.type === "select") input = `<select id="${fid}" ${ro ? "disabled" : ""}>${f.required && !v ? `<option value="">Aukeratu…</option>` : ""}${f.options.map(([val, lab]) => `<option value="${esc(val)}" ${String(v ?? "") === String(val) ? "selected" : ""}>${esc(lab)}</option>`).join("")}</select>`;
-      else if (f.type === "textarea") input = `<textarea id="${fid}" ${ro ? "readonly" : ""}>${esc(v || "")}</textarea>`;
+      else if (f.type === "textarea") input = `<textarea id="${fid}" ${f.mono ? `class="mono" rows="10" spellcheck="false"` : ""} ${f.placeholder ? `placeholder="${esc(f.placeholder.replace(/\\n/g, "\n"))}"` : ""} ${ro ? "readonly" : ""}>${esc(v || "")}</textarea>`;
       else if (f.type === "yesno") input = `<div class="seg" role="radiogroup" aria-labelledby="${fid}-l">
           <label><input type="radio" name="${fid}" value="1" ${v ? "checked" : ""} ${ro ? "disabled" : ""}><span>Bai</span></label>
           <label><input type="radio" name="${fid}" value="0" ${!v ? "checked" : ""} ${ro ? "disabled" : ""}><span>Ez</span></label></div>`;
@@ -1361,6 +1786,7 @@ main { overflow-x: clip; }
       <div class="err" id="form-err" role="alert"></div>
       <div class="actions">
         ${id && !ro && !(kind === "componente" && state.componentes.some((c) => c.id === id && c.admin)) ? `<button type="button" class="btn danger" id="btn-del">Ezabatu</button>` : ""}
+        ${kind === "bolo" && id ? `<button type="button" class="btn" data-fitxa="${esc(id)}">Fitxa · egutegia</button>` : ""}
         <span class="spacer"></span>
         <button type="button" class="btn" id="btn-cancel">${ro ? "Itxi" : "Utzi"}</button>
         ${ro ? "" : `<button type="submit" class="btn primary" id="btn-save">Gorde</button>`}
@@ -1514,7 +1940,7 @@ main { overflow-x: clip; }
       }
     },
     flash(acc) { document.querySelectorAll(`[data-metro-key="${CSS.escape(this.key || "")}"]`).forEach((b) => { b.classList.add(acc ? "beat1" : "beat"); setTimeout(() => b.classList.remove("beat", "beat1"), 90); }); },
-    mark(on) { document.querySelectorAll(".metro-b.on").forEach((b) => b.classList.remove("on")); if (on && this.key) document.querySelectorAll(`[data-metro-key="${CSS.escape(this.key)}"]`).forEach((b) => b.classList.add("on")); },
+    mark(on) { document.querySelectorAll(".metro-b.on, .sm-play.on").forEach((b) => b.classList.remove("on")); if (on && this.key) document.querySelectorAll(`[data-metro-key="${CSS.escape(this.key)}"]`).forEach((b) => b.classList.add("on")); },
     stop() { clearInterval(this.timer); this.timer = null; this.key = null; this.mark(false); },
   };
   // ---- Agertokian: erritmoa zuzenean aldatu (adminak bakarrik), desplegable batetik ----
@@ -1610,6 +2036,11 @@ main { overflow-x: clip; }
       await ref.set(data);
       if (newPin && window.sustraiSetPin) await window.sustraiSetPin(ref.id, newPin);
       if (current.kind === "bolo") { await syncCoches(ref.id, data); await guardarRutas(data); }
+      if (current.kind === "bolo" && state.abisuak && state.abisuak.aktibo) {
+        const KS = ["evento", "fecha", "ordua", "amaiera", "ordua2", "amaiera2", "helbidea", "elkartu", "elkartuLekua", "proba"];
+        if (!prev) ntfySend(state.abisuak.taldea, "🎵 Emanaldi berria", boloAbisuTxt(data), ["musical_note"]);
+        else if (KS.some((k) => String(prev[k] || "") !== String(data[k] || ""))) ntfySend(state.abisuak.taldea, "📅 Emanaldia aldatu da", boloAbisuTxt(data), ["date"]);
+      }
       closeForm(); toast("Gordeta");
     } catch (er) { btn.disabled = false; btn.textContent = "Gorde"; handleWriteError(er, true); }
   });
@@ -2070,6 +2501,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
       <p class="hint" style="margin:0">Tarifa berriak hemendik aurrera idazten dituzun emanaldiei bakarrik aplikatzen zaizkie.</p>
       <div class="field"><label for="fld-eurKm">Kilometroko prezioa (€)</label><input id="fld-eurKm" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(num(state.ajustes.eurKm) || EURKM_DEF)}"></div>
       <p class="hint" style="margin:0">0,26 €/km da Ogasunak zergarik gabe onartzen duena.</p>
+      <div class="field"><label>Abisuak mugikorrean</label><div><button type="button" class="btn" data-abisuak>🔔 ${state.abisuak && state.abisuak.aktibo ? "Aktibatuta · ikusi" : "Konfiguratu"}</button></div></div>
       <div class="err" id="form-err" role="alert"></div>
       <div class="actions"><span class="spacer"></span><button type="button" class="btn" id="btn-cancel">Utzi</button><button type="button" class="btn primary" id="btn-save-aj">Gorde</button></div>`;
     $("overlay").hidden = false;
@@ -2155,7 +2587,10 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const cur = num((b.ordainduak || {})[key]);
     const paid = cur >= amount - 0.009;
     busy.add(boloId);
-    try { await state.db.collection(col).doc(boloId).update({ ordainduak: { [key]: paid ? 0 : amount } }); if (col === "bolos" && !state.limited) marcarVisto([boloId + "|" + key], !paid); toast(paid ? "Ordaindu gabe gisa markatuta" : "Ordainduta ✓"); }
+    try {
+      await state.db.collection(col).doc(boloId).update({ ordainduak: { [key]: paid ? 0 : amount } }); if (col === "bolos" && !state.limited) marcarVisto([boloId + "|" + key], !paid); toast(paid ? "Ordaindu gabe gisa markatuta" : "Ordainduta ✓");
+      if (state.limited && !paid && state.abisuak && state.abisuak.aktibo) { const [fr, to] = key.split("__"); ntfySend(state.abisuak.admina, "💶 " + compName(myComp()) + ": ordainketa eginda", `${compName(fr)} → ${compName(to)} · ${money(amount)}${col === "bolos" ? " · " + (b.evento || "") : ""}`, ["moneybag"]); }
+    }
     catch (er) { handleWriteError(er); }
     finally { busy.delete(boloId); }
   }
@@ -2252,6 +2687,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
         render();
       });
     });
+    db.doc("ajustes/abisuak").onSnapshot((snap) => { state.abisuak = snap.exists ? snap.data() : null; if ($("overlay").hidden) render(); }, () => {});
     db.doc("ajustes/general").onSnapshot((snap) => { if (snap.exists) { state.ajustes = Object.assign({ eurKm: EURKM_DEF }, snap.data()); if ($("overlay").hidden) render(); } }, () => {});
   }
   start();

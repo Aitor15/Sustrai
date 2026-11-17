@@ -311,14 +311,35 @@
 
   // ---- Admin barra txikia (saioa, babeskopia, inportazioa) ----
   const COLS = ["componentes", "bolos", "viajes", "rutas", "materiala", "abestiak", "setlistak", "ajustes"];
-  async function backup() {
+  async function collectAll() {
     const out = {};
     for (const c of COLS) { const snap = await fs.collection(c).get(); out[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); }
+    return out;
+  }
+  // ---- Babeskopia automatikoa: astean behin, Firebase barruan (azken 8ak gordetzen dira) ----
+  const BK_COL = "babeskopiak", BK_KEEP = 8, BK_DAYS = 7;
+  const dayStr = (d) => { const x = d || new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
+  async function listBackups() { const snap = await fs.collection(BK_COL).get(); return snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).sort((a, b) => String(b.id).localeCompare(String(a.id))); }
+  async function makeBackup(force) {
+    const list = await listBackups();
+    const last = list[0];
+    if (!force && last && Date.now() - Date.parse(last.id + "T12:00:00") < BK_DAYS * 864e5) return null;
+    const out = await collectAll();
+    const json = JSON.stringify(out);
+    if (json.length > 900000) { console.warn("Babeskopia handiegia Firebase-n gordetzeko:", json.length); return null; }
+    const id = dayStr(), n = COLS.reduce((s, c) => s + out[c].length, 0);
+    await fs.collection(BK_COL).doc(id).set({ noiz: new Date().toISOString(), json, n, tamaina: json.length, auto: !force });
+    const all = await listBackups();
+    for (const old of all.slice(BK_KEEP)) await fs.collection(BK_COL).doc(old.id).delete();
+    return id;
+  }
+  async function backup() {
+    const out = await collectAll();
     const d = new Date().toISOString().slice(0, 10);
     downloads.save({ filename: `sustrai-babeskopia-${d}.json`, data: new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }) });
   }
-  async function importJson(file) {
-    const data = JSON.parse(await file.text());
+  async function importJson(file) { return importData(JSON.parse(await file.text())); }
+  async function importData(data) {
     let n = 0, batch = fs.batch(), inBatch = 0;
     for (const c of COLS) {
       for (const doc of data[c] || []) {
@@ -330,6 +351,40 @@
     }
     if (inBatch) await batch.commit();
     return n;
+  }
+  function backupsPanel() {
+    const old = document.getElementById("bk-panel"); if (old) old.remove();
+    const w = document.createElement("div"); w.id = "bk-panel";
+    w.style.cssText = "position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px";
+    w.innerHTML = `<div style="background:var(--surface,#fff);color:var(--ink,#111);border-radius:14px;max-width:520px;width:100%;max-height:85vh;overflow:auto;padding:18px;font:14px var(--font-body,sans-serif);box-shadow:0 10px 40px rgba(0,0,0,.3)">
+      <h2 style="margin:0 0 4px">Babeskopiak</h2>
+      <p style="margin:0 0 12px;color:var(--muted,#666)">Astean behin bere kabuz egiten da, zu (admina) sartzean. Azken ${BK_KEEP}ak gordetzen dira Firebase-n.</p>
+      <div id="bk-list">Kargatzen…</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap"><button type="button" class="btn" data-bk="now">Orain egin</button><button type="button" class="btn primary" data-bk="close">Itxi</button></div></div>`;
+    document.body.appendChild(w);
+    const fill = async () => {
+      const box = w.querySelector("#bk-list");
+      try {
+        const list = await listBackups();
+        box.innerHTML = list.length ? list.map((b) => `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line,#ddd);flex-wrap:wrap">
+          <div><strong>${b.id}</strong><div style="color:var(--muted,#666);font-size:12px">${b.n || "?"} dokumentu · ${Math.round((b.tamaina || 0) / 1024)} KB${b.auto ? " · automatikoa" : ""}</div></div>
+          <div style="display:flex;gap:6px"><button type="button" class="btn small" data-bk="dl" data-id="${b.id}">Deskargatu</button><button type="button" class="btn small" data-bk="restore" data-id="${b.id}">Leheneratu</button></div></div>`).join("") : "Oraindik ez dago babeskopiarik.";
+        w._list = list;
+      } catch (e) { box.textContent = "Ezin izan dira kargatu: " + (e.code || e.message); }
+    };
+    w.addEventListener("click", async (e) => {
+      if (e.target === w) return w.remove();
+      const b = e.target.closest("[data-bk]"); if (!b) return;
+      const k = b.dataset.bk, item = (w._list || []).find((x) => x.id === b.dataset.id);
+      if (k === "close") return w.remove();
+      if (k === "now") { b.disabled = true; try { await makeBackup(true); await fill(); } catch (er) { alert("Errorea: " + (er.code || er.message)); } b.disabled = false; return; }
+      if (k === "dl" && item) return downloads.save({ filename: `sustrai-babeskopia-${item.id}.json`, data: new Blob([JSON.stringify(JSON.parse(item.json), null, 2)], { type: "application/json" }) });
+      if (k === "restore" && item) {
+        if (!confirm(`${item.id}-ko babeskopia leheneratu? Data horretako dokumentuak berriro idatziko dira (geroztik sortutakoak ez dira ezabatzen).`)) return;
+        try { const n = await importData(JSON.parse(item.json)); alert(n + " dokumentu leheneratuta ✓"); location.reload(); } catch (er) { alert("Errorea: " + (er.code || er.message)); }
+      }
+    });
+    fill();
   }
   function bar() {
     const b = document.createElement("div"); b.id = "sustrai-bar";
@@ -344,7 +399,7 @@
           if (!confirm("Fitxategiko datuak datu-basera kopiatuko dira (id bera duten dokumentuak ordezkatuz). Jarraitu?")) return;
           try { const n = await importJson(file.files[0]); alert(n + " dokumentu inportatuta ✓"); location.reload(); } catch (e) { alert("Errorea inportatzean: " + (e.message || e)); }
         };
-        b.append(lab, link("Babeskopia", () => backup().catch((e) => alert("Errorea: " + e.message))), link("Inportatu", () => file.click()), link("Irten", () => auth.signOut().then(() => location.reload())), file);
+        b.append(lab, link("Babeskopia", () => backup().catch((e) => alert("Errorea: " + e.message))), link("Babeskopiak", backupsPanel), link("Inportatu", () => file.click()), link("Irten", () => auth.signOut().then(() => location.reload())), file);
       } else {
         b.append(link("Admin sarrera", async () => {
           const p = new firebase.auth.GoogleAuthProvider();
@@ -360,4 +415,5 @@
     document.body.appendChild(b);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bar); else bar();
+  authReady.then((u) => { if (isAdminUser(u)) setTimeout(() => makeBackup(false).then((id) => { if (id) console.log("Babeskopia automatikoa:", id); }).catch((e) => console.warn("Babeskopia automatikoa:", e)), 5000); });
 })();
