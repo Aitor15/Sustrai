@@ -514,8 +514,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="config.js?v=20261118d"></script>
-<script src="firebase-shim.js?v=20261118d"></script>
+<script src="config.js?v=20261118e"></script>
+<script src="firebase-shim.js?v=20261118e"></script>
 </head>
 <body>
 <header class="top">
@@ -609,7 +609,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     loaded: { componentes: false, bolos: false, viajes: false, rutas: false, materiala: false, abestiak: false, setlistak: false },
     year: "all", tab: "bolos", filtroComp: "all", canWrite: true, db: null, limited: true, filtroCobro: "all", myEmail: null, myId: null,
   };
-  try { const y = localStorage.getItem("sustrai-year"); if (y) state.year = y; } catch (e) {}
+  // Aplikazioa irekitzean, beti 2027ko epean (admina eta kideak). Gero "Epea"-n alda daiteke.
+  const EPEA_HASIERA = "2027";
+  state.year = EPEA_HASIERA;
 
   const TABS = [
     { id: "bolos", label: "Emanaldiak" },
@@ -743,8 +745,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const ys = new Set();
     [...state.viajes, ...state.bolos, ...state.materiala].forEach((x) => { if (x.fecha && /^\d{4}/.test(x.fecha)) ys.add(x.fecha.slice(0, 4)); });
     state.setlistak.forEach((sl) => { const f = slYear(sl); if (/^\d{4}$/.test(f)) ys.add(f); });
+    ys.add(EPEA_HASIERA);
     const list = [...ys].sort().reverse();
-    if (state.year !== "all" && !list.includes(state.year)) { if (state.loaded.bolos) { state.year = "all"; try { localStorage.setItem("sustrai-year", "all"); } catch (er) {} } else list.unshift(state.year); }
+    if (state.year !== "all" && !list.includes(state.year)) list.unshift(state.year);
     $("year-select").innerHTML = `<option value="all">Guztia</option>` + list.map((y) => `<option value="${y}">${y}</option>`).join("");
     $("year-select").value = state.year;
   }
