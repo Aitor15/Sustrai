@@ -54,6 +54,18 @@
     doc: (p) => wrapDoc(fs.doc(p)),
   };
 
+  // ---- Audioak (Firebase Storage): adminak igo, denek entzun ----
+  let st = null;
+  try { st = fs && firebase.storage ? firebase.storage() : null; } catch (e) { console.warn("Storage:", e); }
+  window.sustraiStorage = st && {
+    upload: (path, file, onProg) => new Promise((res, rej) => {
+      const ref = st.ref(path);
+      const task = ref.put(file, { contentType: file.type || "audio/mpeg", cacheControl: "public,max-age=31536000" });
+      task.on("state_changed", (s) => onProg && s.totalBytes && onProg(s.bytesTransferred / s.totalBytes), rej, () => ref.getDownloadURL().then(res, rej));
+    }),
+    remove: (path) => st.ref(path).delete(),
+  };
+
   // ---- PINak eta loturak ----
   window.sustraiSetPin = (compId, pin) => fs.collection("pinak").doc(compId).set({ pin: String(pin) });
   window.sustraiClaim = async (compId, pin) => {

@@ -355,11 +355,19 @@ body.sm-on { overflow: hidden; }
 .bz-hist { border-top: 1px solid var(--line); padding-top: 6px; }
 input.autofill { background: color-mix(in srgb, var(--accent) 12%, transparent) !important; transition: background .3s; }
 @media (max-width: 640px) { .bz-table .row { grid-template-columns: minmax(0, 1fr) 70px 80px !important; } .bz-table .row > .r { display: block !important; } .bz-table .row > .hide-m { display: none !important; } }
-/* ---- Abisuak ---- */
-.ab-steps { margin: 0 0 4px; padding-left: 20px; display: grid; gap: 6px; }
-.ab-topic { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; background: var(--surface); }
-.ab-topic code { font-size: 16px; font-weight: 700; word-break: break-all; user-select: all; -webkit-user-select: all; }
-.ab-btns { display: flex; gap: 8px; flex-wrap: wrap; } .ab-btns a.btn { text-decoration: none; color: var(--ink); }
+/* ---- Grabazioak ---- */
+.au-pill { justify-self: start; margin-top: 4px; border: 1px solid #4a4a4a; background: transparent; color: #ddd; border-radius: 999px; padding: 3px 11px; font: 600 12px var(--font-body); cursor: pointer; }
+.au-pill:not(.add) { border-color: var(--accent); color: #fff; background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.au-pill.add { border-style: dashed; color: #9a9a9a; }
+.au-pill:disabled { opacity: .7; cursor: progress; }
+#au-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: #141414; color: #fff; border-top: 3px solid var(--accent); padding: 10px max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); display: grid; gap: 8px; box-shadow: 0 -8px 30px rgba(0,0,0,.4); }
+.au-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.au-name { display: grid; min-width: 0; } .au-name strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .au-name span { font-size: 12px; color: #9a9a9a; }
+.au-btns { display: flex; gap: 6px; flex: none; }
+.au-btns button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid #3a3a3a; background: #1f1f1f; color: #fff; cursor: pointer; font-size: 15px; }
+.au-btns button:disabled { opacity: .3; }
+#au-bar audio { width: 100%; height: 40px; }
+@media print { .au-pill, #au-bar { display: none !important; } }
 /* ---- Letrak ---- */
 .lt-tr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0 2px; }
 .lt-tr-lab { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8a8a8a; font-weight: 700; }
@@ -505,8 +513,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="config.js?v=20261117z"></script>
-<script src="firebase-shim.js?v=20261117z"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="config.js?v=20261118d"></script>
+<script src="firebase-shim.js?v=20261118d"></script>
 </head>
 <body>
 <header class="top">
@@ -594,7 +603,6 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   // ---------- Estado ----------
   const state = {
-    abisuak: null,
     repOpen: new Set(),
     componentes: [], bolos: [], viajes: [], rutas: [], materiala: [], abestiak: [], setlistak: [], bezeroak: [],
     ajustes: { eurKm: EURKM_DEF },
@@ -904,7 +912,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const body = list.length ? `<div class="card kide-bolos" style="--cols:minmax(0,1fr) 96px 104px"><div class="ledger-head" style="display:grid"><div>Herria</div><div>Data</div><div class="r">Ordua</div></div><ul class="ledger">${list.map((b) => `<li class="row" tabindex="0" role="button" data-fitxa="${esc(b.id)}"><div class="main">${esc(b.evento || "Emanaldia")}${b.helbidea || hhmm(b.elkartu) || b.fitxaOharrak ? ` <span class="fitxa-dot" title="Fitxa">ⓘ</span>` : ""}</div><div class="num">${esc(fdate(b.fecha))}</div><div class="r num">${hTxt(b) ? esc(hTxt(b)).replace(" / ", "<br>") : "—"}</div></li>`).join("")}</ul></div>`
       : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Aukeratu beste urte bat goian.</div>`;
     return `${avisoEmanaldiak()}<section style="display:grid;gap:12px">
-      <div class="sec-head"><div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.length} emanaldi. Sakatu emanaldi bat fitxa ikusteko.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${state.abisuak && state.abisuak.aktibo ? `<button type="button" class="btn small" data-abisuak>🔔 Abisuak</button>` : ""}${list.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn small" data-ics-all>📅 Datozenak egutegira</button>` : ""}</div></div>
+      <div class="sec-head"><div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.length} emanaldi. Sakatu emanaldi bat fitxa ikusteko.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${list.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn small" data-ics-all>📅 Datozenak egutegira</button>` : ""}</div></div>
       ${loadingOr("bolos", body)}
     </section>`;
   }
@@ -1023,7 +1031,6 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
             <button type="button" class="pill ${x.paid ? "ok" : "neutral"}" data-pay="${esc(b.id)}" data-key="${esc(payKey(x))}" data-amount="${x.amount}" ${canPay(x) ? "" : "disabled"} title="${canPay(x) ? "Aldatu" : "Zure ordainketak bakarrik marka ditzakezu"}">${x.paid ? "✓ Ordainduta" : "Ordaindu gabe"}</button></li>`).join("")}</ul>` : `<p class="meta" style="margin:0">Inork ez dio inori ezer zor.</p>`}
           </div>`).join("")}</details>` : ""}
       </section>
-      <section style="display:grid;gap:10px"><h2>Hilabeteko banaketa</h2><div class="card card-pad">${chart()}</div></section>
 `;
   }
 
@@ -1280,7 +1287,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   function copySetlist(id) {
     const src = state.setlistak.find((x) => x.id === id); if (!src) return;
     openSetlist(null);
-    current.items = (src.items || []).map((x) => ({ ...x }));
+    current.items = (src.items || []).map((x) => { const { audio, ...rest } = x; return { ...rest }; }); // grabazioak ez dira kopiatzen
     $("dialog").querySelector("h3").textContent = "Setlistaren kopia";
     $("sl-izena").value = (src.izena || "Setlista") + " (kopia)";
     $("sl-notas").value = src.notas || "";
@@ -1311,7 +1318,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     if (!izena) { $("form-err").textContent = "Jarri izen bat setlistari."; return; }
     const prev = current.id ? state.setlistak.find((x) => x.id === current.id) : null;
     const now = new Date().toISOString();
-    const data = { izena, boloId: $("sl-bolo").value || "", urtea: ($("sl-urtea") && $("sl-urtea").value) || "", items: current.items.map((x) => (x.a ? { a: x.a } : x.g !== undefined ? { g: x.g } : { t: x.t })), notas: ($("sl-notas").value || "").trim(), actualizado: now, creado: prev && prev.creado ? prev.creado : now };
+    const data = { izena, boloId: $("sl-bolo").value || "", urtea: ($("sl-urtea") && $("sl-urtea").value) || "", items: current.items.map((x) => (x.a ? (x.audio ? { a: x.a, audio: x.audio } : { a: x.a }) : x.g !== undefined ? { g: x.g } : { t: x.t })), notas: ($("sl-notas").value || "").trim(), actualizado: now, creado: prev && prev.creado ? prev.creado : now };
     const btn = $("btn-save"); btn.disabled = true; btn.textContent = "Gordetzen…";
     try {
       const col = state.db.collection("setlistak");
@@ -1418,50 +1425,6 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   }, true);
   document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("li[data-fitxa]")) { e.preventDefault(); openFitxa(e.target.dataset.fitxa); } });
 
-  // ================= ABISUAK MUGIKORRERA (ntfy) =================
-  // Zerbitzaririk gabe: ntfy.sh doako zerbitzua. Kide bakoitzak "ntfy" aplikazioa instalatu eta taldearen gaira harpidetzen da.
-  const NTFY = "https://ntfy.sh";
-  const randTopic = (pre) => { const a = new Uint8Array(9); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256)); return pre + Array.from(a, (x) => (x % 36).toString(36)).join(""); };
-  const appUrl = () => /^https?:/.test(location.protocol) ? location.origin + location.pathname : "";
-  async function ntfySend(topic, title, message, tags) {
-    if (!topic || !state.abisuak || !state.abisuak.aktibo) return;
-    try { await fetch(NTFY + "/", { method: "POST", body: JSON.stringify({ topic, title, message, tags: tags || [], click: appUrl() || undefined }) }); } catch (e) { console.warn("ntfy:", e); }
-  }
-  const boloAbisuTxt = (b) => [b.evento || "Emanaldia", fdateLong(b.fecha), hTxt(b)].filter(Boolean).join(" · ");
-  function openAbisuak() {
-    const A = state.abisuak || {}, admin = state.canWrite && !state.limited;
-    current = { kind: "abisuak" };
-    const topicBox = (t, lab) => `<div class="ab-topic"><div class="meta">${lab}</div><code>${esc(t)}</code><div class="ab-btns"><button type="button" class="btn small" data-copy="${esc(t)}">Kopiatu</button><a class="btn small" href="${NTFY}/${esc(t)}" target="_blank" rel="noopener">Ireki ntfy-n</a></div></div>`;
-    $("dialog").classList.remove("stage-dialog");
-    $("dialog").innerHTML = `<h3>🔔 Abisuak mugikorrean</h3>
-      ${A.aktibo ? `
-      <ol class="ab-steps">
-        <li>Instalatu <strong>ntfy</strong> aplikazioa (doan): <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a>.</li>
-        <li>Ireki ntfy, sakatu <strong>+</strong> eta idatzi gai hau (edo kopiatu eta itsatsi):</li>
-      </ol>
-      ${topicBox(A.taldea, "Taldearen abisuak: emanaldi berriak eta aldaketak")}
-      ${admin ? topicBox(A.admina, "Zuretzat bakarrik (admina): kideek ordainketa bat markatzen dutenean") : ""}
-      <p class="hint" style="margin:0">Gaiaren izena dakienak abisuak ikus ditzake; ez partekatu taldetik kanpo. Abisuek ntfy.sh zerbitzaritik pasatzen dira.</p>` : `
-      <p>Aktibatzen badituzu, taldekideei abisu bat iristen zaie mugikorrera <strong>emanaldi berri bat sortzen duzunean</strong> edo data/ordua aldatzen duzunean, eta zuri <strong>kide batek ordainketa bat markatzen duenean</strong>.</p>
-      <p class="hint">Doakoa da (ntfy.sh). Kide bakoitzak "ntfy" aplikazioa instalatu beharko du.</p>`}
-      <div class="err" id="form-err" role="alert"></div>
-      <div class="actions">${admin ? (A.aktibo ? `<button type="button" class="btn danger" data-ab="off">Desaktibatu</button><button type="button" class="btn" data-ab="test">Probatu</button>` : `<button type="button" class="btn primary" data-ab="on">Aktibatu</button>`) : ""}<span class="spacer"></span><button type="button" class="btn" id="btn-cancel">Itxi</button></div>`;
-    $("overlay").hidden = false;
-  }
-  document.addEventListener("click", async (e) => {
-    const t = e.target;
-    if (t.closest("[data-abisuak]")) { e.preventDefault(); return openAbisuak(); }
-    const cp = t.closest("[data-copy]"); if (cp) { e.preventDefault(); try { await navigator.clipboard.writeText(cp.dataset.copy); toast("Kopiatuta"); } catch (er) { const r = document.createRange(); const c = cp.closest(".ab-topic").querySelector("code"); r.selectNodeContents(c); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Hautatuta: kopiatu eskuz"); } return; }
-    const ab = t.closest("[data-ab]"); if (!ab) return;
-    e.preventDefault();
-    const k = ab.dataset.ab, A = state.abisuak || {};
-    try {
-      if (k === "on") { const d = { aktibo: true, taldea: A.taldea || randTopic("sustrai-"), admina: A.admina || randTopic("sustrai-adm-"), actualizado: new Date().toISOString() }; await state.db.doc("ajustes/abisuak").set(d); state.abisuak = d; openAbisuak(); toast("Abisuak aktibatuta"); }
-      else if (k === "off") { await state.db.doc("ajustes/abisuak").set(Object.assign({}, A, { aktibo: false, actualizado: new Date().toISOString() })); state.abisuak = Object.assign({}, A, { aktibo: false }); openAbisuak(); toast("Abisuak desaktibatuta"); }
-      else if (k === "test") { await ntfySend(A.taldea, "Sustrai · proba", "Abisuak ondo dabiltza 🎶", ["musical_note"]); await ntfySend(A.admina, "Sustrai · proba (admina)", "Ordainketen abisuak hemen iritsiko dira", ["moneybag"]); toast("Proba bidalita: begiratu mugikorra"); }
-    } catch (er) { handleWriteError(er, true); }
-  }, true);
-
   // ================= LETRAK ETA AKORDEAK =================
   const hasLetra = (a) => !!(a && (String(a.letra || "").trim() || String(a.esteka || "").trim()));
   const safeUrl = (u) => /^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "";
@@ -1525,6 +1488,75 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   document.addEventListener("click", (e) => { const b = e.target.closest("[data-letra]"); if (!b) return; e.preventDefault(); e.stopPropagation(); openLetra(b.dataset.letra); }, true);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.getElementById("letra-panel")) { e.preventDefault(); e.stopImmediatePropagation(); closeLetra(); } }, true);
 
+  // ================= GRABAZIOAK (setlisteko abesti bakoitzaren audioa) =================
+  const AU_MAX = 60 * 1024 * 1024;
+  const auSize = (n) => n >= 1048576 ? (n / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.round(n / 1024) + " KB";
+  const auPill = (sl, x, i) => {
+    if (x.audio && x.audio.url) return `<button type="button" class="au-pill" data-au-play="${i}" data-au-sl="${esc(sl.id)}" aria-label="Grabazioa entzun: ${esc(itemName(x))}">▶ Grabazioa</button>`;
+    return state.canWrite && !state.limited && window.sustraiStorage ? `<button type="button" class="au-pill add" data-au-add="${i}" data-au-sl="${esc(sl.id)}" aria-label="Grabazioa igo: ${esc(itemName(x))}">＋ Grabazioa</button>` : "";
+  };
+  function auClose() { const el = document.getElementById("au-bar"); if (el) { const a = el.querySelector("audio"); if (a) a.pause(); el.remove(); } }
+  function auOpen(slId, i) {
+    const sl = state.setlistak.find((x) => x.id === slId); if (!sl) return;
+    const items = sl.items || [], list = items.map((x, k) => ({ x, k })).filter((o) => o.x.a && o.x.audio && o.x.audio.url);
+    const cur = list.findIndex((o) => o.k === +i); if (cur < 0) return;
+    const { x } = list[cur], admin = state.canWrite && !state.limited;
+    auClose();
+    const el = document.createElement("div"); el.id = "au-bar"; el.setAttribute("role", "region"); el.setAttribute("aria-label", "Grabazioa");
+    el.innerHTML = `<div class="au-top"><div class="au-name"><strong>${esc(itemName(x))}</strong><span>${esc(sl.izena || "")} · ${cur + 1}/${list.length}</span></div>
+        <div class="au-btns"><button type="button" data-au="prev" ${cur === 0 ? "disabled" : ""} aria-label="Aurrekoa">⏮</button><button type="button" data-au="next" ${cur === list.length - 1 ? "disabled" : ""} aria-label="Hurrengoa">⏭</button>${admin ? `<button type="button" data-au="del" aria-label="Grabazioa ezabatu">🗑</button>` : ""}<button type="button" data-au="close" aria-label="Itxi">✕</button></div></div>
+      <audio controls autoplay preload="auto" src="${esc(x.audio.url)}"></audio>`;
+    document.body.appendChild(el);
+    const audio = el.querySelector("audio");
+    audio.addEventListener("ended", () => { if (cur < list.length - 1) auOpen(slId, list[cur + 1].k); });
+    el.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-au]"); if (!b) return;
+      const k = b.dataset.au;
+      if (k === "close") return auClose();
+      if (k === "prev" && cur > 0) return auOpen(slId, list[cur - 1].k);
+      if (k === "next" && cur < list.length - 1) return auOpen(slId, list[cur + 1].k);
+      if (k === "del") {
+        if (!confirm(`"${itemName(x)}" abestiaren grabazioa ezabatu?`)) return;
+        try {
+          if (x.audio.path && window.sustraiStorage) { try { await window.sustraiStorage.remove(x.audio.path); } catch (er) { if (!er || er.code !== "storage/object-not-found") throw er; } }
+          const items2 = (sl.items || []).map((y, j) => { if (j !== +i) return y; const { audio, ...rest } = y; return rest; });
+          await state.db.collection("setlistak").doc(slId).update({ items: items2 }); sl.items = items2;
+          auClose(); auRefresh(slId); toast("Grabazioa ezabatuta");
+        } catch (er) { handleWriteError(er); }
+      }
+    });
+  }
+  function auRefresh(slId) {
+    if (current && current.kind === "stage" && current.id === slId) { const sc = $("dialog").scrollTop; openStage(slId); $("dialog").scrollTop = sc; }
+    if (SM.el && SM.sl && SM.sl.id === slId) { const sl = state.setlistak.find((x) => x.id === slId); if (sl) { SM.sl = sl; SM.slides = smSlides(sl); smShow(); } }
+  }
+  function auUpload(slId, i, btn) {
+    const sl = state.setlistak.find((x) => x.id === slId); if (!sl || !window.sustraiStorage) return;
+    const x = (sl.items || [])[+i]; if (!x || !x.a) return;
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "audio/*,.mp3,.m4a,.wav,.aac,.ogg"; inp.style.display = "none";
+    document.body.appendChild(inp);
+    inp.addEventListener("change", async () => {
+      const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      if (f.size > AU_MAX) return toast("Audioa handiegia da (gehienez 60 MB).");
+      if (f.type && !/^audio\//.test(f.type)) return toast("Hori ez da audio-fitxategi bat.");
+      const ext = (f.name.match(/\.([a-z0-9]{2,4})$/i) || [, "mp3"])[1].toLowerCase();
+      const path = `audioak/${slId}/${String(x.a)}-${Date.now()}.${ext}`;
+      const orig = btn.textContent; btn.disabled = true;
+      try {
+        const url = await window.sustraiStorage.upload(path, f, (p) => { btn.textContent = "Igotzen… " + Math.round(p * 100) + "%"; });
+        const fresh = state.setlistak.find((y) => y.id === slId) || sl;
+        const items2 = (fresh.items || []).map((y, j) => j === +i ? { ...y, audio: { url, path, izena: f.name, tamaina: f.size, mota: f.type || "audio/" + ext, noiz: new Date().toISOString() } } : y);
+        await state.db.collection("setlistak").doc(slId).update({ items: items2 }); fresh.items = items2;
+        toast("Grabazioa igota ✓ (" + auSize(f.size) + ")"); auRefresh(slId);
+      } catch (er) { btn.disabled = false; btn.textContent = orig; console.error(er); toast("Ezin izan da igo: " + (er.code || er.message || er)); }
+    });
+    inp.click();
+  }
+  document.addEventListener("click", (e) => {
+    const p = e.target.closest("[data-au-play]"); if (p) { e.preventDefault(); e.stopImmediatePropagation(); return auOpen(p.dataset.auSl, p.dataset.auPlay); }
+    const u = e.target.closest("[data-au-add]"); if (u) { e.preventDefault(); e.stopImmediatePropagation(); return auUpload(u.dataset.auSl, u.dataset.auAdd, u); }
+  }, true);
+
   // ================= AGERTOKI MODUA (pantaila osoa) =================
   const SM = { sl: null, slides: [], i: 0, el: null, lock: null, auto: true };
   try { SM.auto = localStorage.getItem("sustrai-sm-auto") !== "0"; } catch (e) {}
@@ -1532,7 +1564,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const out = []; let grp = "", pos = 0;
     (sl.items || []).forEach((x) => {
       if (x.g !== undefined) { grp = x.g || "Taldea"; pos = 0; return; }
-      if (x.a) { pos++; out.push({ a: abestia(x.a) || { izena: itemName(x) }, grp, pos }); }
+      if (x.a) { pos++; out.push({ a: abestia(x.a) || { izena: itemName(x) }, grp, pos, audio: x.audio, k: (sl.items || []).indexOf(x) }); }
       else if (x.t) out.push({ t: x.t, grp });
     });
     return out;
@@ -1590,7 +1622,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const name = el.querySelector(".sm-name"); name.textContent = s.a ? s.a.izena || "" : s.t; name.classList.toggle("is-text", !s.a);
     const a = s.a || {};
     el.querySelector(".sm-sub").innerHTML = s.a ? [a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(a.iraupena) : ""].filter(Boolean).join("<i>·</i>") : "";
-    el.querySelector(".sm-tempo").innerHTML = s.a ? `${letraBtn(a, true)}${KONPAS[a.konpasa] ? `<span class="sm-k">${esc(a.konpasa)}</span>` : ""}${bpmOk(a.bpm) ? `<button type="button" class="sm-play" data-sm="play" data-metro-key="sm" aria-label="Metronomoa ${bpmOk(a.bpm)} BPM"><span class="num">${bpmOk(a.bpm)}</span><small>BPM</small></button>` : ""}` : "";
+    el.querySelector(".sm-tempo").innerHTML = s.a ? `${s.audio && s.audio.url ? `<button type="button" class="sm-letra" data-au-play="${s.k}" data-au-sl="${esc(SM.sl.id)}">▶ Grabazioa</button>` : ""}${letraBtn(a, true)}${KONPAS[a.konpasa] ? `<span class="sm-k">${esc(a.konpasa)}</span>` : ""}${bpmOk(a.bpm) ? `<button type="button" class="sm-play" data-sm="play" data-metro-key="sm" aria-label="Metronomoa ${bpmOk(a.bpm)} BPM"><span class="num">${bpmOk(a.bpm)}</span><small>BPM</small></button>` : ""}` : "";
     el.querySelector(".sm-next").innerHTML = n ? `<span>Hurrengoa</span><strong>${esc(n.a ? n.a.izena || "" : n.t)}</strong>${n.a && n.grp !== s.grp && n.grp ? `<em>${esc(n.grp)}</em>` : ""}` : `<span>Amaiera</span><strong>Eskerrik asko!</strong>`;
     el.querySelector('[data-sm="prev"]').disabled = SM.i === 0;
     el.querySelector('[data-sm="next"]').disabled = SM.i >= SM.slides.length - 1;
@@ -1602,7 +1634,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     Metro.stop(); document.removeEventListener("visibilitychange", smVis);
     try { if (SM.lock) SM.lock.release(); } catch (e) {} SM.lock = null;
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-    if (SM.el) SM.el.remove(); SM.el = null; document.body.classList.remove("sm-on");
+    if (SM.el) SM.el.remove(); SM.el = null; document.body.classList.remove("sm-on"); auClose();
   }
   document.addEventListener("keydown", (e) => {
     if (!SM.el) return;
@@ -1613,7 +1645,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-sm-open]"); if (b) { e.preventDefault(); e.stopPropagation(); return smOpen(b.dataset.smOpen); }
     // Agertokiko zerrendan abesti baten izena sakatuz gero, abesti horretatik hasi.
-    const body = e.target.closest(".stage-list li[data-st-a] .st-body"); if (body && current && current.kind === "stage") { e.preventDefault(); return smOpen(current.id, body.closest("li").dataset.stA); }
+    const body = !e.target.closest("button, a, select") && e.target.closest(".stage-list li[data-st-a] .st-body"); if (body && current && current.kind === "stage") { e.preventDefault(); return smOpen(current.id, body.closest("li").dataset.stA); }
   }, true);
 
   function openStage(id) {
@@ -1624,7 +1656,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     $("dialog").classList.add("stage-dialog");
     $("dialog").innerHTML = `
       <div class="stage-head"><div><div class="stage-title">${esc(sl.izena || "Setlista")}</div><div class="meta sm-hint">Sakatu abesti bat agertoki modua hortik hasteko</div><div class="meta">${sl.boloId ? esc(boloName(sl.boloId)) + " · " : ""}${esc(durTxt(inf))}</div></div></div>
-      <ol class="stage-list${(sl.items || []).some((x) => x.a && hasLetra(abestia(x.a))) ? " has-letra" : ""}">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li data-st-i="${i}" data-st-a="${esc(x.a)}"><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}</span>${a && hasLetra(a) ? `<span class="st-lm">${letraBtn(a, false, true)}</span>` : ""}<span class="st-side"><span class="st-l">${a ? letraBtn(a) : ""}</span><span class="st-k">${a ? (canKonp() ? konpSelect(a, i) : konpTag(a)) : ""}</span><span class="st-m">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
+      <ol class="stage-list${(sl.items || []).some((x) => x.a && hasLetra(abestia(x.a))) ? " has-letra" : ""}">${(() => { const gs = slGroups(sl.items); return (sl.items || []).map((x, i) => { if (x.g !== undefined) { pos = 0; const g = gs.find((z) => z.i === i); return `<li class="st-group"><span>${esc(x.g || "Taldea")}</span><span class="st-meta">${g ? esc(grpTxt(g)) : ""}</span></li>`; } const a = x.a ? abestia(x.a) : null; if (x.a) pos++; return x.a ? `<li data-st-i="${i}" data-st-a="${esc(x.a)}"><span class="st-n">${pos}</span><span class="st-body"><span class="st-name">${esc(itemName(x))}</span>${a && (a.tonua || a.triki || a.iraupena) ? `<span class="st-sub">${[a.tonua ? `<b>${esc(a.tonua)}</b>` : "", a.triki ? "triki " + esc(a.triki) : "", a.iraupena ? esc(fmtDur(durSec(a.iraupena))) : ""].filter(Boolean).join('<i aria-hidden="true">·</i>')}</span>` : ""}${auPill(sl, x, i)}</span>${a && hasLetra(a) ? `<span class="st-lm">${letraBtn(a, false, true)}</span>` : ""}<span class="st-side"><span class="st-l">${a ? letraBtn(a) : ""}</span><span class="st-k">${a ? (canKonp() ? konpSelect(a, i) : konpTag(a)) : ""}</span><span class="st-m">${a && bpmOk(a.bpm) ? metroBtn(a, "st-" + i, true) : ""}</span></span></li>` : `<li class="st-text"><span class="st-n"></span><span class="st-body"><span class="st-name">${esc(x.t)}</span></span><span class="st-side"></span></li>`; }).join(""); })() || `<li class="st-text"><span class="st-n"></span><span class="st-name">Setlista hutsik dago</span></li>`}</ol>
       ${sl.notas ? `<p class="meta" style="margin:0">${esc(sl.notas)}</p>` : ""}
       <div class="actions stage-actions"><button type="button" class="btn primary" data-sm-open="${esc(sl.id)}">⛶ Agertoki modua</button>${state.canWrite && !state.limited ? `<button type="button" class="btn" id="btn-stage-edit">Editatu</button>` : ""}<button type="button" class="btn" id="btn-stage-pdf">PDF</button><button type="button" class="btn" id="btn-print">Inprimatu</button><span class="spacer"></span><button type="button" class="btn primary" id="btn-cancel">Itxi</button></div>`;
     $("overlay").hidden = false;
@@ -2043,7 +2075,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     if (m.hasAttribute("data-metro-input")) { const f = $("fld-bpm"), k = $("fld-konpasa"); return Metro.toggle(f && f.value, "form", k && k.value); }
     Metro.toggle(m.dataset.metro, m.dataset.metroKey, m.dataset.metroK);
   }, true);
-  function closeForm() { Metro.stop(); $("overlay").hidden = true; current = null; $("dialog").innerHTML = ""; $("dialog").classList.remove("stage-dialog"); document.body.classList.remove("printing-stage"); render(); }
+  function closeForm() { Metro.stop(); auClose(); $("overlay").hidden = true; current = null; $("dialog").innerHTML = ""; $("dialog").classList.remove("stage-dialog"); document.body.classList.remove("printing-stage"); render(); }
   $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeForm(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("overlay").hidden) closeForm(); });
 
@@ -2122,11 +2154,6 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       if (current.kind === "bolo") { await syncCoches(ref.id, data); await guardarRutas(data); }
       if (current.kind === "bolo" && !state.limited && String(data.cliente || "").trim() && !bezeroaOf(data.cliente)) {
         try { await state.db.collection("bezeroak").doc().set({ izena: String(data.cliente).trim(), email: data.clienteEmail || "", kontaktua: data.kontaktua || "", tel: data.kontaktuTel || "", creado: data.actualizado, actualizado: data.actualizado }); } catch (er) { console.warn("bezeroa:", er); }
-      }
-      if (current.kind === "bolo" && state.abisuak && state.abisuak.aktibo) {
-        const KS = ["evento", "fecha", "ordua", "amaiera", "ordua2", "amaiera2", "helbidea", "elkartu", "elkartuLekua", "proba"];
-        if (!prev) ntfySend(state.abisuak.taldea, "🎵 Emanaldi berria", boloAbisuTxt(data), ["musical_note"]);
-        else if (KS.some((k) => String(prev[k] || "") !== String(data[k] || ""))) ntfySend(state.abisuak.taldea, "📅 Emanaldia aldatu da", boloAbisuTxt(data), ["date"]);
       }
       closeForm(); toast("Gordeta");
     } catch (er) { btn.disabled = false; btn.textContent = "Gorde"; handleWriteError(er, true); }
@@ -2588,7 +2615,6 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
       <p class="hint" style="margin:0">Tarifa berriak hemendik aurrera idazten dituzun emanaldiei bakarrik aplikatzen zaizkie.</p>
       <div class="field"><label for="fld-eurKm">Kilometroko prezioa (€)</label><input id="fld-eurKm" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(num(state.ajustes.eurKm) || EURKM_DEF)}"></div>
       <p class="hint" style="margin:0">0,26 €/km da Ogasunak zergarik gabe onartzen duena.</p>
-      <div class="field"><label>Abisuak mugikorrean</label><div><button type="button" class="btn" data-abisuak>🔔 ${state.abisuak && state.abisuak.aktibo ? "Aktibatuta · ikusi" : "Konfiguratu"}</button></div></div>
       <div class="err" id="form-err" role="alert"></div>
       <div class="actions"><span class="spacer"></span><button type="button" class="btn" id="btn-cancel">Utzi</button><button type="button" class="btn primary" id="btn-save-aj">Gorde</button></div>`;
     $("overlay").hidden = false;
@@ -2676,7 +2702,6 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     busy.add(boloId);
     try {
       await state.db.collection(col).doc(boloId).update({ ordainduak: { [key]: paid ? 0 : amount } }); if (col === "bolos" && !state.limited) marcarVisto([boloId + "|" + key], !paid); toast(paid ? "Ordaindu gabe gisa markatuta" : "Ordainduta ✓");
-      if (state.limited && !paid && state.abisuak && state.abisuak.aktibo) { const [fr, to] = key.split("__"); ntfySend(state.abisuak.admina, "💶 " + compName(myComp()) + ": ordainketa eginda", `${compName(fr)} → ${compName(to)} · ${money(amount)}${col === "bolos" ? " · " + (b.evento || "") : ""}`, ["moneybag"]); }
     }
     catch (er) { handleWriteError(er); }
     finally { busy.delete(boloId); }
@@ -2775,7 +2800,6 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
       });
     });
     if (!state.limited) db.collection("bezeroak").onSnapshot((snap) => { state.bezeroak = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); if ($("overlay").hidden) render(); }, () => {});
-    db.doc("ajustes/abisuak").onSnapshot((snap) => { state.abisuak = snap.exists ? snap.data() : null; if ($("overlay").hidden) render(); }, () => {});
     db.doc("ajustes/general").onSnapshot((snap) => { if (snap.exists) { state.ajustes = Object.assign({ eurKm: EURKM_DEF }, snap.data()); if ($("overlay").hidden) render(); } }, () => {});
   }
   start();
