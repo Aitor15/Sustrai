@@ -1575,7 +1575,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       </div>` : `<div class="card empty"><strong>Ez dago erosketarik (${esc(periodoTxt())})</strong>Idatzi taldearentzat erositakoa, nork ordaindu duen eta noren artean banatzen den.</div>`;
     const kideak = items.length ? `<div class="card" style="--cols:minmax(0,1.4fr) 1fr 1fr 1fr">
         <div class="ledger-head"><div>Kidea</div><div class="r hide-m">Ordaindu du</div><div class="r hide-m">Dagokiona</div><div class="r">Saldoa</div></div>
-        <ul class="ledger">${state.componentes.map((c) => { const p = pagado[c.id] || 0, q = cuota[c.id] || 0, d = round2(p - q); return `
+        <ul class="ledger">${state.componentes.filter((c) => !c.ordezkoa || pagado[c.id] || cuota[c.id]).map((c) => { const p = pagado[c.id] || 0, q = cuota[c.id] || 0, d = round2(p - q); return `
           <li class="row" style="cursor:default"><div><div class="main">${esc(c.nombre)}</div><div class="meta only-m">ordaindu ${money(p)} · dagokio ${money(q)}</div></div>
           <div class="r num hide-m">${money(p)}</div><div class="r num hide-m">${money(q)}</div>
           <div class="r num" style="color:${d < 0 ? "var(--bad)" : d > 0 ? "var(--good)" : "inherit"}"><strong>${d > 0 ? "+" : ""}${money(d)}</strong></div></li>`; }).join("")}</ul></div>
@@ -2215,11 +2215,11 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     },
     materiala: {
       col: "materiala", title: ["Erosketa berria", "Editatu erosketa"],
-      fields: () => [
+      fields: (values = {}) => [
         { id: "deskribapena", label: "Zer erosi da", type: "text", required: true, full: true, placeholder: "Kableak, atrilak, baxu-sokak…" },
         { id: "fecha", label: "Data", type: "date", required: true, def: today() },
         { id: "ordainketak", label: "Nork zenbat ordaindu du (€)", type: "pagadores", full: true, hint: "Bete ordaindu dutenen zenbatekoa bakarrik. Guztira berez kalkulatzen da." },
-        { id: "banatu", label: "Noren artean banatzen da", type: "multi", full: true, options: compOpts(), defSel: titulares().map((c) => c.id) },
+        { id: "banatu", label: "Noren artean banatzen da", type: "multi", full: true, options: compOpts().filter(([id, , ord]) => !ord || (Array.isArray(values.banatu) && values.banatu.includes(id))), defSel: titulares().map((c) => c.id) },
         { id: "notas", label: "Oharrak", type: "textarea", full: true },
       ],
     },
@@ -2264,7 +2264,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     current = { kind, id: id || null };
     const ro = !state.canWrite;
     const clientes = [...new Set([...state.bezeroak.map((z) => z.izena), ...state.bolos.map((x) => x.cliente)].filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
-    const html = def.fields().map((f) => {
+    const html = def.fields(values).map((f) => {
       if (f.sep) return `<div class="field full sep">${esc(f.sep)}</div>`;
       let v = values[f.id] !== undefined ? values[f.id] : f.def;
       const fid = "fld-" + f.id, req = f.required ? " *" : "";
@@ -2302,7 +2302,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       }
       else if (f.type === "pagadores") {
         const map = v && typeof v === "object" ? v : (kind === "materiala" && values.ordaindu ? { [values.ordaindu]: values.zenbatekoa } : {});
-        input = `<div class="coches" id="${fid}">${state.componentes.map((c) => `<div class="pag-row"><label for="pag-${esc(c.id)}">${esc(c.nombre)}</label><input type="number" id="pag-${esc(c.id)}" class="pag-in" data-c="${esc(c.id)}" step="0.01" min="0" inputmode="decimal" placeholder="0" value="${esc(has(map[c.id]) && num(map[c.id]) ? map[c.id] : "")}" ${ro ? "readonly" : ""}></div>`).join("")}<div class="pag-row pag-tot"><span>Guztira</span><span class="num" id="pag-total"></span></div></div>`;
+        const pagComps = kind === "materiala" ? state.componentes.filter((c) => !c.ordezkoa || num(map[c.id]) > 0) : state.componentes;
+        input = `<div class="coches" id="${fid}">${pagComps.map((c) => `<div class="pag-row"><label for="pag-${esc(c.id)}">${esc(c.nombre)}</label><input type="number" id="pag-${esc(c.id)}" class="pag-in" data-c="${esc(c.id)}" step="0.01" min="0" inputmode="decimal" placeholder="0" value="${esc(has(map[c.id]) && num(map[c.id]) ? map[c.id] : "")}" ${ro ? "readonly" : ""}></div>`).join("")}<div class="pag-row pag-tot"><span>Guztira</span><span class="num" id="pag-total"></span></div></div>`;
       }
       else if (f.type === "multi") {
         const sel = Array.isArray(v) && v.length ? v : (f.defSel || f.options.map((o) => o[0]));
