@@ -135,6 +135,7 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .row:last-child { border-bottom: 0; }
 .row.zal { opacity: .45; filter: grayscale(.85); font-style: italic; }
 .row.zal:hover, .row.zal:focus-visible { opacity: .8; }
+.bide-tag { white-space: nowrap; }
 .zal-tag { display: inline-block; font-size: 11px; font-style: normal; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; border: 1px dashed currentColor; border-radius: 6px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
 .row:hover { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
 .row .main { font-weight: 500; overflow-wrap: anywhere; }
@@ -197,6 +198,7 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
   .only-m { display: inline; }
   .coche-detail { padding-left: 0; }
   .bolos-card .row, .bolos-card .ledger-foot { grid-template-columns: minmax(0,1fr) auto auto; }
+  .bolos-card .row > .r .meta { max-width: 120px; margin-left: auto; }
   .form-grid { grid-template-columns: minmax(0, 1fr); }
   .brand h1 { font-size: 24px; }
   .brand-word img { height: 56px; }
@@ -523,8 +525,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="config.js?v=20261125c"></script>
-<script src="firebase-shim.js?v=20261125c"></script>
+<script src="config.js?v=20261125e"></script>
+<script src="firebase-shim.js?v=20261125e"></script>
 </head>
 <body>
 <header class="top">
@@ -730,6 +732,10 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   // Konfirmatu gabeko emanaldiak: zerrendan bai (difuminatuta), kontuetan ez.
   const fijo = (b) => !(b && b.zalantzan);
+  // Harremanetarako bidea (WhatsApp, emaila…)
+  const BIDEAK = [["", "—"], ["whatsapp", "WhatsApp"], ["telefonoa", "Telefonoa"], ["emaila", "Emaila"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["aurrez", "Aurrez aurre"], ["beste", "Beste bat"]];
+  const BIDE_IKON = { whatsapp: "💬", telefonoa: "📞", emaila: "✉", instagram: "📷", facebook: "👍", aurrez: "🤝", beste: "•" };
+  const bideTag = (b) => { const o = b.bidea && BIDEAK.find((x) => x[0] === b.bidea); return o ? ` · <span class="bide-tag" title="Harremanetarako bidea">${BIDE_IKON[o[0]] || ""} ${esc(o[1])}</span>` : ""; };
   const bolosOk = () => state.bolos.filter(fijo);
   const zalTag = (b) => b.zalantzan ? ` <span class="zal-tag">konfirmatu gabe</span>` : "";
   function totals() {
@@ -927,7 +933,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       return `
         <li class="row${b.zalantzan ? " zal" : ""}" tabindex="0" data-edit="bolo" data-id="${esc(b.id)}">
           <div><div class="main">${esc(b.evento || "Lekurik gabeko emanaldia")}${zalTag(b)}</div>
-            <div class="meta"><span class="only-m">${fechaH(b)} · </span>${b.cliente ? esc(b.cliente) : ""}${b.clienteEmail ? ` · <a href="mailto:${esc(b.clienteEmail)}" style="color:inherit">✉ ${esc(b.clienteEmail)}</a>` : ""}${c.facturado ? (b.facturaEmitida ? ` · <span class="pago-ok">faktura${b.facturaNum ? " " + esc(b.facturaNum) : ""} emanda ✓</span>` : ` · <span class="pago-pend">faktura egin gabe</span>${state.canWrite ? ` <button type="button" class="linkbtn" data-toggle-fact="${esc(b.id)}">emanda markatu</button>` : ""}`) : ""}${b.cena === false ? " · afaririk gabe (+" + money(tarifa().extra) + ")" + (afariGastuak(b).length ? ", afaria: " + esc(afariGastuak(b).map((x) => compName(x.componente) + " " + money(x.importe)).join(", ")) : "") : b.cena === "zehazteko" ? ' · <span class="pago-pend">afaria zehazteko</span>' : ""}${(() => { const e = boloEstadoPagos(b); return e === "ok" ? ' · <span class="pago-ok">bidaiak kitatuta ✓</span>' : e === "pend" ? ' · <span class="pago-pend">bidaiak kitatu gabe</span>' : ""; })()}<span class="only-m"> · kudeaketa ${money(c.gestion)}</span></div></div>
+            <div class="meta"><span class="only-m">${fechaH(b)} · </span>${b.cliente ? esc(b.cliente) : ""}${bideTag(b)}${b.clienteEmail ? ` · <a href="mailto:${esc(b.clienteEmail)}" style="color:inherit">✉ ${esc(b.clienteEmail)}</a>` : ""}${c.facturado ? (b.facturaEmitida ? ` · <span class="pago-ok">faktura${b.facturaNum ? " " + esc(b.facturaNum) : ""} emanda ✓</span>` : ` · <span class="pago-pend">faktura egin gabe</span>${state.canWrite ? ` <button type="button" class="linkbtn" data-toggle-fact="${esc(b.id)}">emanda markatu</button>` : ""}`) : ""}${b.cena === false ? " · afaririk gabe (+" + money(tarifa().extra) + ")" + (afariGastuak(b).length ? ", afaria: " + esc(afariGastuak(b).map((x) => compName(x.componente) + " " + money(x.importe)).join(", ")) : "") : b.cena === "zehazteko" ? ' · <span class="pago-pend">afaria zehazteko</span>' : ""}${(() => { const e = boloEstadoPagos(b); return e === "ok" ? ' · <span class="pago-ok">bidaiak kitatuta ✓</span>' : e === "pend" ? ' · <span class="pago-pend">bidaiak kitatu gabe</span>' : ""; })()}<span class="only-m"> · kudeaketa ${money(c.gestion)}</span></div></div>
           <div class="hide-m"><div class="num">${fdate(b.fecha)}</div>${hTxt(b) ? `<div class="meta num">${esc(hTxt(b)).replace(" / ", "<br>")}</div>` : `<div class="meta" style="font-style:italic">ordua?</div>`}</div>
           <div class="r"><div class="num"><strong>${money(pedido)}</strong></div><div class="meta">${b.modalidad && b.modalidad.endsWith("2") ? "Gipuzkoatik kanpo · " : ""}${c.facturado ? "+ BEZ" : "fakturarik gabe"}</div></div>
           <div class="r num hide-m" style="color:${c.gestion < 0 ? "var(--bad)" : "inherit"}">${money(c.gestion)}</div>
@@ -1748,6 +1754,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
         { sep: "Bezeroa" },
         { id: "cliente", label: "Bezeroa", type: "text", full: true, list: "dl-clientes", placeholder: "Udala, aretoa, elkartea…" },
         { id: "clienteEmail", label: "Bezeroaren emaila", type: "text", full: true, placeholder: "kultura@udala.eus" },
+        { id: "bidea", label: "Nondik jarri dira harremanetan", type: "select", options: BIDEAK, def: "" },
         { sep: "Tarifa" },
         { id: "modalidad", label: "Tarifa", type: "select", def: "factura", full: true, options: modalidadOpts() },
         { id: "cena", label: "Afaria edo bazkaria barne?", type: "cena3", def: true, full: true, hint: `Ezetz bada, +${money(tarifa().extra)} aurrekontuan, kideen artean banatuta` },
