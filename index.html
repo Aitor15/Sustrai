@@ -3,10 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sustrai</title>
+<title>Sustrai erromeria</title>
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Sustrai">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -130,6 +133,9 @@ h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; margin
 .ledger-head { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--line); }
 .row { border-bottom: 1px solid var(--line); cursor: pointer; }
 .row:last-child { border-bottom: 0; }
+.row.zal { opacity: .45; filter: grayscale(.85); font-style: italic; }
+.row.zal:hover, .row.zal:focus-visible { opacity: .8; }
+.zal-tag { display: inline-block; font-size: 11px; font-style: normal; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; border: 1px dashed currentColor; border-radius: 6px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
 .row:hover { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
 .row .main { font-weight: 500; overflow-wrap: anywhere; }
 .row .meta { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
@@ -517,442 +523,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="config.js?v=20261122"></script>
-<script>/* Sustrai kontuak — Firebase egokitzailea.
-   Aplikazioak erabiltzen duen window.__sapi.use(...) interfazea Firebase-ren gainean eskaintzen du:
-   db (Firestore), user (saioa), downloads (fitxategiak deskargatu). Besteak (sample, mcp) ez daude. */
-(function () {
-  "use strict";
-  const CFG = window.SUSTRAI_CONFIG || {};
-  const ADMIN = String(CFG.adminEmail || "").trim().toLowerCase();
-  let fs = null, auth = null, initError = null;
-  try {
-    firebase.initializeApp(CFG.firebase);
-    auth = firebase.auth();
-    fs = firebase.firestore();
-    fs.settings({ ignoreUndefinedProperties: true });
-  } catch (e) { initError = e; console.error("Firebase:", e); }
-
-  // ---- Saioa: admina Google-rekin, besteak izenik gabe (anonimoki) ----
-  const authReady = new Promise((resolve) => {
-    if (!auth) return resolve(null);
-    let tried = false;
-    auth.getRedirectResult().catch(() => {});
-    auth.onAuthStateChanged((u) => {
-      if (u) return resolve(u);
-      if (tried) return resolve(null);
-      tried = true;
-      auth.signInAnonymously().catch((e) => { console.error(e); resolve(null); });
-    });
-  });
-  const isAdminUser = (u) => !!(u && !u.isAnonymous && u.email && u.email.toLowerCase() === ADMIN);
-
-  // ---- Datu-basea ----
-  const isPlain = (v) => v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date) && Object.getPrototypeOf(v) === Object.prototype;
-  function flatten(obj, pre, out) {
-    Object.keys(obj).forEach((k) => {
-      const v = obj[k];
-      if (isPlain(v) && Object.keys(v).length) flatten(v, pre + k + ".", out);
-      else out[pre + k] = v === undefined ? null : v;
-    });
-    return out;
-  }
-  const wrapDoc = (ref) => ({
-    id: ref.id,
-    set: (d) => ref.set(d),
-    update: (d) => {
-      const f = flatten(d, "", {}), ks = Object.keys(f);
-      // Ordainketa bakarra markatzean, nork-nori gehitu (segurtasun-arauek egiaztatzen dute).
-      if (ks.length === 1 && ks[0].startsWith("ordainduak.")) { const [from, to] = ks[0].slice(11).split("__"); if (from && to) f.ordainduakAzkena = { from, to }; }
-      return ref.update(f);
-    },
-    delete: () => ref.delete(),
-    onSnapshot: (a, b) => ref.onSnapshot(a, b),
-  });
-  const db = fs && {
-    collection: (c) => { const col = fs.collection(c); return { doc: (id) => wrapDoc(id ? col.doc(id) : col.doc()), onSnapshot: (a, b) => col.onSnapshot(a, b) }; },
-    doc: (p) => wrapDoc(fs.doc(p)),
-  };
-
-  // ---- Audioak (Firebase Storage): adminak igo, denek entzun ----
-  let st = null;
-  try { st = fs && firebase.storage ? firebase.storage() : null; } catch (e) { console.warn("Storage:", e); }
-  window.sustraiStorage = st && {
-    upload: (path, file, onProg) => new Promise((res, rej) => {
-      const ref = st.ref(path);
-      const task = ref.put(file, { contentType: file.type || "audio/mpeg", cacheControl: "public,max-age=31536000" });
-      task.on("state_changed", (s) => onProg && s.totalBytes && onProg(s.bytesTransferred / s.totalBytes), rej, () => ref.getDownloadURL().then(res, rej));
-    }),
-    remove: (path) => st.ref(path).delete(),
-  };
-
-  // ---- PINak eta loturak ----
-  window.sustraiSetPin = (compId, pin) => fs.collection("pinak").doc(compId).set({ pin: String(pin) });
-  window.sustraiClaim = async (compId, pin) => {
-    const u = auth.currentUser; if (!u) throw new Error("no-user");
-    await fs.collection("loturak").doc(u.uid).set({ comp: compId, pin: String(pin), creado: new Date().toISOString() });
-    await fs.collection("componentes").doc(compId).update({ uid: u.uid });
-  };
-  // PINa kendu: PINa ezabatu, gailu guztiak deskonektatu eta "lotuta" marka kendu.
-  window.sustraiRevoke = async (compId) => {
-    await fs.collection("pinak").doc(compId).delete();
-    await window.sustraiUnlink(compId);
-    await fs.collection("componentes").doc(compId).update({ uid: null });
-  };
-  window.sustraiUnlink = async (compId) => {
-    const snap = await fs.collection("loturak").where("comp", "==", compId).get();
-    await Promise.all(snap.docs.map((d) => d.ref.delete()));
-  };
-
-  // ---- Kilometroak eta bidesariak: Google Routes API (aukerakoa, gakoa config.js-n) ----
-  const splitTray = (tray) => {
-    let pts = tray.split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+/).map((x) => x.trim()).filter(Boolean);
-    if (pts.length < 2) pts = tray.split("-").map((x) => x.trim()).filter(Boolean);
-    return pts;
-  };
-  // ---- Bidesarien taula ofiziala (Bidegi / Interbiak, arinak, 2026-01-01etik) ----
-  // Euskal Herriko ordainpeko autobideak, arinak / 1. klasea. Urtarrilero eguneratu (Iparraldea: otsailean):
-  // Bidegi/Interbiak (AP-8, AP-1, AP-636), Audenasa (AP-15), Bizkaia/Araba (AP-68), ASF-Vinci (A63).
-  // W = AP-8/AP-1 mendebaldea (Bilbo – Gasteiz – Donostia); E = AP-8 Donostia – Irun.
-  const TOLL_YEAR = 2026;
-  const WN = ["AO", "Amorebieta", "Iurreta", "Abadino", "Ermua", "Eibar", "BergaraIN", "BergaraHS", "Arrasate", "Eskoriatza", "Luko", "Etxabarri", "Elgoibar", "Itziar", "Zestoa", "Zarautz", "Donostia"];
-  const WROWS = {
-    AO: [null, 1.05, 2.8, 3.3, 4.6, 6.66, 8.23, 9.01, 9.66, 11.31, 15.14, 16.39, 7.56, 8.84, 9.74, 11.12, 13.81],
-    Iurreta: [2.8, 2.8, null, null, 1.75, 2.97, 4.54, 5.32, 5.97, 7.62, 11.45, 12.7, 3.87, 5.15, 6.05, 7.43, 10.12],
-    Abadino: [3.3, 3.3, null, null, 1.25, 2.44, 4.01, 4.79, 5.44, 7.09, 10.92, 12.17, 3.34, 4.62, 5.52, 6.9, 9.59],
-    Ermua: [4.6, 4.6, 1.75, 1.25, null, 1.22, 2.79, 3.57, 4.22, 5.87, 9.7, 10.95, 2.12, 3.4, 4.3, 5.68, 8.37],
-    Eibar: [6.66, 6.66, 2.97, 2.44, 1.22, null, 1.88, 2.66, 3.31, 4.96, 8.79, 10.04, 1.17, 2.47, 3.27, 4.75, 7.43],
-    BergaraIN: [8.23, 8.23, 4.54, 4.01, 2.79, 1.88, null, null, null, null, null, null, 2.58, 3.85, 4.57, 6.13, 8.71],
-    BergaraHS: [9.01, 9.01, 5.32, 4.79, 3.57, 2.66, null, null, 0.89, 2.45, 6.31, 7.56, 3.36, 4.63, 5.35, 6.91, 9.49],
-    Arrasate: [9.66, 9.66, 5.97, 5.44, 4.22, 3.31, null, 0.89, null, 1.71, 5.54, 6.79, 4.01, 5.28, 6.0, 7.56, 10.14],
-    Eskoriatza: [11.31, 11.31, 7.62, 7.09, 5.87, 4.96, null, 2.45, 1.71, null, 3.97, 5.22, 5.66, 6.93, 7.65, 9.21, 11.79],
-    Luko: [15.14, 15.14, 11.45, 10.92, 9.7, 8.79, null, 6.31, 5.54, 3.97, null, 1.5, 9.49, 10.76, 11.48, 13.04, 15.62],
-    Etxabarri: [16.39, 16.39, 12.7, 12.17, 10.95, 10.04, null, 7.56, 6.79, 5.22, 1.5, null, 10.74, 12.01, 12.73, 14.29, 16.87],
-    Elgoibar: [7.56, 7.56, 3.87, 3.34, 2.12, 1.17, 2.58, 3.36, 4.01, 5.66, 9.49, 10.74, null, 1.63, 2.35, 3.92, 6.41],
-    Itziar: [8.84, 8.84, 5.15, 4.62, 3.4, 2.47, 3.85, 4.63, 5.28, 6.93, 10.76, 12.01, 1.63, null, 1.17, 2.47, 5.17],
-    Zestoa: [9.74, 9.74, 6.05, 5.52, 4.3, 3.27, 4.57, 5.35, 6.0, 7.65, 11.48, 12.73, 2.35, 1.17, null, 1.74, 4.41],
-    // Zarautz – Donostia: taulan ez dago zuzenean; Zarautzeko sarrerako barrera 2,80 € (taldeak egiaztatua).
-    Zarautz: [11.12, 11.12, 7.43, 6.9, 5.68, 4.75, 6.13, 6.91, 7.56, 9.21, 13.04, 14.29, 3.92, 2.47, 1.74, null, 2.8],
-  };
-  const W = {};
-  WN.forEach((n) => { W[n] = {}; });
-  Object.entries(WROWS).forEach(([a, row]) => row.forEach((v, i) => { if (v != null) { W[a][WN[i]] = v; W[WN[i]][a] = v; } }));
-  W.Amorebieta.AO = W.AO.Amorebieta = 1.05;
-  const E = { Donostia: { Oiartzun: 1.61, Irun: 2.24, Behobia: 2.47 }, Oiartzun: { Irun: 2.24, Behobia: 2.47 }, Irun: { Behobia: 0.5 } };
-  // A63 Iparralde (ASF / Vinci, 1. klasea, 2026-02-01etik). Biriatou = Behobia (muga).
-  const F = { Biriatou: { SJL: 2.0, Biarritz: 3.2, Bayonne: 4.8, Ondres: 5.8, Capbreton: 6.8 }, SJL: { Biarritz: 1.2, Bayonne: 2.8, Ondres: 3.8, Capbreton: 4.8 },
-    Biarritz: { Bayonne: 1.2, Ondres: 2.2, Capbreton: 3.2 }, Bayonne: { Ondres: 1.0, Capbreton: 2.0 }, Ondres: { Capbreton: 1.0 } };
-  // Lerroko sareak: barrera bakoitzaren prezioa, ondoz ondoko sarbideen artean (batu egiten dira).
-  // AP-636 (Bidegi 2026). Antzuola–Bergara = 1,55 − 0,52 (kalkulatua).
-  const G = [["Beasain", "Ormaiztegi", 0.42], ["Ormaiztegi", "Zumarraga", 0.82], ["Zumarraga", "Antzuola", 0.52], ["Antzuola", "Bergara", 1.03]];
-  // AP-15 Nafarroa (Audenasa 2026): Sarasa, Oriz-Tiebas, Marcilla (enlace / tronco) barrerak.
-  const N = [["Irurtzun", "Pamplona", 2.65], ["Pamplona", "Tafalla", 4.55], ["Tafalla", "Marcilla", 3.45], ["Tafalla", "Tudela", 6.85]];
-  // AP-68 Euskadi, 2026-11-11tik (Bizkaia −20 %, Araba −70 %). Errioxa, Aragoi eta Nafarroako zatia doan.
-  const A = [["Bilbao", "Areta", 3.35], ["Areta", "Altube", 0.9], ["Altube", "Zambrana", 2.45]];
-  const mGet = (T, a, b) => (T[a] && T[a][b]) ?? (T[b] && T[b][a]);
-  const lineGet = (edges, a, b) => { // zuhaitza: bide bakarra
-    const adj = {}; edges.forEach(([x, y, v]) => { (adj[x] = adj[x] || []).push([y, v]); (adj[y] = adj[y] || []).push([x, v]); });
-    if (!adj[a] || !adj[b]) return undefined;
-    const seen = { [a]: 0 }, q = [a];
-    while (q.length) { const x = q.shift(); for (const [y, v] of adj[x]) if (!(y in seen)) { seen[y] = seen[x] + v; q.push(y); } }
-    return b in seen ? Math.round(seen[b] * 100) / 100 : undefined;
-  };
-  const SOUTH = new Set(["Arrasate", "Eskoriatza", "Luko", "Etxabarri"]);
-  const wGet = (a, b) => {
-    if (a === "Bergara") a = SOUTH.has(b) ? "BergaraHS" : "BergaraIN";
-    if (b === "Bergara") b = SOUTH.has(a) ? "BergaraHS" : "BergaraIN";
-    return W[a] ? W[a][b] : undefined;
-  };
-  const NET = {
-    W: (a, b) => wGet(a, b), E: (a, b) => mGet(E, a, b), F: (a, b) => mGet(F, a, b),
-    G: (a, b) => lineGet(G, a, b), N: (a, b) => lineGet(N, a, b), A: (a, b) => lineGet(A, a, b),
-  };
-  // Sareen arteko loturak (sarbide bera bi sareetan).
-  const GATES = [["W", "Donostia", "E", "Donostia"], ["E", "Behobia", "F", "Biriatou"], ["W", "Bergara", "G", "Bergara"], ["W", "AO", "A", "Bilbao"]];
-  // Sarbideen kokapena: Google-ren ibilbide errealetan ordainpeko tarteak hasi eta amaitzen diren lekuak.
-  const NODES = [["W:AO", 43.237, -2.885], ["W:Amorebieta", 43.220, -2.733], ["W:Iurreta", 43.174, -2.638], ["W:Abadino", 43.151, -2.611], ["W:Ermua", 43.189, -2.493], ["W:Eibar", 43.183, -2.472],
-    ["W:Bergara", 43.126, -2.423], ["W:Bergara", 43.107, -2.401], ["W:Arrasate", 43.066, -2.487], ["W:Arrasate", 43.074, -2.463], ["W:Eskoriatza", 43.017, -2.528], ["W:Luko", 42.935, -2.642], ["W:Etxabarri", 42.916, -2.710],
-    ["W:Elgoibar", 43.216, -2.413], ["W:Itziar", 43.276, -2.330], ["W:Zestoa", 43.255, -2.260], ["W:Zarautz", 43.285, -2.171], ["W:Donostia", 43.268, -2.018], ["W:Donostia", 43.281, -1.948], ["W:Donostia", 43.289, -2.022],
-    ["E:Oiartzun", 43.300, -1.860], ["E:Irun", 43.338, -1.789], ["E:Irun", 43.330, -1.803], ["E:Behobia", 43.339, -1.755],
-    ["F:SJL", 43.374, -1.682], ["F:Biarritz", 43.452, -1.556], ["F:Bayonne", 43.488, -1.449], ["F:Bayonne", 43.510, -1.460], ["F:Ondres", 43.565, -1.435], ["F:Capbreton", 43.631, -1.394],
-    ["G:Beasain", 43.046, -2.226], ["G:Ormaiztegi", 43.051, -2.261], ["G:Zumarraga", 43.080, -2.309], ["G:Antzuola", 43.095, -2.370],
-    ["N:Irurtzun", 42.901, -1.799], ["N:Pamplona", 42.837, -1.690], ["N:Pamplona", 42.757, -1.629], ["N:Tafalla", 42.563, -1.642], ["N:Tafalla", 42.512, -1.668], ["N:Marcilla", 42.334, -1.723], ["N:Tudela", 42.195, -1.675],
-    ["A:Bilbao", 43.235, -2.918], ["A:Areta", 43.158, -2.936], ["A:Altube", 42.964, -2.867], ["A:Zambrana", 42.660, -2.880]];
-  const NAMES = { AO: "Bilbo", Bilbao: "Bilbo", Abadino: "Abadiño", Etxabarri: "Etxabarri-Ibiña", Zestoa: "Zestoa-Zumaia", SJL: "Donibane Lohizune", Bayonne: "Baiona", Biarritz: "Biarritz", Pamplona: "Iruñea", Areta: "Areta (Laudio)" };
-  const kmBetween = (a, b) => { const R = 6371, r = Math.PI / 180, dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r; const h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
-  const nearNode = (ll, maxKm = 6) => { let best = null, d = 1e9; NODES.forEach((n) => { const k = kmBetween(ll, [n[1], n[2]]); if (k < d) { d = k; best = n[0]; } }); return d <= maxKm ? best : null; };
-  const tollPrice = (A1, B1) => { // "Sarea:Sarbidea" formatuan
-    if (!A1 || !B1) return undefined;
-    const [na, a] = A1.split(":"), [nb, b] = B1.split(":");
-    if (na === nb) return a === b ? 0 : NET[na](a, b);
-    // sareen arteko bidea (BFS) eta zatien batura
-    const q = [[na, a, 0]], seen = new Set([na]);
-    while (q.length) {
-      const [n, at, sum] = q.shift();
-      for (const [x, xa, y, ya] of GATES.flatMap((g) => [g, [g[2], g[3], g[0], g[1]]])) {
-        if (x !== n || seen.has(y)) continue;
-        const p = at === xa ? 0 : NET[n](at, xa); if (p === undefined) continue;
-        if (y === nb) { const p2 = ya === b ? 0 : NET[y](ya, b); if (p2 !== undefined) return Math.round((sum + p + p2) * 100) / 100; continue; }
-        seen.add(y); q.push([y, ya, sum + p]);
-      }
-    }
-    return undefined;
-  };
-  window.sustraiTollPrice = tollPrice;
-
-  if (CFG.googleMapsKey) {
-    window.sustraiRouteKm = async (tray, ap) => {
-      const pts = splitTray(tray);
-      if (pts.length < 2) return null;
-      const wp = (p) => ({ address: p });
-      const body = {
-        origin: wp(pts[0]), destination: wp(pts[pts.length - 1]),
-        intermediates: pts.slice(1, -1).map(wp),
-        travelMode: "DRIVE", routingPreference: "TRAFFIC_UNAWARE",
-        extraComputations: ["TOLLS"],
-        routeModifiers: { avoidTolls: !ap, vehicleInfo: { emissionType: "GASOLINE" } },
-        regionCode: "es", languageCode: "es", units: "METRIC",
-      };
-      const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Goog-Api-Key": CFG.googleMapsKey,
-          "X-Goog-FieldMask": "routes.distanceMeters,routes.description,routes.travelAdvisory.tollInfo,routes.legs.steps.distanceMeters,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.startLocation,routes.legs.steps.endLocation" },
-        body: JSON.stringify(body),
-      });
-      if (!r.ok) { let m = ""; try { m = (await r.json()).error.message; } catch (e) {} console.error("Google Routes:", r.status, m); throw new Error("routes " + r.status); }
-      const j = await r.json();
-      const rt = j.routes && j.routes[0];
-      if (!rt || !rt.distanceMeters) return null;
-      const ti = rt.travelAdvisory && rt.travelAdvisory.tollInfo;
-      // Google-k ez du Espainiako bidesarien preziorik ematen, baina ordainpeko tarteak markatzen ditu
-      // ("Carretera con peajes"). Tarte bakoitzaren sarrera eta irteera ezagututa, taula ofizialeko prezioa;
-      // taulan ez badago (AP-15, AP-68…), km-ak × €/km (config.js: bidesariaKm).
-      const rate = Number(CFG.bidesariaKm) > 0 ? Number(CFG.bidesariaKm) : 0.14;
-      const LL = (l) => l && l.latLng ? [l.latLng.latitude, l.latLng.longitude] : null;
-      const runs = []; let cur = null;
-      (rt.legs || []).forEach((lg) => (lg.steps || []).forEach((st) => {
-        const t = (st.navigationInstruction && st.navigationInstruction.instructions) || "";
-        if (/peaje/i.test(t)) { if (!cur) { cur = { from: LL(st.startLocation), m: 0 }; runs.push(cur); } cur.to = LL(st.endLocation); cur.m += st.distanceMeters || 0; }
-        else if ((st.distanceMeters || 0) > 1500) cur = null; // zati libre luze batek tartea mozten du
-      }));
-      let tollKm = 0, peajes = 0; const parts = [];
-      runs.forEach((r) => {
-        const km = r.m / 1000; tollKm += km;
-        let a = r.from && nearNode(r.from), b = r.to && nearNode(r.to);
-        // AP-68: Zambranatik hegoaldera doan da 2026-11-11tik (Google-k oraindik ordainpekotzat markatzen du).
-        if (a && a.startsWith("A:") && !b && r.to && r.to[0] < 42.7) b = "A:Zambrana";
-        if (b && b.startsWith("A:") && !a && r.from && r.from[0] < 42.7) a = "A:Zambrana";
-        if (!b && a && a.startsWith("N:") && r.to && r.to[0] < 42.2) b = "N:Tudela";
-        const p = a && b ? tollPrice(a, b) : undefined;
-        const nm = (n) => { const k = n.split(":")[1]; return NAMES[k] || k; };
-        if (p !== undefined) { if (p > 0) parts.push(`${nm(a)} → ${nm(b)} ${p.toFixed(2).replace(".", ",")} € (tarifa ${TOLL_YEAR})`); peajes += p; }
-        else if (km >= 0.5) { const e = Math.round(km * rate * 100) / 100; parts.push(`${String(Math.round(km * 10) / 10).replace(".", ",")} km ordainpeko × ${String(rate).replace(".", ",")} € (estimazioa)`); peajes += e; }
-      });
-      tollKm = Math.round(tollKm * 10) / 10; peajes = Math.round(peajes * 100) / 100;
-      if (!ap) peajes = 0;
-      else if (ti && ti.estimatedPrice && ti.estimatedPrice.length) {
-        const eur = ti.estimatedPrice.find((x) => x.currencyCode === "EUR") || ti.estimatedPrice[0];
-        peajes = Math.round((Number(eur.units || 0) + Number(eur.nanos || 0) / 1e9) * 100) / 100; parts.length = 0;
-      }
-      const kalkulua = ap ? parts.join(" + ") : "";
-      return { km: Math.round(rt.distanceMeters / 100) / 10, ruta: (rt.description || (ap ? "ibilbide azkarrena" : "bidesaririk gabeko ibilbidea")) + (kalkulua ? ` — ${kalkulua}` : ""), peaje: !!ap, peajes, tollKm, exacto: ap && parts.length > 0 && parts.every((x) => /tarifa/.test(x)), fuente: "Google Maps" };
-    };
-  }
-
-  // ---- Kilometroak: OpenRouteService (aukerakoa, gakoa config.js-n) ----
-  if (CFG.openRouteServiceKey && !CFG.googleMapsKey) {
-    const K = CFG.openRouteServiceKey;
-    const geocode = async (name) => {
-      const u = `https://api.openrouteservice.org/geocode/search?api_key=${encodeURIComponent(K)}&text=${encodeURIComponent(name)}&boundary.country=ES,FR&focus.point.lon=-2.0&focus.point.lat=43.1&size=1`;
-      const r = await fetch(u); if (!r.ok) throw new Error("geocode " + r.status);
-      const j = await r.json(); const f = j.features && j.features[0];
-      if (!f) throw new Error("not found: " + name);
-      return f.geometry.coordinates;
-    };
-    window.sustraiRouteKm = async (tray, ap) => {
-      let pts = tray.split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+/).map((x) => x.trim()).filter(Boolean);
-      if (pts.length < 2) pts = tray.split("-").map((x) => x.trim()).filter(Boolean);
-      if (pts.length < 2) return null;
-      const coords = [];
-      for (const p of pts) coords.push(await geocode(p));
-      const body = { coordinates: coords, preference: ap ? "fastest" : "shortest", extra_info: ["tollways"] };
-      if (!ap) body.options = { avoid_features: ["tollways"] };
-      const r = await fetch("https://api.openrouteservice.org/v2/directions/driving-car", { method: "POST", headers: { Authorization: K, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!r.ok) throw new Error("directions " + r.status);
-      const j = await r.json();
-      const r0 = j.routes && j.routes[0];
-      const m = r0 && r0.summary && r0.summary.distance;
-      if (!m) return null;
-      // Bidesaria: ibilbideko ordainpeko km-ak × €/km (config.js-n aldatu daiteke).
-      const tw = (r0.extras && r0.extras.tollways && r0.extras.tollways.summary) || [];
-      const tollM = tw.filter((x) => x.value === 1).reduce((s, x) => s + (x.distance || 0), 0);
-      const tollKm = Math.round(tollM / 100) / 10;
-      const rate = Number(CFG.bidesariaKm) > 0 ? Number(CFG.bidesariaKm) : 0.12;
-      const peajes = ap ? Math.round(tollKm * rate * 100) / 100 : 0;
-      return { km: Math.round(m / 100) / 10, ruta: ap ? (tollKm ? `ibilbide azkarrena (${String(tollKm).replace(".", ",")} km autobidean)` : "ibilbide azkarrena, bidesaririk gabe") : "ibilbide laburrena, bidesaririk gabe", peaje: !!ap, peajes, tollKm, fuente: "OpenRouteService" };
-    };
-  }
-
-  // ---- Deskargak ----
-  const downloads = {
-    save: async ({ filename, data }) => {
-      const blob = data instanceof Blob ? data : new Blob([data]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = filename || "fitxategia";
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-      return { status: "saved" };
-    },
-  };
-
-  // ---- window.__sapi.use ----
-  window.__sapi = {
-    use: async (name) => {
-      if (initError) return null;
-      const u = await authReady;
-      if (!u) return null;
-      if (name === "db") return db;
-      if (name === "downloads") return downloads;
-      if (name === "user") {
-        const admin = isAdminUser(u);
-        if (admin && !window.sustraiPinIds) {
-          window.sustraiPinIds = new Set();
-          fs.collection("pinak").onSnapshot((snap) => { window.sustraiPinIds = new Set(snap.docs.map((d) => d.id)); window.dispatchEvent(new Event("sustrai-pins")); }, () => {});
-        }
-        if (!admin && window.sustraiMyComp === undefined) {
-          window.sustraiMyComp = null;
-          try {
-            const l = await fs.collection("loturak").doc(u.uid).get();
-            if (l.exists) {
-              // PINa kendu edo aldatu bada, arauek irakurtzea ukatzen dute: berriro "Nor zara?" erakutsi.
-              try { await fs.collection("ajustes").doc("general").get(); window.sustraiMyComp = l.data().comp || null; }
-              catch (e) { window.sustraiMyComp = null; }
-            }
-          } catch (e) {}
-        }
-        return {
-          isOwner: async () => admin,
-          canEdit: async () => admin,
-          can: async () => true,
-          me: async () => ({ id: u.uid, email: u.isAnonymous ? null : u.email }),
-        };
-      }
-      return null;
-    },
-  };
-
-  // ---- Admin barra txikia (saioa, babeskopia, inportazioa) ----
-  const COLS = ["componentes", "bolos", "viajes", "rutas", "materiala", "abestiak", "setlistak", "ajustes", "bezeroak"];
-  async function collectAll() {
-    const out = {};
-    for (const c of COLS) {
-      try { const snap = await fs.collection(c).get(); out[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); }
-      catch (e) { if (c === "bezeroak") out[c] = []; else throw e; } // arau berriak oraindik argitaratu gabe badaude
-    }
-    return out;
-  }
-  // ---- Babeskopia automatikoa: astean behin, Firebase barruan (azken 8ak gordetzen dira) ----
-  const BK_COL = "babeskopiak", BK_KEEP = 8, BK_DAYS = 7;
-  const dayStr = (d) => { const x = d || new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
-  async function listBackups() { const snap = await fs.collection(BK_COL).get(); return snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).sort((a, b) => String(b.id).localeCompare(String(a.id))); }
-  async function makeBackup(force) {
-    const list = await listBackups();
-    const last = list[0];
-    if (!force && last && Date.now() - Date.parse(last.id + "T12:00:00") < BK_DAYS * 864e5) return null;
-    const out = await collectAll();
-    const json = JSON.stringify(out);
-    if (json.length > 900000) { console.warn("Babeskopia handiegia Firebase-n gordetzeko:", json.length); return null; }
-    const id = dayStr(), n = COLS.reduce((s, c) => s + out[c].length, 0);
-    await fs.collection(BK_COL).doc(id).set({ noiz: new Date().toISOString(), json, n, tamaina: json.length, auto: !force });
-    const all = await listBackups();
-    for (const old of all.slice(BK_KEEP)) await fs.collection(BK_COL).doc(old.id).delete();
-    return id;
-  }
-  async function backup() {
-    const out = await collectAll();
-    const d = new Date().toISOString().slice(0, 10);
-    downloads.save({ filename: `sustrai-babeskopia-${d}.json`, data: new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }) });
-  }
-  async function importJson(file) { return importData(JSON.parse(await file.text())); }
-  async function importData(data) {
-    let n = 0, batch = fs.batch(), inBatch = 0;
-    for (const c of COLS) {
-      for (const doc of data[c] || []) {
-        const { id, ...rest } = doc; if (!id) continue;
-        delete rest.uid; delete rest.email;
-        batch.set(fs.collection(c).doc(id), rest); n++; inBatch++;
-        if (inBatch >= 400) { await batch.commit(); batch = fs.batch(); inBatch = 0; }
-      }
-    }
-    if (inBatch) await batch.commit();
-    return n;
-  }
-  function backupsPanel() {
-    const old = document.getElementById("bk-panel"); if (old) old.remove();
-    const w = document.createElement("div"); w.id = "bk-panel";
-    w.style.cssText = "position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px";
-    w.innerHTML = `<div style="background:var(--surface,#fff);color:var(--ink,#111);border-radius:14px;max-width:520px;width:100%;max-height:85vh;overflow:auto;padding:18px;font:14px var(--font-body,sans-serif);box-shadow:0 10px 40px rgba(0,0,0,.3)">
-      <h2 style="margin:0 0 4px">Babeskopiak</h2>
-      <p style="margin:0 0 12px;color:var(--muted,#666)">Astean behin bere kabuz egiten da, zu (admina) sartzean. Azken ${BK_KEEP}ak gordetzen dira Firebase-n.</p>
-      <div id="bk-list">Kargatzen…</div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap"><button type="button" class="btn" data-bk="now">Orain egin</button><button type="button" class="btn primary" data-bk="close">Itxi</button></div></div>`;
-    document.body.appendChild(w);
-    const fill = async () => {
-      const box = w.querySelector("#bk-list");
-      try {
-        const list = await listBackups();
-        box.innerHTML = list.length ? list.map((b) => `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line,#ddd);flex-wrap:wrap">
-          <div><strong>${b.id}</strong><div style="color:var(--muted,#666);font-size:12px">${b.n || "?"} dokumentu · ${Math.round((b.tamaina || 0) / 1024)} KB${b.auto ? " · automatikoa" : ""}</div></div>
-          <div style="display:flex;gap:6px"><button type="button" class="btn small" data-bk="dl" data-id="${b.id}">Deskargatu</button><button type="button" class="btn small" data-bk="restore" data-id="${b.id}">Leheneratu</button></div></div>`).join("") : "Oraindik ez dago babeskopiarik.";
-        w._list = list;
-      } catch (e) { box.textContent = "Ezin izan dira kargatu: " + (e.code || e.message); }
-    };
-    w.addEventListener("click", async (e) => {
-      if (e.target === w) return w.remove();
-      const b = e.target.closest("[data-bk]"); if (!b) return;
-      const k = b.dataset.bk, item = (w._list || []).find((x) => x.id === b.dataset.id);
-      if (k === "close") return w.remove();
-      if (k === "now") { b.disabled = true; try { await makeBackup(true); await fill(); } catch (er) { alert("Errorea: " + (er.code || er.message)); } b.disabled = false; return; }
-      if (k === "dl" && item) return downloads.save({ filename: `sustrai-babeskopia-${item.id}.json`, data: new Blob([JSON.stringify(JSON.parse(item.json), null, 2)], { type: "application/json" }) });
-      if (k === "restore" && item) {
-        if (!confirm(`${item.id}-ko babeskopia leheneratu? Data horretako dokumentuak berriro idatziko dira (geroztik sortutakoak ez dira ezabatzen).`)) return;
-        try { const n = await importData(JSON.parse(item.json)); alert(n + " dokumentu leheneratuta ✓"); location.reload(); } catch (er) { alert("Errorea: " + (er.code || er.message)); }
-      }
-    });
-    fill();
-  }
-  function bar() {
-    const b = document.createElement("div"); b.id = "sustrai-bar";
-    b.style.cssText = "position:fixed;left:10px;bottom:10px;z-index:15;font:12px var(--font-body,sans-serif);display:flex;gap:10px;align-items:center;background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:8px;padding:5px 9px;opacity:.85";
-    const link = (txt, fn) => { const a = document.createElement("button"); a.type = "button"; a.textContent = txt; a.style.cssText = "border:0;background:none;color:var(--accent,#d0191c);cursor:pointer;padding:0;font:inherit;text-decoration:underline"; a.onclick = fn; return a; };
-    authReady.then((u) => {
-      if (isAdminUser(u)) {
-        const lab = document.createElement("span"); lab.textContent = "★ Admin"; lab.style.color = "var(--muted,#666)";
-        const file = document.createElement("input"); file.type = "file"; file.accept = "application/json,.json"; file.style.display = "none";
-        file.onchange = async () => {
-          if (!file.files[0]) return;
-          if (!confirm("Fitxategiko datuak datu-basera kopiatuko dira (id bera duten dokumentuak ordezkatuz). Jarraitu?")) return;
-          try { const n = await importJson(file.files[0]); alert(n + " dokumentu inportatuta ✓"); location.reload(); } catch (e) { alert("Errorea inportatzean: " + (e.message || e)); }
-        };
-        b.append(lab, link("Babeskopia", () => backup().catch((e) => alert("Errorea: " + e.message))), link("Babeskopiak", backupsPanel), link("Inportatu", () => file.click()), link("Irten", () => auth.signOut().then(() => location.reload())), file);
-      } else {
-        b.append(link("Admin sarrera", async () => {
-          const p = new firebase.auth.GoogleAuthProvider();
-          try { await auth.signInWithPopup(p); location.reload(); }
-          catch (e) { if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) auth.signInWithRedirect(p); else if (e && e.code !== "auth/popup-closed-by-user") alert("Ezin izan da saioa hasi: " + (e.message || e)); }
-        }));
-      }
-      if (u && !u.isAnonymous && !isAdminUser(u)) {
-        const w = document.createElement("span"); w.textContent = u.email + " ez da admina"; w.style.color = "var(--bad,#b3141a)";
-        b.append(w, link("Irten", () => auth.signOut().then(() => location.reload())));
-      }
-    });
-    document.body.appendChild(b);
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bar); else bar();
-  authReady.then((u) => { if (isAdminUser(u)) setTimeout(() => makeBackup(false).then((id) => { if (id) console.log("Babeskopia automatikoa:", id); }).catch((e) => console.warn("Babeskopia automatikoa:", e)), 5000); });
-})();
-</script>
+<script src="config.js?v=20261125c"></script>
+<script src="firebase-shim.js?v=20261125c"></script>
 </head>
 <body>
 <header class="top">
@@ -1156,8 +728,12 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   }
   function boloEstadoPagos(b) { const l = boloViajes(b); if (!l.total || !l.transfers.length) return null; return boloPagos(b, l).done ? "ok" : "pend"; }
 
+  // Konfirmatu gabeko emanaldiak: zerrendan bai (difuminatuta), kontuetan ez.
+  const fijo = (b) => !(b && b.zalantzan);
+  const bolosOk = () => state.bolos.filter(fijo);
+  const zalTag = (b) => b.zalantzan ? ` <span class="zal-tag">konfirmatu gabe</span>` : "";
   function totals() {
-    const bolos = state.bolos.filter((b) => inYear(b.fecha));
+    const bolos = bolosOk().filter((b) => inYear(b.fecha));
     const via = state.viajes.filter((v) => inYear(v.fecha));
     let presupuesto = 0, facturado = 0, cobrado = 0, pendiente = 0, iva = 0, irpf = 0, gestion = 0, pagos = 0;
     const porComp = {};
@@ -1177,7 +753,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   // ---------- Pestañas y periodo ----------
   function renderTabs() {
     if (state.limited) { $("tabs").innerHTML = TABS_KIDE.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}</button>`).join(""); return; }
-    const counts = { setlist: state.setlistak.length, materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: state.bolos.filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
+    const counts = { setlist: state.setlistak.length, materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: bolosOk().filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
     $("tabs").innerHTML = TABS.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}${counts[t.id] != null ? `<span class="count">${counts[t.id]}</span>` : ""}</button>`).join("");
   }
   function renderYears() {
@@ -1260,7 +836,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   }
   // Laburpeneko laukiak (Doiketak fitxaren goialdean).
   function laburpenaTiles() {
-    const bolos = state.bolos.filter((b) => inYear(b.fecha));
+    const bolos = bolosOk().filter((b) => inYear(b.fecha));
     if (!state.loaded.bolos || !bolos.length) return "";
     const { tot } = laburpenaDatuak(bolos);
     const kpi = (lab, val, foot, cls, col) => `<div class="tile${cls ? " " + cls : ""}${col ? " tcol" : ""}"${col ? ` style="--tc:${col}"` : ""}><div class="label">${lab}</div><div class="value">${val}</div>${foot ? `<div class="foot">${foot}</div>` : ""}</div>`;
@@ -1288,7 +864,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   const SEEN_KEY = "sustrai-ordainketak-ikusita";
   function pagosAhora() {
     const m = {};
-    state.bolos.forEach((b) => { const l = boloViajes(b); if (!l.total) return; boloPagos(b, l).list.forEach((x) => { m[b.id + "|" + payKey(x)] = { paid: x.paid, x, b }; }); });
+    bolosOk().forEach((b) => { const l = boloViajes(b); if (!l.total) return; boloPagos(b, l).list.forEach((x) => { m[b.id + "|" + payKey(x)] = { paid: x.paid, x, b }; }); });
     return m;
   }
   function leerVisto() { try { const v = localStorage.getItem(SEEN_KEY); return v ? JSON.parse(v) : null; } catch (er) { return undefined; } }
@@ -1317,9 +893,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   function avisoEmanaldiak() {
     if (!state.limited || !myComp() || !state.loaded.bolos) return "";
     let seen; try { const v = localStorage.getItem(SEEN_B); seen = v ? JSON.parse(v) : null; } catch (er) { return ""; }
-    const ids = state.bolos.map((b) => b.id);
+    const ids = bolosOk().map((b) => b.id);
     if (!seen) { try { localStorage.setItem(SEEN_B, JSON.stringify(ids)); } catch (er) {} return ""; }
-    const nuevos = state.bolos.filter((b) => !seen.includes(b.id)).sort((a, c) => (a.fecha || "").localeCompare(c.fecha || ""));
+    const nuevos = bolosOk().filter((b) => !seen.includes(b.id)).sort((a, c) => (a.fecha || "").localeCompare(c.fecha || ""));
     if (!nuevos.length) return "";
     return `<div class="banner" style="background:var(--accent-soft);display:grid;gap:8px">
       <strong>🎵 ${nuevos.length === 1 ? "Emanaldi berria" : nuevos.length + " emanaldi berri"}!</strong>
@@ -1330,10 +906,10 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   // Kideentzat: emanaldien zerrenda soila (herria eta data), ikusteko bakarrik.
   function viewBolosKide() {
     const list = state.bolos.filter((b) => inYear(b.fecha)).sort((a, b) => boloKey(a).localeCompare(boloKey(b)));
-    const body = list.length ? `<div class="card kide-bolos" style="--cols:minmax(0,1fr) 96px 104px"><div class="ledger-head" style="display:grid"><div>Herria</div><div>Data</div><div class="r">Ordua</div></div><ul class="ledger">${list.map((b) => `<li class="row" tabindex="0" role="button" data-fitxa="${esc(b.id)}"><div class="main">${esc(b.evento || "Emanaldia")}${b.helbidea || hhmm(b.elkartu) || b.fitxaOharrak ? ` <span class="fitxa-dot" title="Fitxa">ⓘ</span>` : ""}</div><div class="num">${esc(fdate(b.fecha))}</div><div class="r num">${hTxt(b) ? esc(hTxt(b)).replace(" / ", "<br>") : "—"}</div></li>`).join("")}</ul></div>`
+    const body = list.length ? `<div class="card kide-bolos" style="--cols:minmax(0,1fr) 96px 104px"><div class="ledger-head" style="display:grid"><div>Herria</div><div>Data</div><div class="r">Ordua</div></div><ul class="ledger">${list.map((b) => `<li class="row${b.zalantzan ? " zal" : ""}" tabindex="0" role="button" data-fitxa="${esc(b.id)}"><div class="main">${esc(b.evento || "Emanaldia")}${zalTag(b)}${b.helbidea || hhmm(b.elkartu) || b.fitxaOharrak ? ` <span class="fitxa-dot" title="Fitxa">ⓘ</span>` : ""}</div><div class="num">${esc(fdate(b.fecha))}</div><div class="r num">${hTxt(b) ? esc(hTxt(b)).replace(" / ", "<br>") : "—"}</div></li>`).join("")}</ul></div>`
       : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Aukeratu beste urte bat goian.</div>`;
     return `${avisoEmanaldiak()}<section style="display:grid;gap:12px">
-      <div class="sec-head"><div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.length} emanaldi. Sakatu emanaldi bat fitxa ikusteko.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${list.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn small" data-ics-all>📅 Datozenak egutegira</button>` : ""}</div></div>
+      <div class="sec-head"><div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.filter(fijo).length} emanaldi${list.some((b) => b.zalantzan) ? ` (+ ${list.filter((b) => b.zalantzan).length} konfirmatu gabe)` : ""}. Sakatu emanaldi bat fitxa ikusteko.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${list.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn small" data-ics-all>📅 Datozenak egutegira</button>` : ""}</div></div>
       ${loadingOr("bolos", body)}
     </section>`;
   }
@@ -1341,16 +917,16 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     if (state.limited) return viewBolosKide();
     if (state.loaded.componentes && !state.componentes.length) return `<section style="display:grid;gap:12px"><h2>Emanaldiak</h2>${noComps()}</section>`;
     const t = totals();
-    const list = [...t.bolos].filter((b) => state.filtroCobro === "all" || (state.filtroCobro === "facpend" ? boloCalc(b).facturado && !b.facturaEmitida : state.filtroCobro === "fac" ? boloCalc(b).facturado : state.filtroCobro === "sinfac" ? !boloCalc(b).facturado : state.filtroCobro === "si" ? !!b.cobrado : !b.cobrado)).sort((a, b) => boloKey(a).localeCompare(boloKey(b)));
+    const list = state.bolos.filter((b) => inYear(b.fecha) && (fijo(b) || state.filtroCobro === "all")).filter((b) => state.filtroCobro === "all" || (state.filtroCobro === "facpend" ? boloCalc(b).facturado && !b.facturaEmitida : state.filtroCobro === "fac" ? boloCalc(b).facturado : state.filtroCobro === "sinfac" ? !boloCalc(b).facturado : state.filtroCobro === "si" ? !!b.cobrado : !b.cobrado)).sort((a, b) => boloKey(a).localeCompare(boloKey(b)));
     const cols = "minmax(0,1fr) 120px 130px 130px 110px";
     let sp = 0, sc = 0, sg = 0;
     const rows = list.map((b) => {
       const pedido = num(b.presupuesto);
       const c = boloCalc(b);
-      sp += pedido; if (b.cobrado) sc += pedido; sg += c.gestion;
+      if (fijo(b)) { sp += pedido; if (b.cobrado) sc += pedido; sg += c.gestion; }
       return `
-        <li class="row" tabindex="0" data-edit="bolo" data-id="${esc(b.id)}">
-          <div><div class="main">${esc(b.evento || "Lekurik gabeko emanaldia")}</div>
+        <li class="row${b.zalantzan ? " zal" : ""}" tabindex="0" data-edit="bolo" data-id="${esc(b.id)}">
+          <div><div class="main">${esc(b.evento || "Lekurik gabeko emanaldia")}${zalTag(b)}</div>
             <div class="meta"><span class="only-m">${fechaH(b)} · </span>${b.cliente ? esc(b.cliente) : ""}${b.clienteEmail ? ` · <a href="mailto:${esc(b.clienteEmail)}" style="color:inherit">✉ ${esc(b.clienteEmail)}</a>` : ""}${c.facturado ? (b.facturaEmitida ? ` · <span class="pago-ok">faktura${b.facturaNum ? " " + esc(b.facturaNum) : ""} emanda ✓</span>` : ` · <span class="pago-pend">faktura egin gabe</span>${state.canWrite ? ` <button type="button" class="linkbtn" data-toggle-fact="${esc(b.id)}">emanda markatu</button>` : ""}`) : ""}${b.cena === false ? " · afaririk gabe (+" + money(tarifa().extra) + ")" + (afariGastuak(b).length ? ", afaria: " + esc(afariGastuak(b).map((x) => compName(x.componente) + " " + money(x.importe)).join(", ")) : "") : b.cena === "zehazteko" ? ' · <span class="pago-pend">afaria zehazteko</span>' : ""}${(() => { const e = boloEstadoPagos(b); return e === "ok" ? ' · <span class="pago-ok">bidaiak kitatuta ✓</span>' : e === "pend" ? ' · <span class="pago-pend">bidaiak kitatu gabe</span>' : ""; })()}<span class="only-m"> · kudeaketa ${money(c.gestion)}</span></div></div>
           <div class="hide-m"><div class="num">${fdate(b.fecha)}</div>${hTxt(b) ? `<div class="meta num">${esc(hTxt(b)).replace(" / ", "<br>")}</div>` : `<div class="meta" style="font-style:italic">ordua?</div>`}</div>
           <div class="r"><div class="num"><strong>${money(pedido)}</strong></div><div class="meta">${b.modalidad && b.modalidad.endsWith("2") ? "Gipuzkoatik kanpo · " : ""}${c.facturado ? "+ BEZ" : "fakturarik gabe"}</div></div>
@@ -1533,14 +1109,16 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   function materialCalc(m) {
     const ids = (Array.isArray(m.banatu) && m.banatu.length ? m.banatu : titulares().map((c) => c.id)).filter((id) => state.componentes.some((c) => c.id === id));
     const paid = m.ordainketak && typeof m.ordainketak === "object" && Object.keys(m.ordainketak).length ? m.ordainketak : (m.ordaindu ? { [m.ordaindu]: num(m.zenbatekoa) } : {});
-    const total = round2(Object.values(paid).reduce((a, x) => a + num(x), 0));
+    const oin = num(m.oinarria), bezP = has(m.bez) ? num(m.bez) : 21;
+    const bezE = oin > 0 ? round2(oin * bezP / 100) : 0;
+    const total = oin > 0 ? round2(oin + bezE) : round2(Object.values(paid).reduce((a, x) => a + num(x), 0));
     const share = ids.length ? total / ids.length : 0;
     const bal = {};
     ids.forEach((id) => (bal[id] = -share));
     Object.entries(paid).forEach(([id, x]) => { if (num(x) > 0) bal[id] = (bal[id] || 0) + num(x); });
     Object.keys(bal).forEach((k) => (bal[k] = round2(bal[k])));
     const pagadores = Object.entries(paid).filter(([, x]) => num(x) > 0).map(([id, x]) => ({ id, x: num(x) }));
-    return { total, share: round2(share), n: ids.length, ids, bal, transfers: liquidar(bal), pagadores };
+    return { total, oin, bezP, bezE, share: round2(share), n: ids.length, ids, bal, transfers: liquidar(bal), pagadores };
   }
   const pagadoresTxt = (l) => l.pagadores.length ? l.pagadores.map((p) => l.pagadores.length > 1 ? `${compName(p.id)} ${money(p.x)}` : compName(p.id)).join(", ") : "—";
   function viewMateriala() {
@@ -1565,7 +1143,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
         <ul class="ledger">${items.map(({ m, l, pg }) => `
           <li class="row" tabindex="0" data-edit="materiala" data-id="${esc(m.id)}">
             <div class="num hide-m">${fdate(m.fecha)}</div>
-            <div><div class="main">${esc(m.deskribapena || "Erosketa")}</div><div class="meta">${l.n} kideren artean · ${money(l.share)} bakoitzak<span class="only-m"> · ${fdate(m.fecha)} · ordaindu: ${esc(pagadoresTxt(l))} · ${pg.done || !l.transfers.length ? "kitatuta" : "kitatu gabe"}</span></div></div>
+            <div><div class="main">${esc(m.deskribapena || "Erosketa")}</div><div class="meta">${l.oin > 0 ? `${money(l.oin)} + ${money(l.bezE)} BEZ (${l.bezP}%) · ` : ""}${l.n} kideren artean · ${money(l.share)} bakoitzak<span class="only-m"> · ${fdate(m.fecha)} · ordaindu: ${esc(pagadoresTxt(l))} · ${pg.done || !l.transfers.length ? "kitatuta" : "kitatu gabe"}</span></div></div>
             <div class="hide-m">${esc(pagadoresTxt(l))}</div>
             <div class="r num"><strong>${money(l.total)}</strong></div>
             <div class="r hide-m">${pg.done || !l.transfers.length ? `<span class="pill ok">Kitatuta</span>` : `<span class="pill warn">Kitatu gabe</span>`}</div>
@@ -1797,7 +1375,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       catch (e) { if (e && e.name === "AbortError") return; }
       location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics); return;
     }
-    try { const dl = await window.__sapi.use("downloads"); if (dl) { await dl.save({ filename: file, data: blob }); toast("Deskargatuta: ireki fitxategia egutegian gehitzeko"); return; } } catch (e) {}
+    try { const dl = await window.claude.use("downloads"); if (dl) { await dl.save({ filename: file, data: blob }); toast("Deskargatuta: ireki fitxategia egutegian gehitzeko"); return; } } catch (e) {}
     const u = URL.createObjectURL(blob), aEl = document.createElement("a"); aEl.href = u; aEl.download = file; document.body.appendChild(aEl); aEl.click(); aEl.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
   }
   const gcalUrl = (b) => { const ev = boloEvents(b); if (!ev.length) return ""; const e = ev[0];
@@ -1841,7 +1419,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const t = e.target;
     const fx = t.closest("[data-fitxa]"); if (fx) { e.preventDefault(); e.stopPropagation(); return openFitxa(fx.dataset.fitxa); }
     const one = t.closest("[data-ics-one]"); if (one) { e.preventDefault(); const b = state.bolos.find((x) => x.id === one.dataset.icsOne); if (b) saveIcs([b], "sustrai-" + (b.fecha || "") + "-" + (b.evento || "emanaldia")); return; }
-    if (t.closest("[data-ics-all]")) { e.preventDefault(); const list = state.bolos.filter((b) => (b.fecha || "") >= today()).sort((a, b) => boloKey(a).localeCompare(boloKey(b))); if (list.length) saveIcs(list, "sustrai-emanaldiak"); return; }
+    if (t.closest("[data-ics-all]")) { e.preventDefault(); const list = bolosOk().filter((b) => (b.fecha || "") >= today()).sort((a, b) => boloKey(a).localeCompare(boloKey(b))); if (list.length) saveIcs(list, "sustrai-emanaldiak"); return; }
     const fe = t.closest("[data-fitxa-edit]"); if (fe) { e.preventDefault(); e.stopPropagation(); return openForm("bolo", fe.dataset.fitxaEdit); }
     const fs2 = t.closest("[data-fitxa-stage]"); if (fs2) { e.preventDefault(); e.stopPropagation(); return openStage(fs2.dataset.fitxaStage); }
   }, true);
@@ -2153,6 +1731,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       fields: () => [
         { id: "evento", label: "Emanaldiaren lekua", type: "text", required: true, placeholder: "Azpeitiko jaiak" },
         { id: "fecha", label: "Emanaldiaren data", type: "date", required: true, def: today() },
+        { id: "konfirmatuta", label: "Konfirmatuta?", type: "yesno", def: true, hint: "Ez bada, zerrendan difuminatuta agertzen da eta ez da kontuetan sartzen." },
         { sep: "Ordutegia" },
         { id: "ordua", label: "1. txanda · hasiera", type: "time", halfM: true },
         { id: "amaiera", label: "1. txanda · amaiera", type: "time", halfM: true },
@@ -2218,7 +1797,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
       fields: (values = {}) => [
         { id: "deskribapena", label: "Zer erosi da", type: "text", required: true, full: true, placeholder: "Kableak, atrilak, baxu-sokak…" },
         { id: "fecha", label: "Data", type: "date", required: true, def: today() },
-        { id: "ordainketak", label: "Nork zenbat ordaindu du (€)", type: "pagadores", full: true, hint: "Bete ordaindu dutenen zenbatekoa bakarrik. Guztira berez kalkulatzen da." },
+        { id: "oinarria", label: "Zenbatekoa BEZik gabe (€)", type: "number", step: "0.01", min: "0", placeholder: "0,00", hint: "Guztien artean ordaintzekoa" },
+        { id: "bez", label: "BEZa (%)", type: "number", step: "1", min: "0", def: 21, hint: "0 jarri BEZik ez badu" },
+        { id: "ordainketak", label: "Nork ordaindu du (€)", type: "pagadores", full: true, hint: "Kide bakarrak ordaindu badu, idatzi edozein zenbateko: BEZdun guztira jarriko zaio. Batek baino gehiagok ordaindu badute, idatzi bakoitzarena." },
         { id: "banatu", label: "Noren artean banatzen da", type: "multi", full: true, options: compOpts().filter(([id, , ord]) => !ord || (Array.isArray(values.banatu) && values.banatu.includes(id))), defSel: titulares().map((c) => c.id) },
         { id: "notas", label: "Oharrak", type: "textarea", full: true },
       ],
@@ -2261,6 +1842,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const def = FORMS[kind];
     const item = id ? state[def.col].find((x) => x.id === id) : null;
     const values = Object.assign({}, prefill || {}, item || {});
+    if (kind === "bolo" && item) values.konfirmatuta = !item.zalantzan;
     current = { kind, id: id || null };
     const ro = !state.canWrite;
     const clientes = [...new Set([...state.bezeroak.map((z) => z.izena), ...state.bolos.map((x) => x.cliente)].filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
@@ -2340,9 +1922,33 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     if (kind === "abestia" && $("fld-bpm")) { $("fld-bpm").insertAdjacentHTML("afterend", `<button type="button" class="metro-b" data-metro-input data-metro-key="form" style="justify-self:start;margin-top:4px">♩ Entzun</button>`); }
     if (kind === "viaje") updateKm(false);
     if (kind === "materiala" || kind === "bolo") updatePagTotal();
+    if (kind === "materiala") updateMatCalc();
   }
 
-  function updatePagTotal() { const el = $("pag-total"); if (!el) return; let t = 0; $("dialog").querySelectorAll(".pag-in").forEach((i) => (t += num(i.value))); el.textContent = money(round2(t)); }
+  function updateMatCalc() {
+    const oi = $("fld-oinarria"); if (!oi) return;
+    let box = $("mat-calc");
+    if (!box) { $("fld-bez").closest(".field").insertAdjacentHTML("afterend", `<div class="field full"><div class="calc" id="mat-calc"></div></div>`); box = $("mat-calc"); }
+    const oin = num(oi.value), p = $("fld-bez").value === "" ? 21 : num($("fld-bez").value);
+    if (!(oin > 0)) { box.innerHTML = `<div><span>Idatzi zenbatekoa BEZik gabe</span><span></span></div>`; return; }
+    const bz = round2(oin * p / 100), tot = round2(oin + bz);
+    const ids = $("fld-banatu") ? [...$("fld-banatu").querySelectorAll("input:checked")].map((i) => i.value) : [];
+    const n = ids.length;
+    // Nork ordaindu du: kide bakarra bada, guztira berak; bestela idatzitakoa.
+    const paid = {}; $("dialog").querySelectorAll(".pag-in").forEach((i) => { const x = round2(num(i.value)); if (x > 0) paid[i.dataset.c] = x; });
+    const pk = Object.keys(paid); if (pk.length === 1) paid[pk[0]] = tot;
+    let zorrak = "";
+    if (n && pk.length) {
+      const share = tot / n, bal = {};
+      ids.forEach((id) => (bal[id] = -share));
+      Object.entries(paid).forEach(([id, x]) => (bal[id] = (bal[id] || 0) + x));
+      const tr = liquidar(bal), sum = round2(Object.values(paid).reduce((a, x) => a + x, 0));
+      zorrak = Math.abs(sum - tot) > 0.01 ? `<div class="meta" style="color:var(--bad)">Ordaindutakoa (${money(sum)}) ez dator bat guztirakoarekin (${money(tot)}).</div>`
+        : `<div class="liq-h" style="margin-top:6px">Nork nori zor dio</div>${transferHtml(tr)}`;
+    } else if (n) zorrak = `<div class="meta">Idatzi nork ordaindu duen, nork nori zenbat zor dion ikusteko.</div>`;
+    box.innerHTML = `<div><span>BEZik gabe</span><span class="num">${money(oin)}</span></div><div><span>BEZa (${p}%)</span><span class="num">${money(bz)}</span></div><div class="tot"><span>Guztira</span><span class="num">${money(tot)}</span></div>${n ? `<div><span>${n} kideren artean</span><span class="num">${money(round2(tot / n))} bakoitzak</span></div>` : ""}${zorrak}`;
+  }
+  function updatePagTotal() { const el = $("pag-total"); if (!el) return; let t = 0; $("dialog").querySelectorAll(".pag-in").forEach((i) => (t += num(i.value))); el.textContent = money(round2(t)); if (current && current.kind === "materiala") updateMatCalc(); }
   function readForm() {
     const def = FORMS[current.kind], data = {};
     let missing = null;
@@ -2399,6 +2005,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     if (!current) return;
     if (current.kind === "bolo" && (e.target.classList.contains("coche-km") || e.target.classList.contains("coche-peajes"))) { const row = e.target.closest(".coche-row"); delete row.dataset.km1; row.dataset.manual = "1"; const n = row.querySelector(".coche-note"); delete n.dataset.base; n.textContent = "Eskuz aldatua. Gordetzean, ibilbide hau gogoratuko da hurrengorako."; }
     if (current.kind === "materiala" || current.kind === "bolo") updatePagTotal();
+    if (current.kind === "materiala") updateMatCalc();
     if (current.kind === "bolo") { updateCalc(); updateCoches(); }
     if (current.kind === "viaje" && ["fld-km", "fld-tipo", "fld-eurKm", "fld-peajes"].includes(e.target.id)) updateKm(true);
   });
@@ -2562,10 +2169,20 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     delete data.pin; delete data.email;
     if (newPin && !/^\d{4,8}$/.test(newPin)) { $("form-err").textContent = "PINak 4-8 zenbaki izan behar ditu."; return; }
     if (current.kind === "bolo" && data.cena !== false) data.afariOrdainketak = {};
+    if (current.kind === "bolo" && "konfirmatuta" in data) { data.zalantzan = data.konfirmatuta === false; delete data.konfirmatuta; }
     if (current.kind === "bolo") data.extraCena = data.cena === false ? (prev && prev.cena === false && has(prev.extraCena) ? num(prev.extraCena) : tarifa().extra) : 0;
     if (current.kind === "materiala" && (!data.banatu || !data.banatu.length)) { $("form-err").textContent = "Markatu kide bat gutxienez banaketan."; return; }
-    if (current.kind === "materiala" && !Object.keys(data.ordainketak || {}).length) { $("form-err").textContent = "Idatzi nork zenbat ordaindu duen."; return; }
-    if (current.kind === "materiala") { data.zenbatekoa = round2(Object.values(data.ordainketak).reduce((a, x) => a + num(x), 0)); delete data.ordaindu; }
+    if (current.kind === "materiala" && !Object.keys(data.ordainketak || {}).length) { $("form-err").textContent = "Idatzi nork ordaindu duen."; return; }
+    if (current.kind === "materiala") {
+      const oin = round2(num(data.oinarria));
+      if (oin > 0) {
+        data.oinarria = oin; data.bez = has(data.bez) && data.bez !== "" ? num(data.bez) : 21;
+        const tot = round2(oin + round2(oin * data.bez / 100)), ks = Object.keys(data.ordainketak);
+        if (ks.length === 1) data.ordainketak = { [ks[0]]: tot };
+        else { const sum = round2(Object.values(data.ordainketak).reduce((a, x) => a + num(x), 0)); if (Math.abs(sum - tot) > 0.01) { $("form-err").textContent = `Ordaindutakoen batura (${money(sum)}) ez dator bat guztirakoarekin (${money(tot)}).`; return; } }
+      } else { delete data.oinarria; delete data.bez; }
+      data.zenbatekoa = round2(Object.values(data.ordainketak).reduce((a, x) => a + num(x), 0)); delete data.ordaindu;
+    }
     const btn = $("btn-save"); btn.disabled = true; btn.textContent = "Gordetzen…";
     try {
       const col = state.db.collection(def.col);
@@ -2644,7 +2261,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     if (!ap) return 0;
     const g = rutaGuardada(tray, true); if (g) return num(g.peajes);
     if (typeof window.sustraiRouteKm === "function") { const r = await window.sustraiRouteKm(tray, true); if (r && r.peajes !== undefined) return round2(num(r.peajes)); }
-    let sample = null; try { sample = await window.__sapi.use("sample"); } catch (er) {}
+    let sample = null; try { sample = await window.claude.use("sample"); } catch (er) {}
     if (!sample) throw new Error("no sample");
     const v = await sample.json(rutaPrompt(tray, true), { modelTier: "complex" });
     return round2(num(v && v.peajes));
@@ -2716,7 +2333,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     return (w / 1000) * size;
   }
   function deudasReport() {
-    const bolos = state.bolos.filter((b) => inYear(b.fecha)).sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+    const bolos = bolosOk().filter((b) => inYear(b.fecha)).sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
     const porBolo = [], pendG = {}, meses = [];
     bolos.forEach((b) => {
       const l = boloViajes(b); if (!l.total) return;
@@ -2774,7 +2391,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     pages.push(ops);
     const bytes = pdfBytes(pages);
     const fname = list.length === 1 ? `Setlista-${String(list[0].izena || "setlista").replace(/[^\w\-]+/g, "_")}.pdf` : `Sustrai-setlistak-${state.year === "all" ? "guztia" : state.year}.pdf`;
-    let dl = null; try { dl = await window.__sapi.use("downloads"); } catch (er) {}
+    let dl = null; try { dl = await window.claude.use("downloads"); } catch (er) {}
     if (!dl) { toast("Ikuspegi honetan ezin da PDFa deskargatu."); return; }
     try { await dl.save({ filename: fname, data: new Blob([bytes], { type: "application/pdf" }) }); toast("PDFa deskargatuta ✓"); }
     catch (er) { if (er && er.code === "declined") return; toast("Ezin izan da PDFa deskargatu."); }
@@ -2823,13 +2440,13 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
       y -= 12;
     });
     { // Hilabeteko banaketa (pantailako grafikoaren datuak, taula gisa)
-      const ms = [...new Set(state.bolos.filter((b) => inYear(b.fecha) && b.fecha).map((b) => b.fecha.slice(0, 7)))].sort();
+      const ms = [...new Set(bolosOk().filter((b) => inYear(b.fecha) && b.fecha).map((b) => b.fecha.slice(0, 7)))].sort();
       if (ms.length) {
         y -= 10; need(60); text("Hilabeteko banaketa", { s: 14, b: true }); y -= 18;
         text("Hilabetea", { x: L + 12, s: 8, b: true, c: GREY }); text("Kideentzat", { x: 420 - pdfWidth("Kideentzat", 8), s: 8, c: GREY }); right("Artistamente", { s: 8, c: GREY }); y -= 6; rule(); y -= 13;
         let tk = 0, ta = 0;
         ms.forEach((m) => {
-          const bs = state.bolos.filter((b) => (b.fecha || "").slice(0, 7) === m);
+          const bs = bolosOk().filter((b) => (b.fecha || "").slice(0, 7) === m);
           const k = round2(bs.reduce((a, b) => a + boloCalc(b).pagos, 0)), g = round2(bs.reduce((a, b) => a + boloCalc(b).gestion, 0)); tk += k; ta += g;
           need(14); text(mesLargo(m), { x: L + 12, s: 9 }); const kk = money(k); text(kk, { x: 420 - pdfWidth(kk, 9), s: 9 }); right(money(g), { s: 9 }); y -= 13;
         });
@@ -2866,7 +2483,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     pages.push(ops);
     const bytes = pdfBytes(pages);
     const fname = `Sustrai-zorrak-${state.year === "all" ? "guztia" : state.year}-${today()}.pdf`;
-    let dl = null; try { dl = await window.__sapi.use("downloads"); } catch (er) {}
+    let dl = null; try { dl = await window.claude.use("downloads"); } catch (er) {}
     if (!dl) { toast("Ikuspegi honetan ezin da PDFa deskargatu."); return; }
     try { await dl.save({ filename: fname, data: new Blob([bytes], { type: "application/pdf" }) }); toast("PDFa deskargatuta ✓"); }
     catch (er) { if (er && er.code === "declined") return; toast(er && er.code === "rate_limited" ? "Itxaron pixka bat eta saiatu berriro." : "Ezin izan da PDFa deskargatu."); }
@@ -2878,7 +2495,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   async function gmapsDisponible() {
     if (gmOff) return false;
-    let mcp = null; try { mcp = await window.__sapi.use("mcp"); } catch (er) {}
+    let mcp = null; try { mcp = await window.claude.use("mcp"); } catch (er) {}
     if (!mcp) { gmOff = true; return false; }
     try { const l = await mcp.listTools(GM); if (!l || !l.servers || !l.servers.some((s) => s.server === GM)) { gmOff = true; return false; } } catch (er) { gmOff = true; return false; }
     return true;
@@ -2903,7 +2520,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     return laburrena ? all.reduce((a, b) => (b.km < a.km ? b : a)) : all[0];
   }
   async function gmapsKm(tray, ap) {
-    const mcp = await window.__sapi.use("mcp");
+    const mcp = await window.claude.use("mcp");
     let pts = tray.split(/\s*[–—>→\/]\s*|\s+-\s+|\s+a\s+/).map((x) => x.trim()).filter(Boolean);
     if (pts.length < 2) pts = tray.split("-").map((x) => x.trim()).filter(Boolean);
     if (pts.length < 2) return null;
@@ -2950,7 +2567,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     }
     if (!key) { note.textContent = "Idatzi abiapuntua eta helmuga marratxo batez bereizita: Azpeitia – Gasteiz."; return; }
     let sample = null;
-    try { sample = await window.__sapi.use("sample"); } catch (er) {}
+    try { sample = await window.claude.use("sample"); } catch (er) {}
     // 1) Google Maps, Claude mahaigaineko aplikazioaren nabigatzailearen bidez (ahal denean)
     const rutaHook = typeof window.sustraiRouteKm === "function";
     if (rutaHook || await gmapsDisponible()) {
@@ -3091,7 +2708,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const fc = t.closest("[data-filtro-cobro]");
     if (fc) { const v = fc.dataset.filtroCobro; state.filtroCobro = v !== "all" && state.filtroCobro === v ? "all" : v; render(); if (state.filtroCobro !== "all") { const el = $("bolos-list"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
     if (t.closest("[data-pdf]")) return exportPdf();
-    if (t.closest("[data-emanaldi-visto]")) { try { localStorage.setItem(SEEN_B, JSON.stringify(state.bolos.map((b) => b.id))); } catch (er) {} render(); return; }
+    if (t.closest("[data-emanaldi-visto]")) { try { localStorage.setItem(SEEN_B, JSON.stringify(bolosOk().map((b) => b.id))); } catch (er) {} render(); return; }
     if (t.closest("[data-pagos-visto]")) { visto(pagosAhora()); render(); return; }
     const rv = t.closest("[data-revoke]");
     if (rv) {
@@ -3131,7 +2748,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   }
   async function pagarTodo(mes) {
     if (!state.db || !state.canWrite) return;
-    const bolos = state.bolos.filter((b) => inYear(b.fecha) && (!mes || (b.fecha || "").slice(0, 7) === mes));
+    const bolos = bolosOk().filter((b) => inYear(b.fecha) && (!mes || (b.fecha || "").slice(0, 7) === mes));
     try {
       for (const b of bolos) {
         const l = boloViajes(b); if (!l.total) continue;
@@ -3188,7 +2805,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   async function start() {
     render();
     let db = null, user = null;
-    try { [db, user] = await Promise.all([window.__sapi && window.__sapi.use ? window.__sapi.use("db") : null, window.__sapi && window.__sapi.use ? window.__sapi.use("user") : null]); } catch (e) {}
+    try { [db, user] = await Promise.all([window.claude && window.claude.use ? window.claude.use("db") : null, window.claude && window.claude.use ? window.claude.use("user") : null]); } catch (e) {}
     if (!db) {
       setStatus("Daturik gabe: konexiorik ez");
       showBanner("Ezin izan da datu-basera konektatu. Egiaztatu internet konexioa eta config.js fitxategia.");
@@ -3228,7 +2845,5 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
   start();
 })();
 </script>
-
 </body>
 </html>
-
