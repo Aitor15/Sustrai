@@ -525,8 +525,8 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="config.js?v=20261125e"></script>
-<script src="firebase-shim.js?v=20261125e"></script>
+<script src="config.js?v=20261128a"></script>
+<script src="firebase-shim.js?v=20261128a"></script>
 </head>
 <body>
 <header class="top">
@@ -652,6 +652,10 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   const boloKey = (b) => (b.fecha || "9999") + " " + (hhmm(b.ordua) || hhmm(b.ordua2) || "99:99");
   const boloName = (id) => { const b = state.bolos.find((x) => x.id === id); return b ? (b.evento || b.cliente || "Emanaldia") + " · " + fdate(b.fecha) + (hTxt(b) ? " · " + hTxt(b) : "") : ""; };
   const titulares = () => state.componentes.filter((c) => !c.ordezkoa);
+  // Ordezkoek beren emanaldiak eta setlistak bakarrik ikusten dituzte.
+  const esOrdezko = () => { if (!state.limited) return false; const id = myComp(); const c = id && state.componentes.find((x) => x.id === id); return !!(c && c.ordezkoa); };
+  const nireBoloa = (b) => !esOrdezko() || (!!b && Array.isArray(b.tocan) && b.tocan.includes(myComp()));
+  const kideTabs = () => esOrdezko() ? TABS_KIDE.filter((t) => t.id !== "integrantes") : TABS_KIDE;
   const compOpts = () => [...state.componentes].sort((a, b) => (!!a.ordezkoa - !!b.ordezkoa) || (a.nombre || "").localeCompare(b.nombre || "", "es")).map((c) => [c.id, c.nombre, !!c.ordezkoa, c.instrumento || ""]);
   const tocanDe = (b) => {
     const ids = Array.isArray(b.tocan) ? b.tocan.filter((id) => state.componentes.some((c) => c.id === id)) : null;
@@ -758,7 +762,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   // ---------- Pestañas y periodo ----------
   function renderTabs() {
-    if (state.limited) { $("tabs").innerHTML = TABS_KIDE.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}</button>`).join(""); return; }
+    if (state.limited) { $("tabs").innerHTML = kideTabs().map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}</button>`).join(""); return; }
     const counts = { setlist: state.setlistak.length, materiala: state.materiala.filter((m) => inYear(m.fecha)).length, bolos: bolosOk().filter((b) => inYear(b.fecha)).length, viajes: state.viajes.filter((v) => inYear(v.fecha)).length, componentes: state.componentes.length };
     $("tabs").innerHTML = TABS.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${t.label}${counts[t.id] != null ? `<span class="count">${counts[t.id]}</span>` : ""}</button>`).join("");
   }
@@ -780,7 +784,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
 
   // ---------- Vistas ----------
   function render() {
-    if (state.limited && !TABS_KIDE.some((t) => t.id === state.tab)) state.tab = "bolos";
+    if (state.limited && !kideTabs().some((t) => t.id === state.tab)) state.tab = "bolos";
     // Oraindik lotu gabe dagoen kideak "Nor zara?" ikusi behar du (Kontuak-en dago).
     if (state.limited && state.loaded.componentes && !myComp()) state.tab = "integrantes";
     $("btn-ajustes").style.display = state.limited ? "none" : "";
@@ -899,9 +903,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   function avisoEmanaldiak() {
     if (!state.limited || !myComp() || !state.loaded.bolos) return "";
     let seen; try { const v = localStorage.getItem(SEEN_B); seen = v ? JSON.parse(v) : null; } catch (er) { return ""; }
-    const ids = bolosOk().map((b) => b.id);
+    const ids = bolosOk().filter(nireBoloa).map((b) => b.id);
     if (!seen) { try { localStorage.setItem(SEEN_B, JSON.stringify(ids)); } catch (er) {} return ""; }
-    const nuevos = bolosOk().filter((b) => !seen.includes(b.id)).sort((a, c) => (a.fecha || "").localeCompare(c.fecha || ""));
+    const nuevos = bolosOk().filter(nireBoloa).filter((b) => !seen.includes(b.id)).sort((a, c) => (a.fecha || "").localeCompare(c.fecha || ""));
     if (!nuevos.length) return "";
     return `<div class="banner" style="background:var(--accent-soft);display:grid;gap:8px">
       <strong>🎵 ${nuevos.length === 1 ? "Emanaldi berria" : nuevos.length + " emanaldi berri"}!</strong>
@@ -911,8 +915,9 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   }
   // Kideentzat: emanaldien zerrenda soila (herria eta data), ikusteko bakarrik.
   function viewBolosKide() {
-    const list = state.bolos.filter((b) => inYear(b.fecha)).sort((a, b) => boloKey(a).localeCompare(boloKey(b)));
+    const list = state.bolos.filter((b) => inYear(b.fecha) && nireBoloa(b)).sort((a, b) => boloKey(a).localeCompare(boloKey(b)));
     const body = list.length ? `<div class="card kide-bolos" style="--cols:minmax(0,1fr) 96px 104px"><div class="ledger-head" style="display:grid"><div>Herria</div><div>Data</div><div class="r">Ordua</div></div><ul class="ledger">${list.map((b) => `<li class="row${b.zalantzan ? " zal" : ""}" tabindex="0" role="button" data-fitxa="${esc(b.id)}"><div class="main">${esc(b.evento || "Emanaldia")}${zalTag(b)}${b.helbidea || hhmm(b.elkartu) || b.fitxaOharrak ? ` <span class="fitxa-dot" title="Fitxa">ⓘ</span>` : ""}</div><div class="num">${esc(fdate(b.fecha))}</div><div class="r num">${hTxt(b) ? esc(hTxt(b)).replace(" / ", "<br>") : "—"}</div></li>`).join("")}</ul></div>`
+      : esOrdezko() ? `<div class="card empty"><strong>Ez daukazu emanaldirik (${esc(periodoTxt())})</strong>Jotzeko markatzen zaituztenean agertuko dira hemen.</div>`
       : `<div class="card empty"><strong>Ez dago emanaldirik (${esc(periodoTxt())})</strong>Aukeratu beste urte bat goian.</div>`;
     return `${avisoEmanaldiak()}<section style="display:grid;gap:12px">
       <div class="sec-head"><div><h2>Emanaldiak · ${esc(periodoTxt())}</h2><p class="hint">${list.filter(fijo).length} emanaldi${list.some((b) => b.zalantzan) ? ` (+ ${list.filter((b) => b.zalantzan).length} konfirmatu gabe)` : ""}. Sakatu emanaldi bat fitxa ikusteko.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap">${list.some((b) => (b.fecha || "") >= today()) ? `<button type="button" class="btn small" data-ics-all>📅 Datozenak egutegira</button>` : ""}</div></div>
@@ -1204,7 +1209,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
   const slInYear = (sl) => state.year === "all" || slYear(sl) === state.year;
   const slFecha = (sl) => (state.bolos.find((x) => x.id === sl.boloId) || {}).fecha || sl.fecha || String(sl.creado || "").slice(0, 10);
   function viewSetlist() {
-    const sls = [...state.setlistak].filter((sl) => slInYear(sl)).sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
+    const sls = [...state.setlistak].filter((sl) => slInYear(sl) && (!esOrdezko() || nireBoloa(state.bolos.find((x) => x.id === sl.boloId)))).sort((a, b) => { const fa = (state.bolos.find((x) => x.id === a.boloId) || {}).fecha || a.fecha || "", fb = (state.bolos.find((x) => x.id === b.boloId) || {}).fecha || b.fecha || ""; return fb.localeCompare(fa) || (a.izena || "").localeCompare(b.izena || "", "es"); });
     const slHtml = sls.length ? `<div class="card" style="--cols:${state.limited ? "minmax(0,1fr) 24px" : "minmax(0,1fr) 120px"}">
         <div class="ledger-head"><div>Setlista</div><div class="r">${state.limited ? "" : "Agertokia"}</div></div>
         <ul class="ledger">${sls.map((sl) => { const inf = setlistInfo(sl); return `
@@ -1425,7 +1430,7 @@ textarea.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace
     const t = e.target;
     const fx = t.closest("[data-fitxa]"); if (fx) { e.preventDefault(); e.stopPropagation(); return openFitxa(fx.dataset.fitxa); }
     const one = t.closest("[data-ics-one]"); if (one) { e.preventDefault(); const b = state.bolos.find((x) => x.id === one.dataset.icsOne); if (b) saveIcs([b], "sustrai-" + (b.fecha || "") + "-" + (b.evento || "emanaldia")); return; }
-    if (t.closest("[data-ics-all]")) { e.preventDefault(); const list = bolosOk().filter((b) => (b.fecha || "") >= today()).sort((a, b) => boloKey(a).localeCompare(boloKey(b))); if (list.length) saveIcs(list, "sustrai-emanaldiak"); return; }
+    if (t.closest("[data-ics-all]")) { e.preventDefault(); const list = bolosOk().filter((b) => (b.fecha || "") >= today() && nireBoloa(b)).sort((a, b) => boloKey(a).localeCompare(boloKey(b))); if (list.length) saveIcs(list, "sustrai-emanaldiak"); return; }
     const fe = t.closest("[data-fitxa-edit]"); if (fe) { e.preventDefault(); e.stopPropagation(); return openForm("bolo", fe.dataset.fitxaEdit); }
     const fs2 = t.closest("[data-fitxa-stage]"); if (fs2) { e.preventDefault(); e.stopPropagation(); return openStage(fs2.dataset.fitxaStage); }
   }, true);
@@ -2693,7 +2698,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const add = t.closest("[data-add]"); if (add) return add.dataset.add === "setlist" ? openSetlist(null) : openForm(add.dataset.add);
     const stg = t.closest("[data-stage]"); if (stg) { e.stopPropagation(); return openStage(stg.dataset.stage); }
     const rg = t.closest("[data-rep-group]"); if (rg) { const k = rg.dataset.repGroup; if (state.repOpen.has(k)) state.repOpen.delete(k); else state.repOpen.add(k); return render(); }
-    if (t.closest("[data-sl-pdf]")) return exportSetlistPdf([...state.setlistak].filter((sl) => slInYear(sl)).sort((a, b) => slFecha(a).localeCompare(slFecha(b))));
+    if (t.closest("[data-sl-pdf]")) return exportSetlistPdf([...state.setlistak].filter((sl) => slInYear(sl) && (!esOrdezko() || nireBoloa(state.bolos.find((x) => x.id === sl.boloId)))).sort((a, b) => slFecha(a).localeCompare(slFecha(b))));
     const esl = t.closest("[data-edit-setlist]"); if (esl && !state.limited) return openSetlist(esl.dataset.editSetlist);
     if (t.closest("[data-edit-ajustes]")) return openAjustes();
     const dr = t.closest("[data-del-ruta]");
@@ -2715,7 +2720,7 @@ Responde SOLO con JSON: {"km": number, "peajes": number, "ruta": string}`;
     const fc = t.closest("[data-filtro-cobro]");
     if (fc) { const v = fc.dataset.filtroCobro; state.filtroCobro = v !== "all" && state.filtroCobro === v ? "all" : v; render(); if (state.filtroCobro !== "all") { const el = $("bolos-list"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
     if (t.closest("[data-pdf]")) return exportPdf();
-    if (t.closest("[data-emanaldi-visto]")) { try { localStorage.setItem(SEEN_B, JSON.stringify(bolosOk().map((b) => b.id))); } catch (er) {} render(); return; }
+    if (t.closest("[data-emanaldi-visto]")) { try { localStorage.setItem(SEEN_B, JSON.stringify(bolosOk().filter(nireBoloa).map((b) => b.id))); } catch (er) {} render(); return; }
     if (t.closest("[data-pagos-visto]")) { visto(pagosAhora()); render(); return; }
     const rv = t.closest("[data-revoke]");
     if (rv) {
